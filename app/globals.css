@@ -1,0 +1,344 @@
+/* ==========================================================================
+   Juanemo — Global Design Tokens & Utility Classes
+   Source of truth: DESIGN_SYSTEM.md
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties — Color, Spacing, Motion, Hero Axes
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Color Primitives */
+  --color-gunmetal:     #1F2627;
+  --color-outer-space:  #364245;
+  --color-bittersweet:  #F25C54;
+  --color-dun:          #D6C5AB;
+  --color-bone:         #EBE2D6;
+
+  /* Semantic — Dark mode (default) */
+  --color-bg:           var(--color-gunmetal);
+  --color-surface:      var(--color-outer-space);
+  --color-text:         var(--color-bone);
+  --color-text-muted:   var(--color-dun);
+  --color-text-faint:   rgba(235, 226, 214, 0.5);
+  --color-text-soft:    rgba(235, 226, 214, 0.8);
+  --color-accent:       var(--color-bittersweet);
+  --color-tag-bg:       rgba(255, 255, 255, 0.08);
+
+  /* Spacing */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   32px;
+  --space-xl:   64px;
+  --space-2xl:  128px;
+
+  /* Layout */
+  --page-margin:  clamp(24px, 5vw, 80px);
+  --hero-height:  50vh;
+  --max-width:    1400px;
+  --card-radius:  16px;
+  --tag-radius:   8px;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-mid:  220ms;
+  --duration-slow: 400ms;
+
+  /* Hero Axis Defaults */
+  --hero-wdth: 100;
+  --hero-wght: 900;
+  --hero-opsz: 100;
+  --hero-grad: 0;
+  --hero-slnt: 0;
+  --hero-xtra: 468;
+  --hero-xopq: 88;
+  --hero-yopq: 78;
+  --hero-ytuc: 620;
+  --scroll-progress: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Light Mode Overrides
+   -------------------------------------------------------------------------- */
+
+[data-theme="light"] {
+  --color-bg:           var(--color-bone);
+  --color-surface:      var(--color-dun);
+  --color-text:         var(--color-gunmetal);
+  --color-text-muted:   var(--color-outer-space);
+  --color-text-faint:   rgba(31, 38, 39, 0.5);
+  --color-text-soft:    rgba(31, 38, 39, 0.8);
+  --color-accent:       var(--color-bittersweet);
+  --color-tag-bg:       rgba(0, 0, 0, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset & Base Styles
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. Typography Utility Classes
+   -------------------------------------------------------------------------- */
+
+/* Hero — Roboto Flex variable font */
+.hero-text {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-text-muted);
+  font-variation-settings:
+    'wdth' var(--hero-wdth),
+    'wght' var(--hero-wght),
+    'opsz' var(--hero-opsz),
+    'GRAD' var(--hero-grad),
+    'slnt' var(--hero-slnt),
+    'XTRA' var(--hero-xtra),
+    'XOPQ' var(--hero-xopq),
+    'YOPQ' var(--hero-yopq),
+    'YTUC' var(--hero-ytuc);
+}
+
+/* Display — section headlines, case study titles */
+.display {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(44px, 5vw, 70px);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+/* Headline — sub-headlines */
+.headline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+/* Body Large — intro paragraphs */
+.body-lg {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+/* Body — default body copy (inherits from body element) */
+.body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+/* Body Small — secondary info */
+.body-sm {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* Project Title — project list names */
+.project-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+/* Label Large — eyebrow above display headlines */
+.label-lg {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+/* Label — tags, metadata, small labels */
+.label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* Footer text */
+.footer {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   4. Typographic Elements
+   -------------------------------------------------------------------------- */
+
+/* Dash separator — typographic em-dash ligature */
+.dash-separator {
+  letter-spacing: -0.15em;
+  color: var(--color-text-faint);
+}
+
+/* CTA with arrow */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.cta:hover {
+  color: var(--color-accent);
+}
+
+.cta .arrow {
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.cta:hover .arrow {
+  transform: translateX(3px);
+}
+
+/* Accent rule — Bittersweet horizontal line */
+.accent-rule {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--color-accent);
+  border: none;
+}
+
+/* --------------------------------------------------------------------------
+   5. Component Patterns
+   -------------------------------------------------------------------------- */
+
+/* Card */
+.card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-outer-space);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  padding: 24px 32px;
+}
+
+/* Tag / Pill */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--color-tag-bg);
+  border-radius: var(--tag-radius);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* Footer bar */
+.footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-lg) var(--page-margin);
+}
+
+/* Section block with eyebrow */
+.section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Two-column content layout */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.two-col .col-intro {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.two-col .col-body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   6. Reduced Motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
