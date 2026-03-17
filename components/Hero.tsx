@@ -12,21 +12,24 @@ export default function Hero() {
     const el = textRef.current;
     if (!el) return;
 
-    // Set viewport-responsive axes on mount
-    updateHeroAxes();
+    let rafId: number;
 
-    // Fit text edge-to-edge
-    fitHeroText(el);
-
-    // Re-run both on resize
-    const handleResize = () => {
+    // Update axes then fit text after browser applies new variation settings
+    const updateAndFit = () => {
       updateHeroAxes();
-      fitHeroText(el);
+      // Wait one frame for the font to re-render with new axis values
+      // before measuring glyph widths for fitText
+      rafId = requestAnimationFrame(() => {
+        fitHeroText(el);
+      });
     };
-    window.addEventListener('resize', handleResize);
+
+    updateAndFit();
+    window.addEventListener('resize', updateAndFit);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', updateAndFit);
+      cancelAnimationFrame(rafId);
     };
   }, []);
 

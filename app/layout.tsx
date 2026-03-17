@@ -18,23 +18,7 @@ const themeScript = `
 
 const moodScript = `
 (function() {
-  var moods = {
-    SHARP:   { GRAD: 120,  XTRA: 340, XOPQ: 160, YOPQ: 30,  YTUC: 740, slnt: 0,  opsz: 144 },
-    AIRY:    { GRAD: -100, XTRA: 580, XOPQ: 40,  YOPQ: 100, YTUC: 528, slnt: 0,  opsz: 80  },
-    HEAVY:   { GRAD: 150,  XTRA: 400, XOPQ: 175, YOPQ: 25,  YTUC: 760, slnt: 0,  opsz: 144 },
-    REFINED: { GRAD: 0,    XTRA: 468, XOPQ: 88,  YOPQ: 78,  YTUC: 620, slnt: -1, opsz: 100 },
-    PUNCHY:  { GRAD: 100,  XTRA: 460, XOPQ: 130, YOPQ: 50,  YTUC: 760, slnt: 0,  opsz: 120 }
-  };
-  var keys = Object.keys(moods);
-  var mood = moods[keys[Math.floor(Math.random() * keys.length)]];
-  var r = document.documentElement;
-  var map = {
-    '--hero-grad': mood.GRAD, '--hero-xtra': mood.XTRA,
-    '--hero-xopq': mood.XOPQ, '--hero-yopq': mood.YOPQ,
-    '--hero-ytuc': mood.YTUC, '--hero-slnt': mood.slnt,
-    '--hero-opsz': mood.opsz
-  };
-  for (var k in map) { r.style.setProperty(k, map[k]); }
+  /* Mood system temporarily disabled — dialing in width behavior only */
 })();
 `;
 

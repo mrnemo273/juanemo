@@ -123,24 +123,40 @@ Build the JUANEMO variable typography hero — the centerpiece of the entire sit
 > _Document decisions, problems, deviations, and items for the scrummaster here._
 
 ### Decisions Made
-- Used a `<div>` with `role="heading" aria-level={1}` instead of `<h1>` for the JUANEMO text. This gives screen readers the same heading semantics while avoiding default browser heading styles that could interfere with the variable font styling.
+- Used a `<div>` with `role="heading" aria-level={1}` instead of `<h1>` for the JUANEMO text. Screen readers get heading semantics without default browser heading styles.
 - Hero uses `updateHeroAxes()` directly (not `attachHeroListeners()`) since scroll compression is deferred. Simpler wiring: mount + resize only.
-- fitText has its own resize listener in the Hero component's useEffect.
-- Hero padding set to `calc(var(--page-margin) / 2)` — halved from default per JC's feedback, gives the text more room to breathe edge-to-edge.
+- `updateHeroAxes()` uses `requestAnimationFrame` before `fitHeroText()` — the browser needs one frame to apply new `font-variation-settings` before glyph widths can be measured accurately.
+- Hero padding set to `calc(var(--page-margin) / 2)` — halved from default per JC's feedback.
+- Text docked to top-left (`justify-content: flex-start; align-items: flex-start`) per JC's feedback.
+- **Mood system disabled.** Tested all 5 moods with full axis support — the randomized character axes (XOPQ, XTRA, YOPQ, YTUC, GRAD, slnt) interfered with the viewport-responsive behavior. Different moods produced wildly different glyph widths, making the font-size inconsistent across loads. JC preferred the clean, predictable viewport-only behavior. The mood `<head>` script is commented out. Mood definitions remain in `lib/moods.ts` for future use if revisited.
+- **Viewport-responsive axis architecture:**
+  - `wdth` (25–151), `wght` (100–900), `opsz` (8–144) all driven by viewport width
+  - Viewport range: 500–1920px. Anything below 500px clamps to minimum (ultra-condensed, ultra-light)
+  - Mobile: condensed + light + tall letters. Desktop: extended + bold + wide letters
+  - `letter-spacing: -0.04em` constant across all viewports (tighter mobile tracking caused ugly letter overlap)
+  - Font character changes fluidly as the browser resizes — this IS the creative concept now
 
 ### Problems Encountered
-- **Critical: Fontsource Roboto Flex default import only includes `wght` axis.** The default `@fontsource-variable/roboto-flex` import loads a font file with only the weight axis (34KB). All other axes (wdth, opsz, GRAD, XTRA, XOPQ, YOPQ, YTUC, slnt) were silently ignored, making all 5 moods look identical. Fixed by switching to `@fontsource-variable/roboto-flex/full.css` which loads the complete font (326KB) with all 13 axes. This was the root cause of moods not being visually distinct.
-- Scroll compression was implemented (font-size, height, wght, GRAD, opacity, letter-spacing all interpolating) but visually broken in the browser — disabled per JC's direction.
+- **Critical: Fontsource Roboto Flex default import only includes `wght` axis.** The default `@fontsource-variable/roboto-flex` import loads a font file with only the weight axis (34KB). All other axes (wdth, opsz, GRAD, XTRA, XOPQ, YOPQ, YTUC, slnt) were silently ignored. Fixed by switching to `@fontsource-variable/roboto-flex/full.css` (326KB, all 13 axes).
+- Scroll compression was implemented but visually broken — disabled per JC.
+- Mood system produced inconsistent glyph widths across loads, making mobile font-size unpredictable — disabled per JC.
+- Figma reference for mobile uses 363px font-size at wdth:25, but the browser's Roboto Flex renders glyphs wider than Figma at the same axis values, limiting fitText to ~90px. This is a rendering difference between Figma and CSS `font-variation-settings`. Accepted as a platform constraint.
+- Aggressive negative letter-spacing (-0.18em to -0.25em) on mobile allowed larger font-sizes but caused ugly letter overlap — reverted to -0.04em constant.
 
 ### Deviations from Spec
-- **Scroll compression deferred** (tasks 2.4) — implemented but removed per JC's feedback. The hero is static at 50vh for now.
-- **Accent rule deferred** (task 2.5) — removed per JC's feedback. To be re-added when hero composition is finalized.
-- **Font import changed** — `@fontsource-variable/roboto-flex` → `@fontsource-variable/roboto-flex/full.css` to get all 13 axes. TRD.md should be updated to reflect this.
+- **Mood system disabled** — the `<head>` script is commented out. Viewport-responsive axes replace it as the creative concept. All 5 mood presets remain defined in `lib/moods.ts` if revisited.
+- **Scroll compression deferred** (task 2.4) — implemented but removed per JC's feedback.
+- **Accent rule deferred** (task 2.5) — removed per JC's feedback.
+- **Font import changed** — `@fontsource-variable/roboto-flex` → `@fontsource-variable/roboto-flex/full.css` to get all 13 axes.
+- **Viewport-responsive wght** — weight now driven by viewport width (100–900), not locked at 900 as original spec stated.
+- **Viewport clamp at 500px** — `minVw` changed from 320 to 500 so all phones hit the minimum axis values (wdth:25, wght:100).
 
 ### Items for Scrummaster
-- **Update TRD.md** — Font import must be `@fontsource-variable/roboto-flex/full.css`, not the default import. The default only includes wght. This is critical for the mood system to work.
-- **Scroll compression** needs redesign — the spec's approach (sticky header, font-size calc interpolation, height interpolation) was implemented but visually broken. Needs a fresh approach, possibly with a different compression strategy.
-- **Accent rule** to be re-added once overall hero composition is settled.
+- **Update TRD.md** — Document the new axis architecture: viewport drives wdth/wght/opsz, mood system disabled. Font import must be `full.css`.
+- **Update DESIGN_SYSTEM.md** — §2 (Hero) and §3 (Mood System) need revision. Hero is now purely viewport-responsive. Mood system is on hold.
+- **Scroll compression** — deferred, needs redesign if revisited.
+- **Accent rule** — deferred, to be re-added when hero composition is settled.
+- **Consider whether moods should be revisited** — the concept is sound but the implementation caused inconsistent sizing. A future approach could constrain mood axes to only those that don't affect glyph width (GRAD, slnt, YTUC) while leaving width-affecting axes (XOPQ, XTRA, YOPQ) to the viewport system.
 
 ---
 
@@ -148,8 +164,8 @@ Build the JUANEMO variable typography hero — the centerpiece of the entire sit
 
 | Field | Value |
 |---|---|
-| Date completed | _in progress_ |
-| All tasks done? | No — 2.4 (scroll compression) and 2.5 (accent rule) deferred |
+| Date completed | 2026-03-17 |
+| All tasks done? | Core hero complete. 2.4 (scroll), 2.5 (accent rule), 2.6 (moods) deferred. |
 | Build passing? | Yes — `npm run build` zero errors |
-| Deviations? | Scroll compression and accent rule deferred per JC. Font import changed to full.css. |
-| New items for backlog? | Redesign scroll compression. Re-add accent rule. Update TRD.md font import. |
+| Deviations? | Mood system disabled, scroll compression deferred, accent rule deferred, viewport-responsive wght added, font import changed to full.css. See builder notes. |
+| New items for backlog? | Update TRD.md + DESIGN_SYSTEM.md. Redesign scroll compression. Consider mood system v2 (width-safe axes only). Re-add accent rule. |

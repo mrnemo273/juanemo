@@ -12,20 +12,28 @@ function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T 
 }
 
 /**
- * Maps viewport width to Roboto Flex wdth (25–151) and opsz (8–144) axes.
- * Called on resize.
+ * Maps viewport width to Roboto Flex structural axes.
+ * - wdth (25–151): condensed on mobile → extended on desktop
+ * - wght (300–900): light on mobile → bold on desktop
+ * - opsz (8–144): optical size tracks with width
+ *
+ * Mood system controls character axes (GRAD, XTRA, XOPQ, YOPQ, YTUC, slnt)
+ * independently — viewport controls the structural feel.
  */
 export function updateHeroAxes(): void {
   const vw = window.innerWidth;
-  const minVw = 320;
+  const minVw = 500;
   const maxVw = 1920;
   const progress = Math.min(Math.max((vw - minVw) / (maxVw - minVw), 0), 1);
 
   const wdth = Math.round(25 + progress * (151 - 25));
+  const wght = Math.round(100 + progress * (900 - 100));
   const opsz = Math.round(8 + progress * (144 - 8));
 
+  // Letter-spacing: consistent tight tracking across all viewports
   const r = document.documentElement;
   r.style.setProperty('--hero-wdth', String(wdth));
+  r.style.setProperty('--hero-wght', String(wght));
   r.style.setProperty('--hero-opsz', String(opsz));
 }
 
