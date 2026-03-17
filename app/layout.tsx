@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import '@fontsource-variable/roboto-flex';
+import '@fontsource-variable/roboto-flex/full.css';
 import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 import "./globals.css";
