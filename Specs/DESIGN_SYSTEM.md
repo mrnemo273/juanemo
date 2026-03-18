@@ -85,7 +85,7 @@ The Figma cover design makes the rule explicit: Bittersweet appears as a **singl
 
 | Role | Font | Source | Notes |
 |---|---|---|---|
-| Hero display | Roboto Flex | Fontsource (`@fontsource-variable/roboto-flex`) | Variable font, all 13 axes |
+| Hero display | Roboto Flex | Fontsource (`@fontsource-variable/roboto-flex/full.css`) | Variable font, all 13 axes. **Must use `full.css`** — default import only has wght. |
 | Body / UI | DM Sans | Fontsource (`@fontsource/dm-sans`) | Clean, readable, pairs with Roboto Flex |
 | Labels / eyebrows | DM Sans | Same as body | All caps, tracked, medium weight |
 
@@ -118,16 +118,24 @@ The JUANEMO wordmark uses Roboto Flex with all 13 axes. Primary behavior axes: `
 }
 ```
 
-#### Responsive Axis Spec
+#### Responsive Axis Spec (Updated Phase 2)
 
-| Viewport | `wdth` | `wght` | `opsz` |
-|---|---|---|---|
-| Mobile (320px) | 25 | 900 | 8 |
-| Tablet (768px) | 80 | 900 | 72 |
-| Desktop (1280px) | 130 | 900 | 120 |
-| Wide (1920px+) | 151 | 900 | 144 |
+All three structural axes are now viewport-responsive. Viewport range: 500–1920px. Below 500px clamps to minimum values.
 
-#### Scroll Compression Spec
+| Viewport | `wdth` | `wght` | `opsz` | Character |
+|---|---|---|---|---|
+| Mobile (≤500px) | 25 | 100 | 8 | Ultra-condensed, light, tall letters |
+| Tablet (768px) | 48 | 267 | 44 | Condensed, light-medium |
+| Desktop (1280px) | 105 | 554 | 100 | Extended, medium-bold |
+| Wide (1920px+) | 151 | 900 | 144 | Ultra-extended, bold, wide |
+
+**Key change from original spec:** `wght` is viewport-responsive (100–900), not locked at 900. The font transforms fluidly — mobile is light + condensed, desktop is bold + extended. This IS the creative concept.
+
+#### Scroll Compression Spec (DEFERRED)
+
+**Status:** Implemented during Phase 2 but visually broken in practice. Disabled per JC. To be redesigned if revisited.
+
+Original spec preserved for reference:
 
 | Property | At scroll 0 | At scroll 300px |
 |---|---|---|
@@ -236,11 +244,15 @@ Arrow right `→`. At rest: `--color-text-muted`. On hover: `--color-accent`, nu
 
 ---
 
-## 3. Mood System — Roboto Flex Random Axes
+## 3. Mood System — Roboto Flex Random Axes (ON HOLD)
 
-On each page load, one of five moods is selected at random. Each mood uses a distinct combination of Roboto Flex's secondary axes. All moods lock `wght` at 900. Each must look like a deliberate design choice.
+**Status:** Disabled during Phase 2. The character axes (XOPQ, XTRA, YOPQ) produce different glyph widths per mood, breaking fitText consistency on mobile. JC approved disabling in favor of viewport-responsive axis architecture.
 
-### The Five Moods
+**Future approach:** Constrain moods to **width-safe axes only** (GRAD, slnt, YTUC) while leaving width-affecting axes (XOPQ, XTRA, YOPQ) to the viewport system. This preserves mood personality without breaking sizing. The `<head>` script is commented out in `app/layout.tsx`. Mood definitions remain in `lib/moods.ts`.
+
+**Original design (preserved for reference):** On each page load, one of five moods is selected at random. Each mood uses a distinct combination of Roboto Flex's secondary axes. All moods lock `wght` at 900. Each must look like a deliberate design choice.
+
+### The Five Moods (Original — Not Currently Active)
 
 ```js
 const moods = {
@@ -262,7 +274,7 @@ Object.entries({
 }).forEach(([k, v]) => root.style.setProperty(k, v));
 ```
 
-Place this in `<head>` before any font rendering. No flash.
+Place this in `<head>` before any font rendering. No flash. *(Currently commented out in `app/layout.tsx`.)*
 
 ---
 
@@ -450,7 +462,7 @@ npm install @fontsource-variable/roboto-flex @fontsource/dm-sans
 
 ```ts
 // app/layout.tsx
-import '@fontsource-variable/roboto-flex';
+import '@fontsource-variable/roboto-flex/full.css'; // MUST use full.css — default only has wght axis
 import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 ```
@@ -466,28 +478,41 @@ Preload in `<head>` to eliminate FOUT:
 
 ## 9. Component Reference
 
-### `<Hero>`
+### `<Hero>` (Phase 2 — Built)
+- `'use client'` component with `useEffect` + `useRef`
 - Full-width, `--hero-height` (50vh) on load
-- JUANEMO as real DOM text — not SVG, not canvas
+- JUANEMO as real DOM `<div>` with `role="heading" aria-level={1}` — not SVG, not canvas
 - Color: `--color-text-muted` (Dun) — warmer against Gunmetal, per Figma
-- Mood CSS vars set in `<head>` before mount
-- Responsive `wdth` + `opsz` via resize listener
-- Scroll compression via scroll listener + `requestAnimationFrame`
-- Accent rule (`--color-bittersweet`, 2px) below or within the hero composition
+- Viewport-responsive `wdth` + `wght` + `opsz` via `updateHeroAxes()` (resize listener)
+- `fitHeroText()` runs after axis update (with `requestAnimationFrame` gap for glyph re-render)
+- Padding: `calc(var(--page-margin) / 2)` — halved per JC feedback
+- Text docked top-left (`justify-content: flex-start; align-items: flex-start`) per JC feedback
 - `aria-label="Juanemo"` on the element
+- Mood system: **on hold** (script commented out)
+- Scroll compression: **deferred** (was visually broken)
+- Accent rule: **deferred** (waiting for hero composition to settle)
 
-### `<ProjectList>`
-- Vertical list, no cards
-- Each item: `.label-lg` eyebrow (year · tags) + project title link + one-line description + optional `.tag` chips
-- Link has `→` arrow, `--color-text-muted` at rest, `--color-accent` on hover
+### `<ProjectList>` (Phase 3 — Built)
+- Newspaper-style full-bleed vertical list — no cards, no max-width constraint
+- Each entry is a numbered grid: `01`, `02` in Bittersweet (weight 300, same size as title) + content column
+- Title: all-caps, `clamp(28px, 3vw, 40px)`, weight 500, `-0.02em` tracking
+- Below title: `.label-lg` eyebrow showing `publishedDate` string
+- Description: body copy (15px, `--color-text-soft`)
+- "View Project →" CTA: `--color-text-muted` at rest, `--color-accent` on hover, arrow nudges 3px right
 - Opens `_blank` with `rel="noopener noreferrer"`
+- Thin 1px HR separators (`--color-surface`) between entries
+- Mobile (≤600px): numbers stack on top of content
+- Data: `data/projects.ts` — `Project` interface has `name`, `description`, `url`, `publishedDate`
 
-### `<Footer>`
-- Three-column `.footer-bar` layout
-- Left: `JUAN<dash>CARLOS MORALES`
-- Center: `JUANEMO`
-- Right: `BUILT WITH CLAUDE CODE →` (accent on hover) + theme toggle
-- All `.label` / `.footer` styles
+### `<Footer>` (Phase 3 — Built)
+- Three-column layout, full-width with `--page-margin` padding
+- Left: `juanemo.com`
+- Center: `© 2026 Juan-Carlos Morales`
+- Right: Email + LinkedIn contact links
+- All text in `.label` styles (11px, 500 weight, 0.1em tracking, uppercase, `--color-text-faint`)
+- Links hover to `--color-accent` (Bittersweet)
+- 1px top border (`--color-surface`)
+- Mobile (≤600px): stacks vertically, centered
 
 ---
 
