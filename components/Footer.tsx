@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <span>juanemo.com</span>
-      <span>&copy; 2025 Juan-Carlos Morales</span>
+      <span>&copy; 2026 Juan-Carlos Morales</span>
       <div className={styles.links}>
         <a href="mailto:hello@juanemo.com">Email</a>
         <a
