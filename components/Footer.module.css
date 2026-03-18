@@ -1,0 +1,47 @@
+/* ==========================================================================
+   Footer — Minimal site footer
+   ========================================================================== */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-lg) var(--page-margin);
+  border-top: 1px solid var(--color-surface);
+  margin-top: var(--space-xl);
+}
+
+.footer span,
+.footer a {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  text-decoration: none;
+}
+
+.footer a {
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.footer a:hover {
+  color: var(--color-accent);
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Stack vertically on narrow screens */
+@media (max-width: 600px) {
+  .footer {
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: center;
+  }
+}
