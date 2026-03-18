@@ -16,11 +16,6 @@ const themeScript = `
 })();
 `;
 
-const moodScript = `
-(function() {
-  /* Mood system temporarily disabled — dialing in width behavior only */
-})();
-`;
 
 export default function RootLayout({
   children,
@@ -31,7 +26,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <script dangerouslySetInnerHTML={{ __html: moodScript }} />
       </head>
       <body>
         {children}

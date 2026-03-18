@@ -15,17 +15,23 @@ export default function ProjectList() {
                 {String(index + 1).padStart(2, '0')}
               </span>
               <div className={styles.content}>
-                <h2 className={styles.title}>{project.name}</h2>
-                <span className={styles.eyebrow}>{project.publishedDate}</span>
-                <p className={styles.description}>{project.description}</p>
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.cta}
-                >
-                  View Project <span className={styles.arrow}>&rarr;</span>
-                </a>
+                <div className={styles.columns}>
+                  <div>
+                    <h2 className={styles.title}>{project.name}</h2>
+                    <span className={styles.eyebrow}>{project.publishedDate}</span>
+                  </div>
+                  <div className={styles.rightCol}>
+                    <p className={styles.description}>{project.description}</p>
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.cta}
+                    >
+                      View Project <span className={styles.arrow}>&rarr;</span>
+                    </a>
+                  </div>
+                </div>
               </div>
             </article>
           </li>

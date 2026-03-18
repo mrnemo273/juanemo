@@ -52,24 +52,44 @@
   composes: label-lg from global;
 }
 
-/* Project title — oversized headline, all caps like the hero */
+/* Project title — oversized headline, sentence case, Dun color, thin weight */
 .title {
   font-family: 'DM Sans', sans-serif;
   font-size: clamp(28px, 3vw, 40px);
-  font-weight: 500;
+  font-weight: 300;
   line-height: 1.15;
   letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--color-text);
+  color: var(--color-text-muted);
 }
 
-/* Description — body copy */
+/* Two-column: title+meta left, description right on desktop */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+/* Right column: description + CTA */
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Description — body copy, sits in right column on desktop */
 .description {
   font-size: 15px;
   font-weight: 400;
   line-height: 1.65;
   color: var(--color-text-soft);
-  max-width: 640px;
+}
+
+@media (min-width: 768px) {
+  .columns {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
 }
 
 /* CTA link — "View Project →" */
@@ -98,10 +118,18 @@
   transform: translateX(3px);
 }
 
-/* Mobile: stack number on top of content */
+/* Mobile: stack number on top of content, bigger titles */
 @media (max-width: 600px) {
   .entry {
     grid-template-columns: 1fr;
     gap: var(--space-xs) 0;
+  }
+
+  .title {
+    font-size: 36px;
+  }
+
+  .number {
+    font-size: 36px;
   }
 }

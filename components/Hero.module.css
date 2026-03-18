@@ -1,6 +1,7 @@
 /* ==========================================================================
-   Hero Component — JUANEMO variable typography hero
-   The centerpiece. Typography is the product.
+   Hero Component — Generative per-character drift
+   Each letter in JUANEMO independently drifts to random axis values.
+   The wordmark is never the same twice.
    ========================================================================== */
 
 .hero {
@@ -9,38 +10,37 @@
   justify-content: flex-start;
   align-items: flex-start;
   width: 100%;
-  height: var(--hero-height);
-  padding: 0 calc(var(--page-margin) / 2);
+  min-height: 70vh;
+  padding: calc(var(--page-margin) / 2);
   overflow: hidden;
 }
 
-/* Text container — holds the fitted text */
-.textContainer {
-  position: relative;
-  width: 100%;
+.word {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: baseline;
+  white-space: nowrap;
+  transform-origin: top left;
 }
 
-/* The JUANEMO wordmark — all axis behavior driven by CSS custom properties */
-.text {
-  display: block;
-  white-space: nowrap;
-  width: max-content;
+.char {
   font-family: 'Roboto Flex Variable', sans-serif;
   text-transform: uppercase;
-  letter-spacing: -0.04em;
-  line-height: 0.9;
+  font-size: clamp(60px, 17vw, 280px);
+  letter-spacing: -0.03em;
+  line-height: 0.85;
   color: var(--color-text-muted);
-  font-variation-settings:
-    'wdth' var(--hero-wdth),
-    'wght' var(--hero-wght),
-    'opsz' var(--hero-opsz),
-    'GRAD' var(--hero-grad),
-    'slnt' var(--hero-slnt),
-    'XTRA' var(--hero-xtra),
-    'XOPQ' var(--hero-xopq),
-    'YOPQ' var(--hero-yopq),
-    'YTUC' var(--hero-ytuc);
+  display: inline-block;
+  will-change: font-variation-settings;
+}
+
+@media (max-width: 600px) {
+  .hero {
+    min-height: 40vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char {
+    transition: none !important;
+  }
 }
