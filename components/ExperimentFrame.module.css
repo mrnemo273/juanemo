@@ -1,0 +1,257 @@
+/* ==========================================================
+   ExperimentFrame — the full-viewport specimen stage
+   ========================================================== */
+
+.frame {
+  display: grid;
+  grid-template-rows: auto 1px auto 1fr 1px auto;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* ----------------------------------------------------------
+   TOP BAR: date (left) · LogoMark (center) · grid icon (right)
+   ---------------------------------------------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--page-padding);
+  position: relative;
+}
+
+.date {
+  position: absolute;
+  left: var(--page-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.25;
+  white-space: nowrap;
+}
+
+/* LogoMark inline override — strip fixed positioning */
+.logoInline {
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: auto;
+}
+
+.gridIcon {
+  position: absolute;
+  right: var(--page-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+.gridIcon:hover { opacity: 0.8; }
+.gridIcon:focus-visible {
+  outline: 2px solid var(--color-text-faint);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.gridIcon span {
+  width: 5px;
+  height: 5px;
+  background: var(--color-dun);
+  border-radius: 1px;
+  display: block;
+}
+
+/* ----------------------------------------------------------
+   KEYLINES
+   ---------------------------------------------------------- */
+.keyline {
+  width: 100%;
+  background: rgba(214, 197, 171, 0.12);
+}
+
+/* ----------------------------------------------------------
+   META BAR: experiment number + title
+   ---------------------------------------------------------- */
+.metabar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 20px var(--page-padding) 10px;
+}
+.metabarLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.expNumber {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-bittersweet);
+  white-space: nowrap;
+}
+.expTitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ----------------------------------------------------------
+   EXPERIMENT VIEWPORT — scrollable container
+   ---------------------------------------------------------- */
+.viewport {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  position: relative;
+  /* Give children explicit height context so height: 100% resolves */
+  display: flex;
+  flex-direction: column;
+}
+.viewport > * {
+  min-height: 100%;
+}
+
+/* Custom scrollbar */
+.viewport::-webkit-scrollbar { width: 3px; }
+.viewport::-webkit-scrollbar-track { background: transparent; }
+.viewport::-webkit-scrollbar-thumb {
+  background: rgba(214, 197, 171, 0.15);
+  border-radius: 2px;
+}
+.viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 197, 171, 0.3);
+}
+
+/* Firefox scrollbar */
+.viewport {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(214, 197, 171, 0.15) transparent;
+}
+
+/* ----------------------------------------------------------
+   BOTTOM BAR: description (left) · controls (right)
+   ---------------------------------------------------------- */
+.bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--page-padding);
+  gap: 24px;
+}
+.bottombarLeft {
+  min-width: 0;
+  flex: 1;
+}
+.bottombarRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.expDesc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-dun);
+  opacity: 0.35;
+  max-width: 600px;
+}
+
+/* Controls */
+.ctrl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ctrlLabel {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.25;
+}
+.ctrlBtn {
+  padding: 3px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.45;
+  background: none;
+  border: 1px solid rgba(214, 197, 171, 0.12);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ctrlBtn:hover {
+  opacity: 0.8;
+  border-color: rgba(214, 197, 171, 0.3);
+}
+.ctrlBtnActive {
+  border-color: var(--color-bittersweet);
+  color: var(--color-bittersweet);
+  opacity: 0.9;
+}
+
+.dotSep {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--color-dun);
+  opacity: 0.2;
+  flex-shrink: 0;
+}
+
+.sectionCounter {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.25;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------
+   MOBILE
+   ---------------------------------------------------------- */
+@media (max-width: 600px) {
+  .date { display: none; }
+  .bottombar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .bottombarRight {
+    flex-wrap: wrap;
+  }
+}

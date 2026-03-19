@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Zoom Nav V2</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline-dark: rgba(214, 197, 171, 0.12);
+    --keyline-light: rgba(31, 38, 39, 0.1);
+    --transition-zoom: 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ==========================================================
+     SCENE — the full viewport, light background always behind
+     ========================================================== */
+  .scene {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1px 1fr 1px auto;
+    background: var(--bone);
+    transition: background var(--transition-zoom);
+  }
+  .scene:not(.zoomed-out) {
+    background: var(--gunmetal);
+  }
+
+  /* ==========================================================
+     PERSISTENT NAV — top bar + bottom bar, always visible
+     Color shifts: dark mode → light mode on zoom
+     ========================================================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+    z-index: 20;
+  }
+  .topbar-date {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color var(--transition-zoom), opacity var(--transition-zoom);
+  }
+
+  /* Logo */
+  .logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    transition: color var(--transition-zoom);
+  }
+
+  /* Grid trigger */
+  .grid-trigger {
+    position: absolute;
+    right: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+    z-index: 20;
+    transition: opacity 0.2s;
+  }
+  .grid-trigger:hover { opacity: 0.9 !important; }
+  .grid-trigger span {
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    transition: background var(--transition-zoom);
+  }
+
+  /* Keylines */
+  .keyline {
+    width: 100%;
+    transition: background var(--transition-zoom);
+  }
+
+  /* Bottom bar */
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad);
+    z-index: 20;
+    transition: color var(--transition-zoom);
+  }
+  .bottombar-text {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color var(--transition-zoom), opacity var(--transition-zoom);
+  }
+
+  /* --- DARK STATE (experiment active) --- */
+  .scene:not(.zoomed-out) .topbar-date { color: var(--dun); opacity: 0.25; }
+  .scene:not(.zoomed-out) .logo-char { color: var(--dun); }
+  .scene:not(.zoomed-out) .grid-trigger { opacity: 0.35; }
+  .scene:not(.zoomed-out) .grid-trigger span { background: var(--dun); }
+  .scene:not(.zoomed-out) .keyline { background: var(--keyline-dark); }
+  .scene:not(.zoomed-out) .bottombar-text { color: var(--dun); opacity: 0.35; }
+
+  /* --- LIGHT STATE (zoomed out) --- */
+  .scene.zoomed-out .topbar-date { color: var(--gunmetal); opacity: 0.3; }
+  .scene.zoomed-out .logo-char { color: var(--gunmetal); opacity: 0.6; }
+  .scene.zoomed-out .grid-trigger { opacity: 0.4; }
+  .scene.zoomed-out .grid-trigger span { background: var(--gunmetal); }
+  .scene.zoomed-out .keyline { background: var(--keyline-light); }
+  .scene.zoomed-out .bottombar-text { color: var(--gunmetal); opacity: 0.3; }
+
+  /* ==========================================================
+     CONTENT AREA — holds either experiment or grid
+     ========================================================== */
+  .content-area {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ==========================================================
+     EXPERIMENT CARDS — the experiment content, no nav chrome
+     ========================================================== */
+  .experiments-container {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+  }
+
+  /* Active experiment — fills the content area */
+  .exp-card {
+    position: absolute;
+    background: var(--gunmetal);
+    overflow: hidden;
+    transition: all var(--transition-zoom);
+    cursor: default;
+  }
+
+  /* FULL STATE — active experiment fills content area */
+  .scene:not(.zoomed-out) .exp-card {
+    inset: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .scene:not(.zoomed-out) .exp-card:not(.active) {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+  }
+
+  /* ZOOMED OUT — experiments become a grid of cards */
+  .scene.zoomed-out .exp-card {
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    cursor: pointer;
+  }
+  .scene.zoomed-out .exp-card:hover {
+    box-shadow: 0 16px 60px rgba(0,0,0,0.25);
+    transform: translateY(-4px) !important;
+  }
+  .scene.zoomed-out .exp-card.active {
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 2px var(--bittersweet);
+  }
+
+  /* Card meta — visible only when zoomed out */
+  .card-meta {
+    position: absolute;
+    bottom: -36px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease 0.2s;
+    pointer-events: none;
+  }
+  .scene.zoomed-out .card-meta {
+    opacity: 1;
+  }
+  .card-meta-number {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--bittersweet);
+  }
+  .card-meta-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.4;
+  }
+
+  /* ==========================================================
+     EXPERIMENT CONTENT — the actual visual inside each card
+     ========================================================== */
+  .exp-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+  }
+
+  /* Section label inside experiment */
+  .exp-label {
+    position: absolute;
+    top: var(--pad);
+    left: var(--pad);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .exp-label-num {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--bittersweet);
+    opacity: 0.7;
+  }
+  .exp-label-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  /* Generative text */
+  .gen-word {
+    display: flex;
+    align-items: baseline;
+  }
+  .gen-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    will-change: font-variation-settings;
+  }
+
+  /* Experiment-specific sizes */
+  .exp-content.size-hero .gen-char { font-size: clamp(50px, 12vw, 180px); }
+  .exp-content.size-medium .gen-char { font-size: clamp(36px, 6vw, 80px); }
+
+  /* Experiment #2: breathing specific */
+  .exp-breathing .gen-char {
+    animation: breathe 4s ease-in-out infinite;
+    animation-play-state: running;
+  }
+  .scene.zoomed-out .exp-breathing .gen-char {
+    animation-play-state: paused;
+  }
+  @keyframes breathe {
+    0%   { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+    50%  { font-variation-settings: 'wdth' 60, 'wght' 300, 'opsz' 40; letter-spacing: 0.02em; }
+    100% { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+  }
+
+  /* Experiment #3: outline */
+  .exp-outline .gen-char {
+    -webkit-text-stroke: 1.5px var(--dun);
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Experiment #4: gradient */
+  .exp-gradient .gen-char {
+    background: linear-gradient(135deg, var(--bittersweet), var(--dun), var(--bone), var(--dun), var(--bittersweet));
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradShift 6s ease infinite;
+    animation-play-state: running;
+  }
+  .scene.zoomed-out .exp-gradient .gen-char {
+    animation-play-state: paused;
+  }
+  @keyframes gradShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Experiment #5: echo layers */
+  .exp-echo .echo-rows { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .exp-echo .row-2 .gen-char { color: var(--outer-space); }
+  .exp-echo .row-3 .gen-char { color: rgba(214, 197, 171, 0.1); }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .bottombar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- TOP BAR — persists, colors shift -->
+  <div class="topbar">
+    <span class="topbar-date">March 2025</span>
+    <a class="logo" id="logo"></a>
+    <button class="grid-trigger" id="gridTrigger" aria-label="View all experiments">
+      <span></span><span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- KEYLINE TOP -->
+  <div class="keyline"></div>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area" id="contentArea">
+    <div class="experiments-container" id="experimentsContainer">
+      <!-- Cards are generated by JS -->
+    </div>
+  </div>
+
+  <!-- KEYLINE BOTTOM -->
+  <div class="keyline"></div>
+
+  <!-- BOTTOM BAR — persists, colors shift -->
+  <div class="bottombar">
+    <span class="bottombar-text">Juan-Carlos Morales</span>
+    <span class="bottombar-text">Built with Claude Code</span>
+  </div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+
+function createGenWord(container, size) {
+  const word = document.createElement('div');
+  word.className = 'gen-word';
+  LETTERS.forEach(l => {
+    const s = document.createElement('span');
+    s.className = 'gen-char';
+    if (size) s.style.fontSize = size;
+    s.style.fontVariationSettings = aStr(rAxes());
+    s.textContent = l;
+    word.appendChild(s);
+  });
+  container.appendChild(word);
+  return word;
+}
+
+// Logo
+const logo = document.getElementById('logo');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'logo-char';
+  s.textContent = l;
+  s.style.fontVariationSettings = aStr(rAxes());
+  logo.appendChild(s);
+});
+
+// --- EXPERIMENTS DATA ---
+const experiments = [
+  { id: 'generative-type', number: '01', name: 'Generative Typography', type: 'drift' },
+  { id: 'breathing', number: '02', name: 'Axis Breathing', type: 'breathing' },
+  { id: 'outline', number: '03', name: 'Hollow Forms', type: 'outline' },
+  { id: 'gradient', number: '04', name: 'Gradient Fill', type: 'gradient' },
+  { id: 'echo', number: '05', name: 'Layered Echo', type: 'echo' },
+];
+
+let activeIndex = 0;
+let isZoomed = false;
+const container = document.getElementById('experimentsContainer');
+const scene = document.getElementById('scene');
+const contentArea = document.getElementById('contentArea');
+
+// Build experiment cards
+const cards = experiments.map((exp, i) => {
+  const card = document.createElement('div');
+  card.className = 'exp-card' + (i === 0 ? ' active' : '');
+  card.dataset.index = i;
+
+  const content = document.createElement('div');
+  content.className = `exp-content size-hero exp-${exp.type}`;
+
+  // Label inside experiment
+  const label = document.createElement('div');
+  label.className = 'exp-label';
+  label.innerHTML = `<span class="exp-label-num">${exp.number}</span><span class="exp-label-name">${exp.name}</span>`;
+  content.appendChild(label);
+
+  // Build experiment visual
+  if (exp.type === 'echo') {
+    const rows = document.createElement('div');
+    rows.className = 'echo-rows';
+    for (let r = 0; r < 3; r++) {
+      const word = createGenWord(rows);
+      if (r > 0) word.className += ` row-${r + 1}`;
+    }
+    content.appendChild(rows);
+    content.classList.remove('size-hero');
+    content.classList.add('size-medium');
+  } else {
+    createGenWord(content);
+  }
+
+  card.appendChild(content);
+
+  // Meta below card (only visible when zoomed out)
+  const meta = document.createElement('div');
+  meta.className = 'card-meta';
+  meta.innerHTML = `<span class="card-meta-number">${exp.number}</span><span class="card-meta-name">${exp.name}</span>`;
+  card.appendChild(meta);
+
+  container.appendChild(card);
+
+  // Click to zoom into this experiment
+  card.addEventListener('click', () => {
+    if (isZoomed) {
+      activeIndex = i;
+      cards.forEach((c, j) => c.classList.toggle('active', j === i));
+      zoomIn();
+    }
+  });
+
+  return card;
+});
+
+// --- DRIFT ANIMATION for experiment #1 ---
+const driftChars = cards[0].querySelectorAll('.gen-char');
+let driftTimers = [];
+
+function driftCycle() {
+  if (isZoomed) return; // frozen when zoomed out
+  driftChars.forEach((el, i) => {
+    const t = setTimeout(() => {
+      el.style.transition = `font-variation-settings ${1500 + rand(-200,200)}ms ${SPRING}`;
+      el.style.fontVariationSettings = aStr(rAxes());
+    }, i * 80);
+    driftTimers.push(t);
+  });
+  const holdTimer = setTimeout(driftCycle, 8000 + 1500 + LETTERS.length * 80);
+  driftTimers.push(holdTimer);
+}
+driftCycle();
+
+// --- ZOOM LAYOUT ---
+
+function computeGridPositions() {
+  const rect = contentArea.getBoundingClientRect();
+  const w = rect.width;
+  const h = rect.height;
+  const pad = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 24;
+
+  const count = experiments.length;
+  // Responsive columns
+  let cols = count <= 2 ? 2 : count <= 4 ? 2 : 3;
+  if (w < 600) cols = 1;
+  const rows = Math.ceil(count / cols);
+
+  const gap = 16;
+  const metaSpace = 44; // space below each card for meta text
+  const totalGapX = (cols - 1) * gap;
+  const totalGapY = (rows - 1) * (gap + metaSpace);
+  const cardW = (w - pad * 2 - totalGapX) / cols;
+  const cardH = Math.min((h - pad * 2 - totalGapY) / rows, cardW * 0.6);
+
+  const positions = [];
+  const gridW = cols * cardW + totalGapX;
+  const gridH = rows * cardH + totalGapY;
+  const offsetX = (w - gridW) / 2;
+  const offsetY = (h - gridH) / 2;
+
+  experiments.forEach((_, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    positions.push({
+      left: offsetX + col * (cardW + gap),
+      top: offsetY + row * (cardH + gap + metaSpace),
+      width: cardW,
+      height: cardH,
+    });
+  });
+
+  return positions;
+}
+
+function zoomOut() {
+  isZoomed = true;
+  scene.classList.add('zoomed-out');
+
+  // Stop drift
+  driftTimers.forEach(clearTimeout);
+  driftTimers = [];
+
+  // Position cards in grid
+  const positions = computeGridPositions();
+  cards.forEach((card, i) => {
+    const p = positions[i];
+    card.style.left = p.left + 'px';
+    card.style.top = p.top + 'px';
+    card.style.width = p.width + 'px';
+    card.style.height = p.height + 'px';
+    card.style.opacity = '1';
+    card.style.transform = 'none';
+    card.style.pointerEvents = 'auto';
+  });
+}
+
+function zoomIn() {
+  isZoomed = false;
+  scene.classList.remove('zoomed-out');
+
+  // Reset all cards to fill
+  cards.forEach((card) => {
+    card.style.left = '';
+    card.style.top = '';
+    card.style.width = '';
+    card.style.height = '';
+    card.style.transform = '';
+    card.style.opacity = '';
+    card.style.pointerEvents = '';
+  });
+
+  // Restart drift after transition
+  setTimeout(() => {
+    if (!isZoomed) driftCycle();
+  }, 700);
+}
+
+// Reposition on resize when zoomed out
+window.addEventListener('resize', () => {
+  if (isZoomed) {
+    const positions = computeGridPositions();
+    cards.forEach((card, i) => {
+      const p = positions[i];
+      card.style.transition = 'none';
+      card.style.left = p.left + 'px';
+      card.style.top = p.top + 'px';
+      card.style.width = p.width + 'px';
+      card.style.height = p.height + 'px';
+      void card.offsetWidth;
+      card.style.transition = '';
+    });
+  }
+});
+
+// Grid trigger
+document.getElementById('gridTrigger').addEventListener('click', () => {
+  if (isZoomed) zoomIn();
+  else zoomOut();
+});
+
+// Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isZoomed) zoomIn();
+});
+</script>
+
+</body>
+</html>

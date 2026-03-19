@@ -1,28 +1,23 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import LogoMark from './LogoMark';
+import { NavigationContext } from '../lib/NavigationContext';
 import IndexOverlay from './IndexOverlay';
-import styles from './Navigation.module.css';
 
-export default function Navigation() {
+export default function Navigation({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClose = useCallback(() => setIsOpen(false), []);
-  const handleToggle = useCallback(() => setIsOpen((prev) => !prev), []);
+  const openIndex = useCallback(() => setIsOpen(true), []);
 
   return (
-    <>
-      <LogoMark />
-      <button
-        className={styles.indexTrigger}
-        onClick={handleToggle}
-        aria-label={isOpen ? 'Close experiment index' : 'Open experiment index'}
-        aria-expanded={isOpen}
-      >
-        INDEX
-      </button>
+    <NavigationContext.Provider value={{ openIndex }}>
+      {children}
       <IndexOverlay isOpen={isOpen} onClose={handleClose} />
-    </>
+    </NavigationContext.Provider>
   );
 }

@@ -404,8 +404,7 @@ Confirmed pattern across all content nodes. Eyebrow label stacked above display 
   --space-2xl: 128px;
 
   --page-margin:  clamp(24px, 5vw, 80px);
-  --hero-height:  50vh;
-  --max-width:    1400px;
+  /* --hero-height and --max-width removed in Phase C — no longer used */
   --card-radius:  16px;
   --tag-radius:   8px;
 }
@@ -467,12 +466,17 @@ import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 ```
 
-Preload in `<head>` to eliminate FOUT:
+**Self-hosted fonts (Phase C):** Fontsource's woff2 filenames contain content hashes that change per build, making `<link rel="preload">` impossible with hardcoded paths. Solution: Latin woff2 files copied to `public/fonts/` with stable filenames. Matching `@font-face` declarations in `globals.css` (section 0) with `font-display: block` for Roboto Flex (zero FOUT) and `font-display: swap` for DM Sans. Fontsource CSS import retained as fallback for non-Latin subsets.
 
 ```html
-<link rel="preload" as="font" type="font/woff2" crossorigin
-  href="/_next/static/media/roboto-flex-latin-wght-normal.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin="anonymous"
+  href="/fonts/roboto-flex-latin-full.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin="anonymous"
+  href="/fonts/dm-sans-latin-400-normal.woff2" />
 ```
+
+- Roboto Flex Latin: 319KB (all 13 axes)
+- DM Sans 400 + 500: ~15KB each
 
 ---
 

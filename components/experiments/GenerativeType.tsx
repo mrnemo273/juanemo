@@ -1,21 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useContext } from 'react';
 import {
   axisString,
   randomAxesForWord,
 } from '../../lib/generativeAxes';
+import {
+  ExperimentControlsContext,
+  EASINGS,
+} from '../../lib/ExperimentControlsContext';
 import styles from './GenerativeType.module.css';
 
 const LETTERS = 'JUANEMO'.split('');
 
-// --- Timing constants (easy to tune) ---
-const HOLD_DURATION = 8000;  // ms — how long the wordmark sits still
-const TRANS_DURATION = 1500; // ms — base transition duration per letter
-const STAGGER = 80;          // ms — delay between each letter's start
-
-// Spring easing with overshoot — non-negotiable
-const SPRING_EASING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+const STAGGER = 80; // ms — delay between each letter's start
 
 const MOBILE_BREAKPOINT = 600;
 
@@ -24,6 +22,10 @@ function isMobileViewport(): boolean {
 }
 
 export default function GenerativeType() {
+  const controls = useContext(ExperimentControlsContext);
+  const controlsRef = useRef(controls);
+  controlsRef.current = controls;
+
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const wordRef = useRef<HTMLDivElement>(null);
@@ -96,8 +98,8 @@ export default function GenerativeType() {
     cloneRef.current = clone;
 
     // Initial randomization — stagger letters in one at a time
-    const INTRO_STAGGER = 100; // ms between each letter appearing
-    const INTRO_FADE = 400;    // ms fade-in duration per letter
+    const INTRO_STAGGER = 100;
+    const INTRO_FADE = 400;
     const cloneChars = clone.querySelectorAll('span');
     const initialAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
     chars.forEach((el, i) => {
@@ -105,7 +107,6 @@ export default function GenerativeType() {
       el.style.opacity = '0';
       el.style.transition = 'none';
       el.style.fontVariationSettings = axisString(initialAxes[i]);
-      // Sync clone
       if (cloneChars[i]) {
         (cloneChars[i] as HTMLElement).style.transition = 'none';
         (cloneChars[i] as HTMLElement).style.fontVariationSettings =
@@ -113,7 +114,7 @@ export default function GenerativeType() {
       }
     });
 
-    // Stagger each letter's appearance (separate from cycle timers)
+    // Stagger each letter's appearance
     const introTimers: ReturnType<typeof setTimeout>[] = [];
     chars.forEach((el, i) => {
       if (!el) return;
@@ -130,15 +131,11 @@ export default function GenerativeType() {
       introTimers.push(introId);
     });
 
-    // Initial fit (for clone measurement even before letters fade in)
     requestAnimationFrame(fitWord);
 
-    // ResizeObserver on the hidden clone — fires as font-variation-settings
-    // transitions cause glyph size changes, without any visible flash
     const ro = new ResizeObserver(fitWord);
     ro.observe(clone);
 
-    // Refit on window resize
     window.addEventListener('resize', fitWord);
 
     const clearTimers = () => {
@@ -149,28 +146,30 @@ export default function GenerativeType() {
     const shift = () => {
       clearTimers();
       const currentCloneChars = clone.querySelectorAll('span');
-      // Generate all axes for the word at once (mobile rule: max 1 extreme)
       const wordAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
+      const { speed, easing } = controlsRef.current;
+      const easingCss = EASINGS[easing];
+      // Transition duration scales with speed (speed is the base cycle time)
+      const transDuration = Math.round(speed * 0.75);
 
       chars.forEach((el, i) => {
         if (!el) return;
         const delay = i * STAGGER;
         const duration =
-          TRANS_DURATION + Math.round((Math.random() - 0.5) * 400); // ±200ms
+          transDuration + Math.round((Math.random() - 0.5) * 400);
 
         const id = setTimeout(() => {
           const axes = wordAxes[i];
           if (prefersReduced) {
             el.style.transition = 'none';
           } else {
-            el.style.transition = `font-variation-settings ${duration}ms ${SPRING_EASING}`;
+            el.style.transition = `font-variation-settings ${duration}ms ${easingCss}`;
           }
           el.style.fontVariationSettings = axisString(axes);
 
-          // Sync clone immediately so ResizeObserver picks up the change
           if (currentCloneChars[i]) {
             (currentCloneChars[i] as HTMLElement).style.transition =
-              `font-variation-settings ${duration}ms ${SPRING_EASING}`;
+              `font-variation-settings ${duration}ms ${easingCss}`;
             (currentCloneChars[i] as HTMLElement).style.fontVariationSettings =
               axisString(axes);
           }
@@ -179,16 +178,17 @@ export default function GenerativeType() {
         timersRef.current.push(id);
       });
 
-      // After all transitions complete, start hold
       const totalTransTime =
-        TRANS_DURATION + 200 + LETTERS.length * STAGGER;
+        transDuration + 200 + LETTERS.length * STAGGER;
       const holdTimer = setTimeout(() => hold(), totalTransTime);
       timersRef.current.push(holdTimer);
     };
 
     const hold = () => {
       clearTimers();
-      const shiftTimer = setTimeout(() => shift(), HOLD_DURATION);
+      // Hold duration = speed * 4 (same ratio as prototype)
+      const holdDuration = controlsRef.current.speed * 4;
+      const shiftTimer = setTimeout(() => shift(), holdDuration);
       timersRef.current.push(shiftTimer);
     };
 
@@ -202,13 +202,37 @@ export default function GenerativeType() {
       clearTimers();
       ro.disconnect();
       window.removeEventListener('resize', fitWord);
-      // Clean up clone
       if (clone.parentNode) {
         clone.parentNode.removeChild(clone);
       }
       cloneRef.current = null;
     };
   }, [fitWord]);
+
+  // React to shuffle
+  useEffect(() => {
+    if (controls.shuffleKey === 0) return; // skip initial
+    const chars = charsRef.current;
+    const clone = cloneRef.current;
+    if (!chars.length) return;
+
+    const wordAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
+    const easingCss = EASINGS[controls.easing];
+    const cloneChars = clone?.querySelectorAll('span');
+
+    chars.forEach((el, i) => {
+      if (!el) return;
+      const axes = wordAxes[i];
+      el.style.transition = `font-variation-settings 600ms ${easingCss}`;
+      el.style.fontVariationSettings = axisString(axes);
+      if (cloneChars?.[i]) {
+        (cloneChars[i] as HTMLElement).style.transition =
+          `font-variation-settings 600ms ${easingCss}`;
+        (cloneChars[i] as HTMLElement).style.fontVariationSettings =
+          axisString(axes);
+      }
+    });
+  }, [controls.shuffleKey, controls.easing]);
 
   return (
     <div ref={containerRef} className={styles.container}>

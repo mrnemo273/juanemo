@@ -22,8 +22,8 @@ export const AXIS_RANGES_DESKTOP: AxisRanges = {
 
 // Mobile moderate range — most characters use this
 export const AXIS_RANGES_MOBILE: AxisRanges = {
-  wdth: { min: 40, max: 120 },   // moderate range — avoids ultra-condensed + ultra-extended
-  wght: { min: 300, max: 750 },   // allows bold, skips black
+  wdth: { min: 25, max: 100 },    // capped — avoids ultra-extended on small screens
+  wght: { min: 300, max: 650 },   // capped — bold but not black
   opsz: { min: 8, max: 120 },
 };
 

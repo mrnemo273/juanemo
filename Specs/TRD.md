@@ -26,7 +26,7 @@ Juanemo — Personal Creative Site
 
 ### Hero: Roboto Flex
 
-**Decision: Roboto Flex.** Selected for its exceptional axis range, all-caps legibility at display sizes, and technical depth for the mood system. Self-hosted via Fontsource — no runtime Google Fonts request, no FOUT risk. Fontsource handles hosting via `node_modules` import (webpack/turbopack serves the woff2 files automatically), so no `public/fonts/` directory is needed.
+**Decision: Roboto Flex.** Selected for its exceptional axis range, all-caps legibility at display sizes, and technical depth for the generative system. Self-hosted in `public/fonts/` with stable filenames (Phase C). Fontsource CSS import retained as fallback. `font-display: block` on Roboto Flex ensures zero FOUT — the wordmark never flashes in a system font. DM Sans uses `font-display: swap`.
 
 ```bash
 npm install @fontsource-variable/roboto-flex
@@ -388,6 +388,11 @@ juanemo/
 │   ├── moods.ts                # Mood definitions (preserved for future experiments)
 │   ├── fitText.ts              # Binary search font-size fitter (preserved for future experiments)
 │   └── heroListeners.ts        # Resize + scroll listeners (preserved for future experiments)
+├── public/
+│   └── fonts/                  # Self-hosted woff2 with stable filenames for preloading
+│       ├── roboto-flex-latin-full.woff2    # 319KB, all 13 axes
+│       ├── dm-sans-latin-400-normal.woff2  # ~15KB
+│       └── dm-sans-latin-500-normal.woff2  # ~15KB
 ├── prototypes/                 # HTML experiment prototypes (creative development)
 ├── Specs/                      # Project spec documents
 ├── vercel.json                 # Framework hint for Vercel deployment
@@ -471,3 +476,4 @@ Variable font support is baseline for all modern browsers. No polyfill needed.
 | 2026-03-18 | Hero V2: Viewport-responsive axis system superseded by generative per-character drift. New `lib/generativeAxes.ts`. Hero uses scaleX + ResizeObserver for full-width fitting. Font-size increased to `clamp(60px, 17vw, 280px)`, hero 70vh desktop / 40vh mobile. Mood script removed from layout.tsx. File structure updated. | Scrummaster (from Hero V2 builder notes) |
 | 2026-03-18 | Hero V3: ScaleXY fill (both axes). Hidden clone measurement (no flash). Mobile axis caps: wdth 40–120, wght 300–750. Mobile hero 35vh. `randomAxesForWord()` — 1 extreme char + rest moderate on mobile. TypeScript `AxisRanges` interface. | Scrummaster (from Hero V3 builder notes) |
 | 2026-03-19 | **V2.0 Architecture pivot.** Site restructured as journal of full-screen experiments. New routing (`/experiments/[slug]`), data model (`experiments.ts`), file structure. ProjectList/Footer removed from experiment pages. IndexOverlay, LogoMark, ExperimentShell added. | Scrummaster (JC creative direction) |
+| 2026-03-19 | Phase C: Self-hosted fonts in `public/fonts/` (Fontsource hashes were unstable). `font-display: block` on Roboto Flex, `swap` on DM Sans. `dvh` units for iOS Safari. INDEX trigger opacity bumped to 60% for WCAG AA. Close button added to overlay. Vestigial CSS removed. | Scrummaster (from Phase C builder notes) |

@@ -72,6 +72,7 @@
 
   /* Layout */
   --page-margin:  clamp(24px, 5vw, 80px);
+  --page-padding: clamp(16px, 2.5vw, 32px);
   --card-radius:  16px;
   --tag-radius:   8px;
 

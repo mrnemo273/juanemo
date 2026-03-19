@@ -1,13 +1,9 @@
 /* ==========================================================================
-   LogoMark — Static generative identity, top-left
-   Same Roboto Flex per-character randomization as the hero, but frozen.
+   LogoMark — Static generative identity
+   Position controlled by parent (inline in ExperimentFrame top bar)
    ========================================================================== */
 
 .logoMark {
-  position: fixed;
-  top: 16px;
-  left: var(--page-margin);
-  z-index: 50;
   display: inline-flex;
   align-items: baseline;
   gap: 0;

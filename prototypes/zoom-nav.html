@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Zoom-Out Navigation Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline: rgba(214, 197, 171, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    background: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ==========================================================
+     SCENE — contains both experiment view and grid view
+     ========================================================== */
+  .scene {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    perspective: 1200px;
+  }
+
+  /* ==========================================================
+     EXPERIMENT VIEW — the current experiment (dark, full-screen)
+     ========================================================== */
+  .experiment-view {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    transform-origin: center center;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                border-radius 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, border-radius;
+  }
+
+  /* Zoomed out state */
+  .scene.zoomed-out .experiment-view {
+    transform: scale(0.55) translateY(-8%);
+    border-radius: 16px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(214, 197, 171, 0.1);
+    cursor: pointer;
+  }
+
+  /* The actual experiment frame inside */
+  .exp-frame {
+    width: 100%;
+    height: 100%;
+    background: var(--gunmetal);
+    display: grid;
+    grid-template-rows: auto 1px auto 1fr 1px auto;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  /* --- Experiment frame pieces (simplified from experiment-frame.html) --- */
+  .exp-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+  }
+  .exp-topbar-date {
+    position: absolute;
+    left: var(--pad);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  .exp-logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+  }
+  .exp-logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    color: var(--dun);
+    letter-spacing: -0.02em;
+  }
+
+  /* Grid icon trigger */
+  .grid-trigger {
+    position: absolute;
+    right: var(--pad);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.2s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 4px;
+    background: none;
+    border: none;
+    z-index: 20;
+  }
+  .grid-trigger:hover { opacity: 0.8; }
+  .grid-trigger span {
+    width: 5px;
+    height: 5px;
+    background: var(--dun);
+    border-radius: 1px;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.3s;
+  }
+  /* When zoomed out, icon becomes a close X — squares spread apart */
+  .scene.zoomed-out .grid-trigger {
+    position: fixed;
+    top: var(--pad);
+    right: var(--pad);
+    z-index: 100;
+    opacity: 0.5;
+  }
+  .scene.zoomed-out .grid-trigger span {
+    background: var(--gunmetal);
+  }
+  .scene.zoomed-out .grid-trigger:hover { opacity: 1; }
+
+  .exp-keyline { background: var(--keyline); }
+
+  .exp-metabar {
+    display: flex;
+    align-items: baseline;
+    padding: 20px var(--pad) 10px;
+    gap: 12px;
+  }
+  .exp-metabar .num {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .exp-metabar .title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  .exp-viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: var(--pad);
+  }
+
+  .exp-bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad);
+    color: var(--dun);
+  }
+  .exp-desc {
+    font-size: 11px;
+    opacity: 0.35;
+    max-width: 500px;
+    line-height: 1.5;
+  }
+  .exp-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .exp-ctrl {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    padding: 3px 10px;
+    background: none;
+    border: 1px solid rgba(214, 197, 171, 0.12);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  /* Generative text */
+  .gen-word {
+    display: flex;
+    align-items: baseline;
+  }
+  .gen-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    will-change: font-variation-settings;
+  }
+
+  /* ==========================================================
+     GRID VIEW — light mode, all experiments as tiles
+     ========================================================== */
+  .grid-view {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--bone);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .scene.zoomed-out .grid-view {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Grid header */
+  .grid-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad) var(--pad) 0;
+  }
+  .grid-header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .grid-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.3;
+  }
+  .grid-count {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Grid logo — dark version for light bg */
+  .grid-logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    color: var(--gunmetal);
+    letter-spacing: -0.02em;
+    opacity: 0.6;
+  }
+
+  /* Experiment tiles */
+  .grid-tiles {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1px;
+    padding: var(--pad) var(--pad) 0;
+    align-content: start;
+    overflow-y: auto;
+  }
+
+  .grid-tile {
+    background: var(--bone);
+    border: 1px solid rgba(31, 38, 39, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .grid-tile:hover {
+    background: white;
+    border-color: rgba(31, 38, 39, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(31, 38, 39, 0.08);
+  }
+  .grid-tile.active {
+    border-color: var(--bittersweet);
+    background: white;
+  }
+  .grid-tile.active::before {
+    content: 'VIEWING';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+
+  .tile-number {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--bittersweet);
+  }
+  .tile-name {
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--gunmetal);
+  }
+  .tile-desc {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--outer-space);
+    opacity: 0.5;
+  }
+  .tile-date {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.2;
+    margin-top: auto;
+  }
+
+  /* Mini preview in tile — frozen generative logo */
+  .tile-preview {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    margin: 8px 0;
+  }
+  .tile-preview-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 18px;
+    line-height: 0.85;
+    color: var(--gunmetal);
+    letter-spacing: -0.02em;
+    opacity: 0.15;
+  }
+
+  /* Grid footer */
+  .grid-footer {
+    padding: 16px var(--pad);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .grid-footer-text {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.15;
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .scene.zoomed-out .experiment-view {
+      transform: scale(0.4) translateY(-15%);
+    }
+    .grid-tiles {
+      grid-template-columns: 1fr;
+    }
+    .exp-desc, .exp-controls { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- EXPERIMENT VIEW — the current experiment -->
+  <div class="experiment-view" id="experimentView">
+    <div class="exp-frame">
+
+      <div class="exp-topbar">
+        <span class="exp-topbar-date">March 2025</span>
+        <a class="exp-logo" id="expLogo"></a>
+        <button class="grid-trigger" id="gridTrigger" aria-label="View all experiments">
+          <span></span><span></span><span></span><span></span>
+        </button>
+      </div>
+
+      <div class="exp-keyline"></div>
+
+      <div class="exp-metabar">
+        <span class="num">01</span>
+        <span class="title">Generative Typography</span>
+      </div>
+
+      <div class="exp-viewport">
+        <div class="gen-word" id="genWord"></div>
+      </div>
+
+      <div class="exp-keyline"></div>
+
+      <div class="exp-bottombar">
+        <span class="exp-desc">Per-character variable font drift using Roboto Flex's 13 axes. Each letter independently randomizes weight, width, and optical size.</span>
+        <div class="exp-controls">
+          <button class="exp-ctrl">Spring</button>
+          <button class="exp-ctrl">Shuffle</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GRID VIEW — light mode index (behind the experiment) -->
+  <div class="grid-view" id="gridView">
+
+    <div class="grid-header">
+      <div class="grid-header-left">
+        <a class="exp-logo" id="gridLogo"></a>
+        <span class="grid-title">Experiments</span>
+        <span class="grid-count">4 entries</span>
+      </div>
+    </div>
+
+    <div class="grid-tiles" id="gridTiles"></div>
+
+    <div class="grid-footer">
+      <span class="grid-footer-text">Juan-Carlos Morales</span>
+      <span class="grid-footer-text">Built with Claude Code</span>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+
+// Create generative logo
+function createLogo(container, size, className) {
+  LETTERS.forEach(l => {
+    const s = document.createElement('span');
+    s.className = className || 'exp-logo-char';
+    s.textContent = l;
+    s.style.fontSize = (size || 15) + 'px';
+    s.style.fontVariationSettings = aStr(rAxes());
+    container.appendChild(s);
+  });
+}
+
+// Experiment logo
+createLogo(document.getElementById('expLogo'), 15, 'exp-logo-char');
+
+// Grid logo (dark on light)
+createLogo(document.getElementById('gridLogo'), 15, 'grid-logo-char');
+
+// Generative hero text
+const genWord = document.getElementById('genWord');
+const chars = LETTERS.map(l => {
+  const el = document.createElement('span');
+  el.className = 'gen-char';
+  el.textContent = l;
+  el.style.fontVariationSettings = aStr(rAxes());
+  genWord.appendChild(el);
+  return { el };
+});
+
+// Drift + hold
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+function shuffleChars() {
+  chars.forEach((c, i) => {
+    setTimeout(() => {
+      c.el.style.transition = `font-variation-settings ${1500 + rand(-200,200)}ms ${SPRING}`;
+      c.el.style.fontVariationSettings = aStr(rAxes());
+    }, i * 80);
+  });
+}
+function cycle() {
+  setTimeout(() => { shuffleChars(); setTimeout(cycle, 2200); }, 8000);
+}
+cycle();
+
+// --- EXPERIMENT DATA ---
+const experiments = [
+  {
+    number: '01',
+    name: 'Generative Typography',
+    desc: 'Per-character variable font drift — the wordmark is never the same twice.',
+    date: 'March 2025',
+    active: true,
+  },
+  {
+    number: '02',
+    name: 'Axis Breathing',
+    desc: 'The text slowly oscillates between bold-extended and light-narrow — like breathing.',
+    date: 'April 2025',
+    active: false,
+  },
+  {
+    number: '03',
+    name: 'Proximity Field',
+    desc: 'Letters near the cursor get pulled toward bold. Move away and they relax back.',
+    date: 'May 2025',
+    active: false,
+  },
+  {
+    number: '04',
+    name: 'Gradient Fill',
+    desc: 'Bittersweet flows through the letterforms using background-clip: text.',
+    date: 'Coming Soon',
+    active: false,
+  },
+];
+
+// Build grid tiles
+const gridTiles = document.getElementById('gridTiles');
+experiments.forEach(exp => {
+  const tile = document.createElement('div');
+  tile.className = 'grid-tile' + (exp.active ? ' active' : '');
+  tile.innerHTML = `
+    <span class="tile-number">${exp.number}</span>
+    <div class="tile-preview" id="preview-${exp.number}"></div>
+    <span class="tile-name">${exp.name}</span>
+    <span class="tile-desc">${exp.desc}</span>
+    <span class="tile-date">${exp.date}</span>
+  `;
+  tile.addEventListener('click', () => zoomIn());
+  gridTiles.appendChild(tile);
+
+  // Mini generative preview in each tile
+  const preview = tile.querySelector('.tile-preview');
+  LETTERS.forEach(l => {
+    const s = document.createElement('span');
+    s.className = 'tile-preview-char';
+    s.textContent = l;
+    s.style.fontVariationSettings = aStr(rAxes());
+    preview.appendChild(s);
+  });
+});
+
+// --- ZOOM INTERACTION ---
+const scene = document.getElementById('scene');
+const trigger = document.getElementById('gridTrigger');
+const experimentView = document.getElementById('experimentView');
+let isZoomed = false;
+
+function zoomOut() {
+  isZoomed = true;
+  scene.classList.add('zoomed-out');
+}
+
+function zoomIn() {
+  isZoomed = false;
+  scene.classList.remove('zoomed-out');
+}
+
+trigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (isZoomed) zoomIn();
+  else zoomOut();
+});
+
+// Click the shrunk experiment to zoom back in
+experimentView.addEventListener('click', () => {
+  if (isZoomed) zoomIn();
+});
+
+// Escape to zoom in
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && isZoomed) zoomIn();
+});
+</script>
+
+</body>
+</html>

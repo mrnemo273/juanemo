@@ -43,8 +43,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <Navigation />
-        {children}
+        <Navigation>
+          {children}
+        </Navigation>
       </body>
     </html>
   );

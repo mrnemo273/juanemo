@@ -1,5 +1,5 @@
 import { experiments } from '@/data/experiments';
-import ExperimentShell from '@/components/ExperimentShell';
+import ExperimentFrame from '@/components/ExperimentFrame';
 import GenerativeType from '@/components/experiments/GenerativeType';
 import { notFound } from 'next/navigation';
 
@@ -21,9 +21,14 @@ export default async function ExperimentPage({
   if (!Component) notFound();
 
   return (
-    <ExperimentShell>
+    <ExperimentFrame
+      number={experiment.number}
+      title={experiment.name}
+      date={experiment.publishedDate}
+      description={experiment.longDescription}
+    >
       <Component />
-    </ExperimentShell>
+    </ExperimentFrame>
   );
 }
 

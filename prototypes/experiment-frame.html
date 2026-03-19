@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Experiment Frame Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline: rgba(214, 197, 171, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ==========================================================
+     FRAME — the full-viewport stage
+     ========================================================== */
+  .frame {
+    display: grid;
+    grid-template-rows: auto 1px auto 1fr 1px auto;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* --- Top bar: logo centered, grid icon right --- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+  }
+  .topbar-left-date {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .topbar-right {
+    position: absolute;
+    right: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* --- Experiment meta bar: sits just below the top keyline --- */
+  .metabar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 20px var(--pad) 10px;
+  }
+  .metabar-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .exp-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+    white-space: nowrap;
+  }
+  .exp-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .exp-date {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+    white-space: nowrap;
+  }
+
+  /* Logo */
+  .logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    color: var(--dun);
+    letter-spacing: -0.02em;
+  }
+
+  /* Grid icon */
+  .grid-icon {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+    padding: 2px;
+  }
+  .grid-icon:hover { opacity: 0.8; }
+  .grid-icon span {
+    width: 5px;
+    height: 5px;
+    background: var(--dun);
+    border-radius: 1px;
+  }
+
+  /* --- Keylines --- */
+  .keyline {
+    width: 100%;
+    background: var(--keyline);
+  }
+
+  /* --- Experiment viewport (scrollable container) --- */
+  .experiment-viewport {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    position: relative;
+  }
+
+  /* Custom scrollbar */
+  .experiment-viewport::-webkit-scrollbar {
+    width: 3px;
+  }
+  .experiment-viewport::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .experiment-viewport::-webkit-scrollbar-thumb {
+    background: rgba(214, 197, 171, 0.15);
+    border-radius: 2px;
+  }
+  .experiment-viewport::-webkit-scrollbar-thumb:hover {
+    background: rgba(214, 197, 171, 0.3);
+  }
+
+  /* --- Bottom bar: description + controls --- */
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad);
+    gap: 24px;
+  }
+  .bottombar-left {
+    min-width: 0;
+    flex: 1;
+  }
+  .bottombar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .exp-desc {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--dun);
+    opacity: 0.35;
+    max-width: 600px;
+  }
+
+  /* Controls */
+  .ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+  .ctrl-btn {
+    padding: 3px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    background: none;
+    border: 1px solid rgba(214, 197, 171, 0.12);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+  .ctrl-btn.active {
+    border-color: var(--bittersweet);
+    color: var(--bittersweet);
+    opacity: 0.9;
+  }
+
+  .dot-sep {
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--dun);
+    opacity: 0.2;
+    flex-shrink: 0;
+  }
+
+  /* Section counter in bottom right */
+  .section-counter {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ==========================================================
+     EXPERIMENT SECTIONS — inside the scrollable viewport
+     ========================================================== */
+  .exp-section {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--pad);
+    position: relative;
+  }
+  .exp-section + .exp-section {
+    border-top: 1px solid var(--keyline);
+  }
+
+  /* Section label — top left of each section */
+  .section-label {
+    position: absolute;
+    top: var(--pad);
+    left: var(--pad);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .section-num {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--bittersweet);
+    opacity: 0.7;
+  }
+  .section-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  /* Section description — bottom left */
+  .section-desc {
+    position: absolute;
+    bottom: var(--pad);
+    left: var(--pad);
+    right: var(--pad);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--dun);
+    opacity: 0.25;
+    max-width: 480px;
+  }
+
+  /* --- Generative text shared --- */
+  .word {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+  .char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings;
+  }
+
+  /* Section A: large drift */
+  #sectionA .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+  }
+
+  /* Section B: echo layers */
+  #sectionB .rows { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  #sectionB .char { font-size: clamp(36px, 7vw, 100px); letter-spacing: -0.02em; }
+  #sectionB .row-2 .char { color: var(--outer-space); }
+  #sectionB .row-3 .char { color: rgba(214, 197, 171, 0.1); }
+
+  /* Section C: proximity */
+  #sectionC .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    transition: color 0.3s ease;
+  }
+
+  /* Section D: freeze */
+  #sectionD .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    cursor: pointer;
+  }
+  #sectionD .char.frozen { color: var(--bittersweet); }
+
+  /* Scroll indicator */
+  .scroll-hint {
+    position: absolute;
+    bottom: calc(var(--pad) + 24px);
+    right: var(--pad);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.15;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeInOut 3s ease-in-out infinite;
+  }
+  .scroll-hint .arrow { font-size: 12px; }
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0.08; }
+    50% { opacity: 0.2; }
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .topbar-right .exp-date { display: none; }
+    .bottombar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .bottombar-right { flex-wrap: wrap; }
+    .section-desc { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- TOP BAR: logo centered, date + grid icon right -->
+  <div class="topbar">
+    <a class="logo" id="logo" aria-label="Juanemo — home"></a>
+    <span class="exp-date topbar-left-date">March 2025</span>
+    <div class="topbar-right">
+      <div class="grid-icon" id="gridIcon" aria-label="View all experiments" role="button" tabindex="0">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYLINE TOP -->
+  <div class="keyline"></div>
+
+  <!-- META BAR: experiment number + name — below the keyline -->
+  <div class="metabar">
+    <div class="metabar-left">
+      <span class="exp-number">01</span>
+      <span class="exp-title">Generative Typography</span>
+    </div>
+  </div>
+
+  <!-- EXPERIMENT VIEWPORT (scrollable) -->
+  <div class="experiment-viewport" id="viewport">
+
+    <!-- Section A: Generative Drift -->
+    <section class="exp-section" id="sectionA">
+      <div class="section-label">
+        <span class="section-num">A</span>
+        <span class="section-name">Generative Drift</span>
+      </div>
+      <div class="word" id="wordA"></div>
+      <div class="section-desc">Each letter independently drifts to a new random weight + width on its own staggered timer. The wordmark is never the same twice.</div>
+      <div class="scroll-hint">Scroll <span class="arrow">↓</span></div>
+    </section>
+
+    <!-- Section B: Echo -->
+    <section class="exp-section" id="sectionB">
+      <div class="section-label">
+        <span class="section-num">B</span>
+        <span class="section-name">Layered Echo</span>
+      </div>
+      <div class="rows">
+        <div class="word row-1" id="wordB1"></div>
+        <div class="word row-2" id="wordB2"></div>
+        <div class="word row-3" id="wordB3"></div>
+      </div>
+      <div class="section-desc">Three stacked instances. The top leads, the others follow at delay — typographic afterimage.</div>
+    </section>
+
+    <!-- Section C: Proximity -->
+    <section class="exp-section" id="sectionC">
+      <div class="section-label">
+        <span class="section-num">C</span>
+        <span class="section-name">Proximity + Drift</span>
+      </div>
+      <div class="word" id="wordC"></div>
+      <div class="section-desc">Ambient drift runs, but letters near your cursor get pulled toward bold + extended. Move away and they relax back.</div>
+    </section>
+
+    <!-- Section D: Freeze Frame -->
+    <section class="exp-section" id="sectionD">
+      <div class="section-label">
+        <span class="section-num">D</span>
+        <span class="section-name">Freeze Frame</span>
+      </div>
+      <div class="word" id="wordD"></div>
+      <div class="section-desc">Click any letter to freeze it in place. Click again to release. Compose your own version of the wordmark.</div>
+    </section>
+
+  </div>
+
+  <!-- KEYLINE BOTTOM -->
+  <div class="keyline"></div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottombar">
+    <div class="bottombar-left">
+      <p class="exp-desc">Per-character variable font drift using Roboto Flex's 13 axes. Each letter independently randomizes weight, width, and optical size on a timed hold → shift cycle with spring easing.</p>
+    </div>
+    <div class="bottombar-right">
+      <div class="ctrl">
+        <span class="ctrl-label">Speed</span>
+        <button class="ctrl-btn active" data-speed="2000">2s</button>
+        <button class="ctrl-btn" data-speed="4000">4s</button>
+        <button class="ctrl-btn" data-speed="8000">8s</button>
+      </div>
+      <div class="dot-sep"></div>
+      <div class="ctrl">
+        <span class="ctrl-label">Easing</span>
+        <button class="ctrl-btn ease-btn active" data-ease="spring">Spring</button>
+        <button class="ctrl-btn ease-btn" data-ease="smooth">Smooth</button>
+      </div>
+      <div class="dot-sep"></div>
+      <button class="ctrl-btn" id="shuffleBtn">Shuffle</button>
+      <div class="dot-sep"></div>
+      <span class="section-counter" id="sectionCounter">A / D</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+
+let speed = 2000;
+const EASINGS = { spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)', smooth: 'cubic-bezier(0.16, 1, 0.3, 1)' };
+let currentEasing = 'spring';
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+function apply(el, axes, dur) { el.style.transition = `font-variation-settings ${dur}ms ${EASINGS[currentEasing]}`; el.style.fontVariationSettings = aStr(axes); }
+
+function mkChars(container) {
+  return LETTERS.map(l => {
+    const el = document.createElement('span'); el.className = 'char'; el.textContent = l;
+    const axes = rAxes(); el.style.fontVariationSettings = aStr(axes);
+    container.appendChild(el); return { el, axes, targetAxes: axes, frozen: false };
+  });
+}
+
+// Logo
+const logo = document.getElementById('logo');
+LETTERS.forEach(l => {
+  const s = document.createElement('span'); s.className = 'logo-char'; s.textContent = l;
+  s.style.fontVariationSettings = aStr(rAxes()); logo.appendChild(s);
+});
+
+// Section A: Drift + Hold
+const charsA = mkChars(document.getElementById('wordA'));
+charsA.forEach((c, i) => {
+  function tick() {
+    c.targetAxes = rAxes(); apply(c.el, c.targetAxes, speed + rand(-300, 300));
+    const holdTime = speed * 4;
+    const totalTrans = speed + rand(-200, 600) + i * 80;
+    setTimeout(tick, totalTrans + holdTime);
+  }
+  setTimeout(tick, i * 200 + rand(0, 500));
+});
+
+// Section B: Echo
+const charsB1 = mkChars(document.getElementById('wordB1'));
+const charsB2 = mkChars(document.getElementById('wordB2'));
+const charsB3 = mkChars(document.getElementById('wordB3'));
+LETTERS.forEach((_, i) => {
+  function tick() {
+    const axes = rAxes(); const dur = speed + rand(-300, 300);
+    apply(charsB1[i].el, axes, dur);
+    setTimeout(() => apply(charsB2[i].el, axes, dur * 1.3), dur * 0.3);
+    setTimeout(() => apply(charsB3[i].el, axes, dur * 1.8), dur * 0.6);
+    setTimeout(tick, dur + speed * 4 + i * 100);
+  }
+  setTimeout(tick, i * 250);
+});
+
+// Section C: Proximity
+const charsC = mkChars(document.getElementById('wordC'));
+let mx = -1000, my = -1000;
+const secC = document.getElementById('sectionC');
+secC.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+secC.addEventListener('mouseleave', () => { mx = -1000; my = -1000; });
+charsC.forEach((c, i) => {
+  (function tick() { c.targetAxes = rAxes(); setTimeout(tick, speed + rand(0, 1000)); })();
+});
+(function loop() {
+  charsC.forEach(c => {
+    const r = c.el.getBoundingClientRect();
+    const dist = Math.sqrt((mx - r.left - r.width / 2) ** 2 + (my - r.top - r.height / 2) ** 2);
+    const inf = Math.max(0, 1 - dist / 250);
+    const att = { wdth: 151, wght: 900, opsz: 144 };
+    const b = {}; Object.keys(c.targetAxes).forEach(k => b[k] = Math.round(c.targetAxes[k] + (att[k] - c.targetAxes[k]) * inf));
+    apply(c.el, b, 150); c.el.style.color = inf > 0.3 ? 'var(--bone)' : 'var(--dun)';
+  });
+  requestAnimationFrame(loop);
+})();
+
+// Section D: Freeze
+const charsD = mkChars(document.getElementById('wordD'));
+charsD.forEach((c, i) => {
+  c.el.addEventListener('click', () => { c.frozen = !c.frozen; c.el.classList.toggle('frozen', c.frozen); });
+  (function tick() {
+    if (!c.frozen) { c.targetAxes = rAxes(); apply(c.el, c.targetAxes, speed + rand(-300, 300)); }
+    setTimeout(tick, speed + rand(-200, 600) + speed * 4 + i * 80);
+  })();
+});
+
+// Controls
+document.querySelectorAll('[data-speed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); speed = parseInt(btn.dataset.speed);
+  });
+});
+document.querySelectorAll('.ease-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ease-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); currentEasing = btn.dataset.ease;
+  });
+});
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  [...charsA, ...charsB1, ...charsB2, ...charsB3, ...charsC, ...charsD].forEach(c => {
+    if (!c.frozen) { c.targetAxes = rAxes(); apply(c.el, c.targetAxes, 600); }
+  });
+});
+
+// Section counter
+const viewport = document.getElementById('viewport');
+const sections = ['A', 'B', 'C', 'D'];
+const sectionEls = [document.getElementById('sectionA'), document.getElementById('sectionB'), document.getElementById('sectionC'), document.getElementById('sectionD')];
+const counter = document.getElementById('sectionCounter');
+
+viewport.addEventListener('scroll', () => {
+  const vh = viewport.clientHeight;
+  const scrollTop = viewport.scrollTop;
+  let current = 0;
+  sectionEls.forEach((el, i) => { if (el.offsetTop - scrollTop < vh * 0.5) current = i; });
+  counter.textContent = `${sections[current]} / ${sections[sections.length - 1]}`;
+});
+</script>
+
+</body>
+</html>
