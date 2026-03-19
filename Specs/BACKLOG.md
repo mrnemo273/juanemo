@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-19 — **All phases complete.** Phase C (Polish) done. Site ready to deploy. Awaiting push to main.
+2026-03-19 — **Phase E complete and deployed.** Experiment frame with pagination, loader, mobile drawer all live.
 
 ---
 
@@ -59,6 +59,21 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | B.5 | Navigation state management | ✅ DONE | `useState` in Navigation.tsx, toggle/close callbacks |
 | B.6 | Build + QA (keyboard accessibility, responsive) | ✅ DONE | Escape, Tab, focus trap. Tested 320–1920px. Zero build errors. |
 
+### Phase D/E — Experiment Frame & Pagination ✅
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| E.1 | ExperimentFrame component — grid layout with keylines, meta bars | ✅ DONE | 7-row CSS Grid, top/bottom keylines, top/bottom meta bars |
+| E.2 | Pagination tiles (A–F) — replace scrolling | ✅ DONE | Only active section mounted; tiles 20px desktop, 28px mobile |
+| E.3 | Section loader — fade + spinning arrow transition | ✅ DONE | 100ms fade-out → 350ms loader → 100ms fade-in |
+| E.4 | 6 type variations (pruned from 12) | ✅ DONE | Drift, Proximity, Mouse Axes, Hover, Expand, Breathing |
+| E.5 | Interactive controls — Speed, Easing, Shuffle | ✅ DONE | Context-driven, affects all sections via controlsRef pattern |
+| E.6 | Mobile drawer for controls | ✅ DONE | Gear icon → slide-up drawer, backdrop dismiss |
+| E.7 | Bottom meta bar — mirrors top placement | ✅ DONE | Section letter + name, 33px padding from keyline |
+| E.8 | Mobile responsive — centered elements, larger type | ✅ DONE | 16vw type, 8px padding, centered meta/pagination |
+| E.9 | Data model — sections array | ✅ DONE | `sections?: string[]` on Experiment interface |
+| E.10 | Build + deploy | ✅ DONE | Zero errors, pushed to main |
+
 ### ARC.4 — Theme Toggle (Carried from Phase 4)
 
 | # | Item | Status | Notes |
@@ -74,12 +89,12 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 |---|---|---|---|
 | V2.1 | Generative background element | PRD V1 | Could be its own experiment |
 | V2.2 | Sound layer — ambient, minimal, opt-in | PRD V1 | Future experiment |
-| V2.3 | Mouse-responsive axis experiment | Prototype session | `prototypes/hero-effects.html` demo #1 |
-| V2.4 | Gradient fill wordmark experiment | Prototype session | `prototypes/hero-effects.html` demo #2 |
-| V2.5 | Outline → fill reveal experiment | Prototype session | `prototypes/hero-effects.html` demo #3 |
-| V2.6 | Per-character proximity experiment | Prototype session | `prototypes/hero-generative-chars.html` demo C |
-| V2.7 | Layered echo experiment | Prototype session | `prototypes/hero-generative-chars.html` demo B |
-| V2.8 | Freeze frame experiment | Prototype session | `prototypes/hero-generative-chars.html` demo D |
+| V2.3 | ~~Mouse-responsive axis experiment~~ | ✅ Phase E | Section C of Experiment 01 |
+| V2.4 | Gradient fill wordmark experiment | Prototype session | Pruned from Exp 01, could be standalone |
+| V2.5 | Outline → fill reveal experiment | Prototype session | Pruned from Exp 01, could be standalone |
+| V2.6 | ~~Per-character proximity experiment~~ | ✅ Phase E | Section B of Experiment 01 |
+| V2.7 | Layered echo experiment | Prototype session | Pruned from Exp 01, could be standalone |
+| V2.8 | Freeze frame experiment | Prototype session | Pruned from Exp 01, could be standalone |
 | V2.9 | Logo specimen grid page | Prototype session | `prototypes/hero-with-logo.html` — logo at multiple sizes |
 | B.1 | Mood system v2 — width-safe axes only (GRAD, slnt, YTUC) | Phase 2 | Could enhance any experiment |
 | B.2 | Verify Vercel Framework Preset = "Next.js" | Phase 1 | |
@@ -100,11 +115,11 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| EXP.1 | Experiment metadata layer — number, title, description overlaid on experiments | 🔲 TODO | Reference: `prototypes/hero-effects.html` — the labeled sections with descriptions felt like a lab/specimen aesthetic |
-| EXP.2 | Keylines above and below the experiment area | 🔲 TODO | Thin lines to contain the experiment. Creates a "stage within the stage." |
-| EXP.3 | Scrollable experiment container (not browser scroll) | 🔲 TODO | Reference: `prototypes/hero-generative-chars.html` — multi-section experiments scroll within their container, not the page. Flash-like. |
-| EXP.4 | Interactive elements / controls for experiments | 🔲 TODO | Speed sliders, easing toggles, pause/shuffle — make experiments playable, not just viewable |
-| EXP.5 | Small type, Bittersweet pops, strategic metadata | 🔲 TODO | The sciency/lab vibe from the prototypes — faint labels, accent numbers, considered info hierarchy |
+| EXP.1 | ~~Experiment metadata layer~~ | ✅ Phase E | Top meta bar (01 + title), bottom meta bar (section letter + name) |
+| EXP.2 | ~~Keylines above and below~~ | ✅ Phase E | Two 1px keylines in the grid layout |
+| EXP.3 | ~~Scrollable experiment container~~ | ✅ Phase E | Replaced with pagination tiles (JC direction — no scrolling) |
+| EXP.4 | ~~Interactive controls~~ | ✅ Phase E | Speed, Easing, Shuffle — mobile drawer pattern |
+| EXP.5 | ~~Small type, Bittersweet pops, metadata~~ | ✅ Phase E | DM Sans 9–11px, Bittersweet for active states + exp number, Dun at 25–50% opacity |
 
 ### NAV — Navigation Redesign (Points 3, 4, 5)
 
@@ -128,3 +143,4 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | 2026-03-19 | Phase A complete. Clean refactor — no deviations. GenerativeType uses `<div>` (was `<header>`), class renamed `.container`. Old components preserved. Vestigial `main` max-width rule and `--hero-height` CSS property noted for cleanup. | Scrummaster (from Phase A builder notes) |
 | 2026-03-19 | Phase B complete. LogoMark, IndexOverlay, Navigation wrapper, INDEX trigger all live. Keyboard accessible, responsive. Minor deviations: DM Sans for overlay names (not Roboto Flex), date below name. Backlog items added: overlay close button for mobile, placeholder experiments, LogoMark `<a>` → `<Link>` upgrade. | Phase B builder |
 | 2026-03-19 | Phase C complete. Self-hosted fonts with preloading. `font-display: block` (Roboto Flex) / `swap` (DM Sans). WCAG AA verified (Dun/Gunmetal 9.11:1, INDEX trigger bumped to 60%). `dvh` units for iOS Safari. Close button added to overlay. Focus trap, focus-visible, tabIndex gating. Vestigial CSS cleaned up (B.6, B.7, B.8 resolved). README updated. Deployment pending push to main. | Scrummaster (from Phase C builder notes) |
+| 2026-03-19 | **Phase D/E complete and deployed.** ExperimentFrame with 7-row grid, pagination tiles (A–F), 3-phase section loader (fade+spinner+fade), 6 type variations, interactive controls (Speed/Easing/Shuffle), mobile drawer behind gear icon, bottom meta bar mirroring top. 12 prototype effects pruned to 6 per JC direction. Scroll replaced with pagination. Mobile: centered layout, 16vw type, 28px tiles. EXP.1–5 all resolved. V2.3 and V2.6 implemented as sections within Exp 01. | Builder (from Phase E session) |

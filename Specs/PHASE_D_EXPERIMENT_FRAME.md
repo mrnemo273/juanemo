@@ -367,34 +367,71 @@ The word anchors **top-left** and scales toward bottom-right:
 
 ---
 
-### R.7 — Builder Notes (Refinement Implementation — 2026-03-19)
+### R.7 — Builder Notes (Phase E Refinement — 2026-03-19)
 
-#### Decisions Made
+#### Architecture: Scroll → Pagination
 
-- **Section architecture**: Each section (A–D) is a separate React component (`SectionDrift`, `SectionEcho`, `SectionProximity`, `SectionFreeze`) rendered via a Fragment from `GenerativeType`. This gives each section its own refs, effects, and cleanup — no shared mutable state leaking between sections.
-- **Section A scaleXY fix**: Replaced the `.container` wrapper with the `<section>` element itself as the measurement target. Added `ResizeObserver` on the section (not just the clone) and double-rAF for initial `fitWord()` to ensure layout resolves before measurement. Added `overflow: hidden` to the clone to prevent scroll-height interference.
-- **Viewport flex children**: Added `flex-shrink: 0` to `.viewport > *` so sections maintain `min-height: 100%` and don't compress in the flex column.
-- **Section B echo timing**: Matches prototype exactly — row 1 leads, row 2 follows at `dur * 0.3` delay with `dur * 1.3` transition, row 3 at `dur * 0.6` delay with `dur * 1.8` transition. Row 2 uses `--color-outer-space`, row 3 uses `rgba(214, 197, 171, 0.1)`.
-- **Section C proximity**: Uses `requestAnimationFrame` loop matching prototype. Radius 250px, influence factor `max(0, 1 - dist/250)`. Letters attracted toward `wdth: 151, wght: 900, opsz: 144`. Color shifts to `--color-bone` when influence > 0.3.
-- **Section D freeze**: Click toggles `frozen` state per character. Frozen chars get `--color-bittersweet` via CSS class and skip drift updates. Shuffle respects frozen state.
-- **Controls affect all sections**: Each section reads controls via `useContext(ExperimentControlsContext)` with a `controlsRef` pattern (stays current without re-running effects). Shuffle key triggers re-randomization in all sections.
-- **Data model**: Added `sections?: string[]` to `Experiment` interface. Generative Type experiment includes `['Generative Drift', 'Layered Echo', 'Proximity + Drift', 'Freeze Frame']`.
+The original Phase D spec called for scrollable sections within the viewport. After user testing, the architecture was changed to **paginated sections** with clickable tiles. Scrolling was removed entirely.
+
+#### Final Section Lineup (6 kept, 6 pruned)
+
+Started with 12 prototype effects, pruned to 6 based on JC creative direction:
+
+| Tile | Section | Type |
+|---|---|---|
+| A | Generative Drift | Per-character timer-based drift + hold cycle |
+| B | Proximity + Drift | rAF loop, mouse-attracted bold/extended (250px radius) |
+| C | Mouse-Responsive Axes | Mouse X→wdth, Y→wght, direct mapping |
+| D | Per-Character Hover | CSS-only hover (translateY, color, axis collapse) |
+| E | Expand Entrance | CSS keyframe from condensed→expanded, replay button |
+| F | Axis Breathing | CSS keyframe oscillating weight/width/tracking |
+
+Removed: Echo, Freeze Frame, Gradient, Outline, Glitch, Wipe.
+
+#### Layout Decisions
+
+- **Pagination tiles** (A–F, 20px desktop / 28px mobile) replace scrolling. Only the active section component is mounted — conditional rendering via `SECTIONS` array.
+- **Bottom meta bar** added above bottom keyline, mirrors top meta bar placement. Shows active section letter + name (e.g., "B PROXIMITY + DRIFT"). Both meta bars use 33px vertical padding.
+- **Grid structure**: `auto 1px auto 1fr auto 1px auto` (7 rows — topbar, keyline, meta, viewport, bottom-meta, keyline, bottombar).
+- **Section labels and descriptions removed** from inside the viewport — all metadata lives in the frame chrome now.
+- **Controls** (Speed, Easing, Shuffle) on bottom-right. Pagination tiles on bottom-left.
+
+#### Transition Loader
+
+Section changes use a 3-phase transition:
+1. **Fade out** (100ms) — viewport opacity → 0
+2. **Loader** (350ms) — 16px spinning arrow SVG (arc + arrowhead), centered in viewport
+3. **Fade in** (100ms) — viewport opacity → 1
+
+The `activeSection` state updates during the loader phase so the new section mounts before fade-in.
+
+#### Mobile Drawer
+
+On viewports ≤600px:
+- Speed/Easing/Shuffle controls **hidden** from bottom bar
+- **Gear icon** (28px, matches tile size) appears next to pagination tiles
+- Tapping gear opens a **slide-up drawer** with controls stacked vertically
+- Dark backdrop (40% opacity) dismisses drawer on tap
+- Pagination tiles and meta bars **centered** on mobile
+- Type size bumped to `16vw` (from `13vw`) with tighter section padding (8px)
+
+#### Technical Details
+
+- **ExperimentControlsContext** extended with `activeSection: number`
+- **Section components** are stateless w.r.t. pagination — they mount/unmount on section change
+- **controlsRef pattern**: ref stays current without re-running useEffect (used in SectionDrift, SectionProximity)
+- **Section B proximity**: rAF loop with 250px radius, influence factor `max(0, 1 - dist/250)`, color shifts to `--color-bone` when influence > 0.3
+- **handleSectionChange** guards against duplicate clicks and mid-transition clicks via phase state
 
 #### Problems Encountered
 
-- None significant. Build passed on first attempt after rewrite.
-
-#### Deviations from Prototype
-
-- **Section A uses scaleXY fill** (word stretches to fill viewport) while prototype uses centered `clamp()` sizing. This is intentional — the scaleXY behavior was the original design intent and the spec explicitly requires edge-to-edge fill for Section A.
-- **Sections B/C/D use centered layout with `clamp()` font sizing** matching the prototype exactly.
-- **Font family**: Uses `'Roboto Flex Variable'` (the locally-loaded variable font) instead of prototype's Google Fonts `'Roboto Flex'`. This is correct — matches the existing project setup with preloaded fonts.
+- None significant. All builds passed on first attempt.
 
 #### Items for Scrummaster
 
-- **Performance**: Section C's proximity effect runs a `requestAnimationFrame` loop continuously while the section is mounted. This is how the prototype works, but if performance is a concern on low-end devices, could add IntersectionObserver to pause the loop when Section C isn't visible.
-- **Accessibility**: Section D freeze chars use `onClick` on spans. Consider adding `role="button"` and keyboard handler for accessibility. The prototype doesn't have this either.
+- **Performance**: Section B's proximity effect runs a `requestAnimationFrame` loop continuously while mounted. Could add IntersectionObserver to pause when not visible.
 - **ExperimentShell cleanup**: Old `ExperimentShell.tsx` and `ExperimentShell.module.css` still on disk, not imported. Can be deleted.
+- **Keyboard nav for pagination**: Arrow keys could cycle through sections. Not yet implemented.
 
 ---
 
@@ -403,7 +440,8 @@ The word anchors **top-left** and scales toward bottom-right:
 | Field | Value |
 |---|---|
 | Date completed | 2026-03-19 |
-| All tasks done? | Yes — D.1–D.12 all complete including D.6 multi-section |
+| All tasks done? | Yes — frame, pagination, loader, mobile drawer all complete |
 | Build passing? | Yes — `npm run build` zero errors |
-| Deviations? | Section A keeps scaleXY fill (intentional, per spec); B/C/D match prototype centered layout |
-| New items for backlog? | Performance optimization for Section C rAF loop; accessibility for Section D click targets; ExperimentShell cleanup |
+| Deployed? | Yes — pushed to main |
+| Deviations? | Scroll replaced with pagination (JC direction); 12 sections pruned to 6 |
+| New items for backlog? | rAF performance optimization; ExperimentShell cleanup; keyboard pagination |

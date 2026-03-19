@@ -115,6 +115,30 @@ The generative typography system, design tokens, and font infrastructure carry f
 
 ---
 
+## V2.0 Phase D → E: Experiment Frame & Pagination
+
+**Goal:** Replace the minimal experiment shell with a rich lab/specimen stage — keylines, metadata, interactive controls, and paginated sub-experiment navigation.
+
+### What Was Built
+
+1. **ExperimentFrame** — full-viewport specimen stage with CSS Grid (7 rows: topbar, keyline, meta, viewport, bottom-meta, keyline, bottombar)
+2. **Pagination tiles** (A–F) — clickable tiles replace scrolling, only active section is mounted
+3. **Section loader** — 3-phase transition: 100ms fade-out → 350ms spinning arrow → 100ms fade-in
+4. **6 type variations** for Experiment 01 (Generative Typography):
+   - A: Generative Drift — per-character timer-based drift
+   - B: Proximity + Drift — mouse-attracted bold/extended
+   - C: Mouse-Responsive Axes — cursor position maps to wdth/wght
+   - D: Per-Character Hover — CSS hover collapse + lift
+   - E: Expand Entrance — condensed→expanded CSS animation
+   - F: Axis Breathing — continuous weight/width oscillation
+5. **Interactive controls** — Speed (2s/4s/8s), Easing (Spring/Smooth), Shuffle
+6. **Mobile drawer** — gear icon opens slide-up drawer for controls; pagination tiles centered at bottom
+7. **Bottom meta bar** — mirrors top meta bar, shows active section letter + name
+
+### Status: ✅ Complete (deployed 2026-03-19)
+
+---
+
 ## Future: Adding New Experiments
 
 Each new experiment follows this pattern:
