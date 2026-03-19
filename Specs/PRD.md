@@ -1,135 +1,188 @@
 # PRD.md — Product Requirements Document
 
 ## Product Name
-Juanemo — Personal Creative Site
+Juanemo — Creative Experiment Journal
 
 ## Owner
 Juan-Carlos Morales (JC / Nemo)
 
 ## Version
-1.0 — Initial Launch
+2.0 — Architecture Pivot (from portfolio to experiment journal)
 
 ---
 
 ## Overview
 
-Juanemo is a single-page personal website that acts as a living index of JC's creative and technical experiments built with Claude Code. The site is minimal in structure but maximal in execution — the typography *is* the design, and the design *is* the product.
+Juanemo is a **journal of full-screen creative experiments** built with Claude Code. Each experiment fills the entire browser window — no scrolling, no chrome, no lists. You land directly in the work. The browser is a canvas, not a document.
+
+This is the modern Praystation. A place where the website IS the work, not a container for it.
+
+---
+
+## The Architecture Shift
+
+The original V1 was a single-page portfolio: hero + project list + footer. Through prototyping the generative typography system, we discovered that the individual experiments (the HTML prototypes) were more compelling than the portfolio structure housing them. The prototypes felt like Flash-era pieces — self-contained, immersive, viewport-sized.
+
+The new architecture makes that the entire site: a journal of full-screen experiments that you enter one at a time.
 
 ---
 
 ## Users
 
-**Primary:** Other designers, creative directors, and technologists who find the site organically or through JC sharing it. They are visually sophisticated and will notice craft immediately.
+**Primary:** Designers, creative directors, and technologists who find the site organically or through JC sharing it. They are visually sophisticated and will notice craft immediately.
 
-**Secondary:** JC himself — adding projects, checking the site, using it as a link-in-bio equivalent.
-
----
-
-## Core Features
-
-### Feature 1: Variable Typography Hero — "JUANEMO"
-
-The top half of the viewport is occupied entirely by the word **JUANEMO** in all caps, rendered in **Roboto Flex** — a variable font with 13 axes, self-hosted via Fontsource.
-
-**Behavior — Viewport Response (Updated Phase 2):**
-- On load, the word fills the top 50% of the viewport — edge to edge, horizontally
-- The font responds to **viewport width** in real time via three structural axes (`wdth`, `wght`, `opsz`), range 500–1920px:
-  - Wide/desktop (1920px+): `wdth` 151, `wght` 900, `opsz` 144 — ultra-extended, bold
-  - Desktop (1280px): `wdth` ~105, `wght` ~554 — extended, medium-bold
-  - Tablet (768px): `wdth` ~48, `wght` ~267 — condensed, light-medium
-  - Mobile (≤500px): `wdth` 25, `wght` 100, `opsz` 8 — ultra-condensed, light, tall
-- **Key change:** `wght` is now viewport-responsive (100–900), not locked at 900. The font character changes fluidly — this IS the creative concept.
-- Transitions are **smooth and continuous** — the font breathes and reshapes itself to its container
-
-**Behavior — Mood System (ON HOLD):**
-- ⏸ Mood system disabled during Phase 2 build. The randomized character axes (XOPQ, XTRA, YOPQ) produced different glyph widths per mood, breaking fitText consistency on mobile. JC approved disabling.
-- **Future approach:** Constrain moods to width-safe axes only (GRAD, slnt, YTUC). Definitions preserved in `lib/moods.ts`.
-- Original design: On every page load, one of **five named moods** is selected at random and applied to the hero via Roboto Flex's secondary axes (`GRAD`, `XTRA`, `XOPQ`, `YOPQ`, `YTUC`, `slnt`). The five moods are: **SHARP**, **AIRY**, **HEAVY**, **REFINED**, **PUNCHY**.
-
-**Behavior — Scroll Compression (DEFERRED):**
-- ⏸ Implemented during Phase 2 but visually broken in practice. Disabled per JC's direction. To be redesigned.
-- Original spec: As the user scrolls 0 → 300px, the hero compresses (font size, wght, GRAD, letter spacing, opacity). The hero remains visible as a persistent compact header.
-
-**Behavior — Accent Rule (DEFERRED):**
-- ⏸ Deferred during Phase 2 per JC's direction. To be re-added when hero composition is finalized.
-- Original spec: A single 2px horizontal line in **Bittersweet** (`#F25C54`) cuts through the hero composition, positioned at a structurally significant moment.
-
-**Color:** JUANEMO renders in **Dun** (`#D6C5AB`) on the dark background — warmer than Bone, confirmed by Figma reference designs.
-
-**Design principle:** The typography should feel like it *belongs* to its container — as if it was always meant to be exactly that shape for exactly that viewport, on exactly that load.
+**Secondary:** JC himself — adding experiments, using the site as a creative journal and link-in-bio equivalent.
 
 ---
 
-### Feature 2: Project List
+## Core Architecture
 
-Below the JUANEMO hero, a newspaper-style full-bleed index of projects.
+### Landing Experience
 
-**Each project entry includes:**
-- Numbered entry (`01`, `02`) in Bittersweet, thin weight (300), same size as title
-- Project name as an all-caps heading — `clamp(28px, 3vw, 40px)`, weight 500
-- `.label-lg` eyebrow below the title showing published date (e.g. `MARCH 5, 2025`)
-- One-line description in body copy (`--color-text-soft`)
-- "View Project →" CTA link
+When you arrive at `juanemo.com`, you land **directly inside the latest experiment**. No hero, no welcome page, no project list. The generative JUANEMO wordmark IS experiment #1. It fills the viewport. You're already inside the work.
 
-**Behavior:**
-- Full-bleed layout — no max-width, matches the hero's edge-to-edge feel
-- Thin 1px HR separators between entries
-- CTA uses `→` arrow: muted at rest, Bittersweet accent on hover, arrow nudges 3px right
-- Open in new tab with `rel="noopener noreferrer"`
-- List is editable by updating a single `data/projects.ts` array — no CMS, no friction
-- Mobile (≤600px): numbers stack on top of content instead of side-by-side
+The home route (`/`) always renders the most recently published experiment. Returning visitors get something new each time JC publishes.
 
-**Design principle:** The list should feel like an oversized newspaper index — confident, unhurried, legible.
+### Full-Screen Experiments
+
+Each experiment is a **full-viewport experience** at its own route. No scrolling within experiments — everything sizes itself to the browser window. Like Flash, the browser is the stage.
+
+- Every experiment fills `100vw × 100vh` — no document scroll
+- Each experiment is self-contained — its own component, styles, and logic
+- Experiments share the design system tokens (colors, fonts, spacing) but are otherwise independent
+- The Gunmetal background is the default canvas for all experiments
+- `overflow: hidden` on the experiment container — the viewport IS the frame
+
+### Navigation — The Index Overlay
+
+Two persistent elements float above every experiment:
+
+1. **LogoMark (top-left):** The generative JUANEMO logo — static, randomized per load, links to `/` (latest experiment). Small (22px), always present. Same Roboto Flex per-character randomization as the hero, but frozen.
+
+2. **INDEX trigger (top-right):** A minimal text label (`INDEX` or a hamburger icon) that opens a **full-screen overlay**. The overlay is:
+   - Dark (`--color-bg`), full viewport
+   - A typographic list of experiment titles in reverse chronological order (newest first)
+   - Each entry: experiment name + date, minimal styling
+   - Click a title → overlay closes → experiment loads
+   - Same design system typography (DM Sans, label styles, Dun/Bone colors)
+   - Keyboard accessible (Escape to close, Tab to navigate)
+
+### Routing
+
+```
+juanemo.com/                                → redirects to latest experiment
+juanemo.com/experiments/generative-type     → experiment #1 (the JUANEMO wordmark)
+juanemo.com/experiments/[future-slug]       → experiment #2, #3, etc.
+```
+
+Each experiment lives at `/experiments/[slug]`. The home route (`/`) redirects to the latest one based on the data file.
+
+### What Persists Across All Experiments
+
+- The generative LogoMark (top-left, fixed, links to `/`)
+- The INDEX trigger (top-right, fixed, opens overlay)
+- The design system tokens (colors, fonts, spacing, motion)
+- The Gunmetal background as default canvas
+- The theme system (dark default, light opt-in)
+
+### What Does NOT Persist
+
+- No project list on the page
+- No footer on experiment pages
+- No scrolling
+- No page chrome beyond logo + index trigger
 
 ---
 
-### Feature 3: Footer
+## Experiment #1: Generative Typography
 
-A minimal three-column full-width footer at the bottom of the page, all uppercase labels.
+The current JUANEMO hero becomes the first experiment. It fills the full viewport.
 
-- Left: `juanemo.com`
-- Center: `© 2026 Juan-Carlos Morales`
-- Right: Email + LinkedIn contact links
+**Behavior — Generative Per-Character Drift:**
+- JUANEMO is split into 7 individual characters, each with independent variable font axis values
+- On load, each letter is randomized and stagger-fades in
+- Two-phase cycle: **hold** (8s still) → **shift** (staggered transition to new random axes) → repeat
+- Spring easing: `cubic-bezier(0.34, 1.56, 0.64, 1)` — letters overshoot and settle
+- ScaleXY: word fills container width AND height via `scale(scaleX, scaleY)` with hidden clone measurement (no flash)
+- Desktop: full viewport. Mobile: 35vh container with capped axis ranges (wght 300–750, wdth 40–120)
+- Mobile uses `randomAxesForWord()` — 1 extreme character + rest moderate for contrast without chaos
 
-All text in `.label` styles (11px, 500 weight, 0.1em tracking, uppercase, `--color-text-faint`). Links hover to Bittersweet. Stacks vertically on mobile (≤600px).
-
----
-
-### Feature 4: Dark / Light Mode
-
-- **Dark is default** — Gunmetal background, Bone/Dun text
-- **Light is opt-in** — Bone background, Gunmetal text, same accent
-- Toggle lives in the footer: `DARK · LIGHT` text labels, no icons
-- Preference persists to `localStorage`
-- Set before render to prevent flash
+**Color:** Dun (`#D6C5AB`) on Gunmetal. The wordmark is never the same twice.
 
 ---
 
-## Out of Scope (V1)
+## Data Model
+
+### Experiments
+
+```ts
+// data/experiments.ts
+export interface Experiment {
+  slug: string;           // URL slug — /experiments/[slug]
+  name: string;           // Display name in index
+  description: string;    // One-line description for index overlay
+  publishedDate: string;  // Human-readable date string
+}
+
+export const experiments: Experiment[] = [
+  {
+    slug: "generative-type",
+    name: "Generative Typography",
+    description: "Per-character variable font drift — the wordmark is never the same twice.",
+    publishedDate: "March 2025",
+  },
+  // add new experiments here — newest first
+];
+```
+
+Adding a new experiment = creating a page component at `/experiments/[slug]/page.tsx` and adding one entry to the data array. No CMS, no friction.
+
+---
+
+## Out of Scope (V2.0 Launch)
 
 - CMS or admin interface
-- Blog or long-form writing
-- Project detail pages (projects link out externally)
+- Blog or long-form writing within experiments
 - Contact form
-- Analytics dashboard (though basic analytics like Vercel Analytics or Plausible may be added silently)
+- Analytics dashboard (basic Vercel Analytics may be added silently)
+- Sound (future experiment, not core architecture)
+- Light mode toggle (deferred — dark is the default, light can come later)
 
 ---
 
 ## Success Criteria
 
-- A senior creative director opens the site and immediately understands what it is and who made it
-- The typography interaction works flawlessly across Chrome, Safari, Firefox on desktop and mobile
-- JC can add a new project in under 5 minutes by editing one file
-- The site loads in under 2 seconds on a standard connection
-- No layout breaks at any viewport width between 320px and 2560px
+- A senior creative director opens the site and immediately feels something — the experience is immersive, not informational
+- Landing on the site drops you directly into an experiment, not a list
+- The INDEX overlay is discoverable but doesn't compete with the experiment
+- Adding a new experiment takes under 15 minutes
+- Every experiment works at every viewport from 320px to 2560px with no scrolling
+- The site loads in under 2 seconds
+- The generative LogoMark is recognizably JUANEMO but different on every load
 
 ---
 
-## Future Considerations (V2+)
+## Future Experiments (Ideas)
 
-- Generative background element (subtle, typographic, or particle-based) that echoes the Flash era
-- Project entries with hover states that reveal a preview or texture
-- A "making of" easter egg that surfaces the Claude Code prompts used to build each project
-- Sound — ambient, minimal, opt-in
-- More moods added to the mood system over time
-- Per-project mood assignment — each project triggers a specific mood on hover
+These are potential future experiments to publish on the site. Each would be its own full-screen experience:
+
+- Mouse-responsive axis mapping (cursor controls wdth/wght in real time)
+- Gradient fill wordmark (background-clip: text with animated gradients)
+- Outline → fill reveal (hollow letterforms that fill on interaction)
+- Per-character proximity interaction (letters react to cursor distance)
+- Layered echo (stacked JUANEMO instances with delayed drift)
+- Generative brush system (Natzke homage — code-driven drawing)
+- Particle typography (letters dissolve into and reform from particles)
+- Sound-reactive type (font axes driven by ambient audio)
+
+---
+
+## Changelog
+
+| Date | Change | By |
+|---|---|---|
+| 2026-03-17 | V1.0 — Initial PRD (single-page portfolio) | JC / Scrummaster |
+| 2026-03-17 | Updated for Phase 2 (viewport-responsive hero, mood system) | Scrummaster |
+| 2026-03-17 | Updated for Phase 3 (newspaper-style project list, footer) | Scrummaster |
+| 2026-03-18 | Updated for Hero V2 (generative per-character drift) | Scrummaster |
+| 2026-03-19 | **V2.0 — Architecture pivot.** Site restructured from single-page portfolio to journal of full-screen experiments. ProjectList and Footer removed from experiment pages. Index overlay replaces project list. LogoMark as persistent identity. Routing changed to `/experiments/[slug]`. Home redirects to latest experiment. | Scrummaster (JC creative direction) |

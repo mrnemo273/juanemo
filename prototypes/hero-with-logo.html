@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Generative Hero + Logo Mark</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --page-margin: clamp(24px, 5vw, 80px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* =========================================================
+     LOGO MARK — Small generative wordmark, frozen on load
+     ========================================================= */
+  .logo-mark {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+    cursor: default;
+    user-select: none;
+    text-decoration: none;
+  }
+  .logo-mark .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    letter-spacing: -0.02em;
+  }
+
+  /* =========================================================
+     TOP BAR
+     ========================================================= */
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px var(--page-margin);
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--outer-space);
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .topbar-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* =========================================================
+     HERO — Generative drift with hold
+     ========================================================= */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 24px 60px;
+  }
+
+  .hero-word {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+  .hero-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings;
+  }
+
+  /* =========================================================
+     PROGRESS BAR — hold timer
+     ========================================================= */
+  .progress-track {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--outer-space);
+    z-index: 101;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--bittersweet);
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  /* =========================================================
+     BELOW CONTENT — simulate a page
+     ========================================================= */
+  .content {
+    padding: 64px var(--page-margin);
+    max-width: 640px;
+  }
+  .content p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--dun);
+    opacity: 0.6;
+    margin-bottom: 24px;
+  }
+  .content .label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+    margin-bottom: 16px;
+  }
+
+  /* =========================================================
+     LOGO SHOWCASE — sized tiles, generous negative space
+     ========================================================= */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1px;
+    padding: 0 var(--page-margin);
+    border-top: 1px solid var(--outer-space);
+    background: var(--outer-space);
+  }
+  .logo-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--gunmetal);
+    position: relative;
+    transition: background 0.2s;
+  }
+  .logo-cell:hover {
+    background: rgba(54, 66, 69, 0.3);
+  }
+  .logo-cell .logo-mark {
+    justify-content: center;
+  }
+  .logo-cell .size-label {
+    position: absolute;
+    bottom: 10px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.15;
+  }
+  /* Size tiers — bigger logos get more room */
+  .logo-cell[data-span="2"] { grid-column: span 2; grid-row: span 2; }
+  .logo-cell[data-span="3"] { grid-column: span 3; grid-row: span 3; }
+  .logo-cell[data-span="4"] { grid-column: span 4; grid-row: span 4; }
+  .logo-cell[data-span="6"] { grid-column: span 6; grid-row: span 6; }
+
+  /* Regenerate button */
+  .regen-bar {
+    padding: 24px var(--page-margin);
+    border-top: 1px solid var(--outer-space);
+  }
+  .regen-btn {
+    padding: 8px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    background: none;
+    border: 1px solid var(--outer-space);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .regen-btn:hover {
+    border-color: var(--bittersweet);
+    color: var(--bittersweet);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR with generative logo -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="logo-mark" id="navLogo" href="#" aria-label="Juanemo"></a>
+    <span class="topbar-label">Experiment 03</span>
+  </div>
+  <span class="topbar-label">Generative Typography</span>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-word" id="heroWord"></div>
+</section>
+
+<!-- BELOW CONTENT -->
+<div class="content">
+  <p class="label">About This Experiment</p>
+  <p>The JUANEMO wordmark uses Roboto Flex's 13 variable font axes to create a generative identity. Each letter independently drifts to random weight and width values on a timed cycle — hold, shift, hold. The wordmark is never the same twice.</p>
+  <p>The small logo in the top left uses the same system but frozen — a single random configuration set on page load. Every visit produces a unique mark. Refresh to see a new one.</p>
+</div>
+
+<!-- LOGO SHOWCASE -->
+<div class="content">
+  <p class="label">Logo Mark — Frozen Generative States</p>
+  <p>Each instance below was randomized independently. The same component at different sizes. Refresh the page to generate new ones.</p>
+</div>
+<div class="logo-grid" id="logoGrid"></div>
+
+<div class="regen-bar">
+  <button class="regen-btn" id="regenBtn">Regenerate All Logos</button>
+</div>
+
+<div style="height: 120px"></div>
+
+<!-- Progress bar -->
+<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+<script>
+// ============================================================
+// SHARED: Axis randomization
+// ============================================================
+
+const LETTERS = 'JUANEMO'.split('');
+
+const AXIS_RANGES = {
+  wdth: { min: 25,  max: 151 },
+  wght: { min: 300, max: 900 },
+  opsz: { min: 8,   max: 144 },
+};
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+function randomAxes() {
+  return {
+    wdth: rand(AXIS_RANGES.wdth.min, AXIS_RANGES.wdth.max),
+    wght: rand(AXIS_RANGES.wght.min, AXIS_RANGES.wght.max),
+    opsz: rand(AXIS_RANGES.opsz.min, AXIS_RANGES.opsz.max),
+  };
+}
+
+function axisString(a) {
+  return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`;
+}
+
+
+// ============================================================
+// LOGO MARK — Static generative component
+// ============================================================
+
+function createLogoMark(container, fontSize) {
+  container.innerHTML = '';
+  const size = fontSize || 18;
+
+  LETTERS.forEach(letter => {
+    const span = document.createElement('span');
+    span.className = 'logo-char';
+    span.textContent = letter;
+    span.style.fontSize = size + 'px';
+    const axes = randomAxes();
+    span.style.fontVariationSettings = axisString(axes);
+    container.appendChild(span);
+  });
+}
+
+// Nav logo
+createLogoMark(document.getElementById('navLogo'), 22);
+
+// Logo grid specimen — each entry defines font size and how many grid cols/rows it spans
+const LOGO_GRID = [
+  // Row 1: one large, rest small
+  { size: 60, span: 6 },
+  { size: 14, span: 2 },
+  { size: 14, span: 2 },
+  { size: 14, span: 2 },
+  // Small row fills
+  { size: 18, span: 2 },
+  { size: 18, span: 2 },
+  { size: 18, span: 2 },
+  // Medium pair
+  { size: 36, span: 4 },
+  { size: 36, span: 4 },
+  { size: 22, span: 2 },
+  { size: 22, span: 2 },
+  // Another large
+  { size: 22, span: 2 },
+  { size: 22, span: 2 },
+  { size: 48, span: 4 },
+  { size: 28, span: 3 },
+  { size: 28, span: 3 },
+];
+const logoGrid = document.getElementById('logoGrid');
+
+function populateLogoGrid() {
+  logoGrid.innerHTML = '';
+  LOGO_GRID.forEach(({ size, span }) => {
+    const cell = document.createElement('div');
+    cell.className = 'logo-cell';
+    cell.dataset.span = String(span);
+
+    const label = document.createElement('span');
+    label.className = 'size-label';
+    label.textContent = size + 'px';
+    cell.appendChild(label);
+
+    const mark = document.createElement('a');
+    mark.className = 'logo-mark';
+    mark.href = '#';
+    mark.setAttribute('aria-label', 'Juanemo');
+    createLogoMark(mark, size);
+    cell.appendChild(mark);
+
+    logoGrid.appendChild(cell);
+  });
+}
+populateLogoGrid();
+
+// Regenerate button
+document.getElementById('regenBtn').addEventListener('click', () => {
+  createLogoMark(document.getElementById('navLogo'), 22);
+  populateLogoGrid();
+});
+
+
+// ============================================================
+// HERO — Generative drift with hold
+// ============================================================
+
+const heroContainer = document.getElementById('heroWord');
+const heroChars = LETTERS.map(letter => {
+  const el = document.createElement('span');
+  el.className = 'hero-char';
+  el.textContent = letter;
+  const axes = randomAxes();
+  el.style.fontVariationSettings = axisString(axes);
+  heroContainer.appendChild(el);
+  return { el, axes };
+});
+
+// Cycle config
+let holdDuration = 8000;
+let transDuration = 1500;
+const easing = 'cubic-bezier(0.34, 1.56, 0.64, 1)'; // spring
+
+const progressBar = document.getElementById('progressBar');
+
+function shuffleHero() {
+  heroChars.forEach((c, i) => {
+    const stagger = i * 80;
+    const charDuration = transDuration + rand(-200, 200);
+    setTimeout(() => {
+      c.axes = randomAxes();
+      c.el.style.transition = `font-variation-settings ${charDuration}ms ${easing}`;
+      c.el.style.fontVariationSettings = axisString(c.axes);
+    }, stagger);
+  });
+}
+
+let cycleTimer;
+function startTransition() {
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  shuffleHero();
+  const totalTransTime = transDuration + (LETTERS.length * 80) + 200;
+  cycleTimer = setTimeout(startHold, totalTransTime);
+}
+
+function startHold() {
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progressBar.style.transition = `width ${holdDuration}ms linear`;
+      progressBar.style.width = '100%';
+    });
+  });
+  cycleTimer = setTimeout(() => {
+    progressBar.style.transition = 'none';
+    progressBar.style.width = '0%';
+    startTransition();
+  }, holdDuration);
+}
+
+// Kick off
+startHold();
+</script>
+
+</body>
+</html>

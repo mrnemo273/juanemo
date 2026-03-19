@@ -1,13 +1,10 @@
-import Hero from '../components/Hero';
-import ProjectList from '../components/ProjectList';
-import Footer from '../components/Footer';
+import { redirect } from 'next/navigation';
+import { experiments } from '@/data/experiments';
 
 export default function Home() {
-  return (
-    <main>
-      <Hero />
-      <ProjectList />
-      <Footer />
-    </main>
-  );
+  const latest = experiments[0];
+  if (latest) {
+    redirect(`/experiments/${latest.slug}`);
+  }
+  return null;
 }

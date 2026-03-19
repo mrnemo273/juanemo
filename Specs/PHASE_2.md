@@ -4,7 +4,7 @@
 
 Build the JUANEMO variable typography hero — the centerpiece of the entire site. This is the most technically complex component and the one that must feel perfect. The word "JUANEMO" should fill the viewport, respond to its container, change character on each load, and compress gracefully on scroll.
 
-## Status: `IN PROGRESS`
+## Status: `COMPLETE` (with deferred items: scroll compression, accent rule, mood system)
 
 ## Depends On: Phase 1 (complete and approved ✅)
 

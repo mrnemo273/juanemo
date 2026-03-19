@@ -12,10 +12,10 @@ Juanemo — Personal Creative Site
 
 | Layer | Choice | Rationale |
 |---|---|---|
-| Framework | **Next.js 14+ (App Router)** | Consistent with JC's existing projects (StateOfCreativeJobs, cc_DesignSystem). TypeScript. Fast. |
+| Framework | **Next.js 16 (App Router, Turbopack)** | Next.js 16.1.7 with React 19.2.3. Turbopack is the default dev server in v16 (no `--turbopack` flag needed). TypeScript. Fast. |
 | Language | **TypeScript** | Type safety, consistency across projects |
 | Styling | **CSS Modules + CSS custom properties** | CSS Modules for component scoping; CSS custom properties on `:root` for the full token system and variable font axes |
-| Hero font | **Roboto Flex** via `@fontsource-variable/roboto-flex` | 13 axes including `wdth` 25–151, `wght` 100–1000, `GRAD`, `XTRA`, `XOPQ`, `YOPQ`, `YTUC`, `slnt`, `opsz`. Self-hosted, no runtime Google Fonts request. |
+| Hero font | **Roboto Flex** via `@fontsource-variable/roboto-flex/full.css` | 13 axes. **Must use `full.css`** — default import only loads wght axis. Self-hosted, no runtime Google Fonts request. |
 | Body font | **DM Sans** via `@fontsource/dm-sans` | Clean humanist sans, readable at small sizes, pairs naturally with Roboto Flex |
 | Deployment | **Vercel** | Zero config, instant deploys, free tier sufficient |
 | Package Manager | **npm** | Consistent with existing repos |
@@ -26,33 +26,43 @@ Juanemo — Personal Creative Site
 
 ### Hero: Roboto Flex
 
-**Decision: Roboto Flex.** Selected for its exceptional axis range, all-caps legibility at display sizes, and technical depth for the mood system. Self-hosted via Fontsource — no runtime Google Fonts request, no FOUT risk.
+**Decision: Roboto Flex.** Selected for its exceptional axis range, all-caps legibility at display sizes, and technical depth for the mood system. Self-hosted via Fontsource — no runtime Google Fonts request, no FOUT risk. Fontsource handles hosting via `node_modules` import (webpack/turbopack serves the woff2 files automatically), so no `public/fonts/` directory is needed.
 
 ```bash
 npm install @fontsource-variable/roboto-flex
 ```
 
+**CRITICAL: Font import must use `full.css`.** The default Fontsource import (`@fontsource-variable/roboto-flex`) only loads a font file with the `wght` axis (34KB). All other axes are silently ignored. To get all 13 axes, import:
+```ts
+import '@fontsource-variable/roboto-flex/full.css'; // 326KB, all 13 axes
+```
+This was discovered during Phase 2 build. The default import appeared to work but all non-weight axes had no effect.
+
 #### Full Axis Reference
 
 | Axis | Tag | Range | Used For |
 |---|---|---|---|
-| Weight | `wght` | 100–1000 | Locked at 900 for hero; shifts to 500 on scroll compression |
-| Width | `wdth` | 25–151 | Responsive to viewport width — primary behavior axis |
-| Optical Size | `opsz` | 8–144 | Shifts with `wdth` — improves letterform quality at each scale |
-| Grade | `GRAD` | -200–150 | Mood system — micro stroke weight, affects density |
-| Slant | `slnt` | -10–0 | Mood system — REFINED mood uses -1 for subtle tension |
-| Counter Width | `XTRA` | 323–603 | Mood system — controls air inside letterforms |
-| Thick Stroke | `XOPQ` | 27–175 | Mood system — controls stroke weight contrast |
-| Thin Stroke | `YOPQ` | 25–135 | Mood system — controls hairline strokes |
-| Uppercase Height | `YTUC` | 528–760 | Mood system — shifts cap height feel |
+| Weight | `wght` | 100–1000 | **Viewport-responsive** (100–900): light on mobile → bold on desktop |
+| Width | `wdth` | 25–151 | **Viewport-responsive** (25–151): condensed on mobile → extended on desktop |
+| Optical Size | `opsz` | 8–144 | **Viewport-responsive** (8–144): tracks with wdth for letterform quality |
+| Grade | `GRAD` | -200–150 | Mood system (on hold) — micro stroke weight, affects density. Width-safe axis. |
+| Slant | `slnt` | -10–0 | Mood system (on hold) — REFINED mood uses -1 for subtle tension. Width-safe axis. |
+| Counter Width | `XTRA` | 323–603 | Mood system (on hold) — controls air inside letterforms. **Width-affecting axis** — caused inconsistent glyph widths. |
+| Thick Stroke | `XOPQ` | 27–175 | Mood system (on hold) — controls stroke weight contrast. **Width-affecting axis** — caused inconsistent glyph widths. |
+| Thin Stroke | `YOPQ` | 25–135 | Mood system (on hold) — controls hairline strokes. **Width-affecting axis** — caused inconsistent glyph widths. |
+| Uppercase Height | `YTUC` | 528–760 | Mood system (on hold) — shifts cap height feel. Width-safe axis. |
 | Ascender Height | `YTAS` | 649–854 | Not used (no ascenders in all-caps) |
 | Descender Depth | `YTDE` | -305–-98 | Not used (no descenders in all-caps) |
 | Lowercase Height | `YTLC` | 416–570 | Not used (all caps) |
 | Figure Height | `YTFI` | 560–788 | Not used |
 
-#### Mood System — 5 Named Presets
+#### Mood System — 5 Named Presets (ON HOLD)
 
-One mood is selected at random on every page load and applied to axes `GRAD`, `XTRA`, `XOPQ`, `YOPQ`, `YTUC`, `slnt`, `opsz` before first paint. All moods lock `wght` at 900.
+**Status:** Disabled during Phase 2 build. The randomized character axes (XOPQ, XTRA, YOPQ) produce wildly different glyph widths across loads, breaking fitText consistency — especially on mobile where font-size is already constrained. JC approved disabling in favor of the viewport-responsive axis architecture.
+
+**Future approach:** Constrain moods to width-safe axes only (GRAD, slnt, YTUC) while leaving width-affecting axes (XOPQ, XTRA, YOPQ) to the viewport system. This preserves mood personality without breaking sizing.
+
+**Original design (preserved in `lib/moods.ts` for reference):** One mood is selected at random on every page load and applied to axes `GRAD`, `XTRA`, `XOPQ`, `YOPQ`, `YTUC`, `slnt`, `opsz` before first paint. All moods lock `wght` at 900.
 
 | Mood | GRAD | XTRA | XOPQ | YOPQ | YTUC | slnt | opsz | Character |
 |---|---|---|---|---|---|---|---|---|
@@ -62,7 +72,9 @@ One mood is selected at random on every page load and applied to axes `GRAD`, `X
 | REFINED | 0 | 468 | 88 | 78 | 620 | -1 | 100 | Balanced, slight slant, elegant |
 | PUNCHY | 100 | 460 | 130 | 50 | 760 | 0 | 120 | High caps, energetic, direct |
 
-#### Mood Implementation
+#### Mood Implementation (Currently Commented Out)
+
+The `<head>` mood script is commented out in `app/layout.tsx`. Mood definitions remain in `lib/moods.ts`. Original implementation preserved below for when moods are revisited:
 
 Place in `<head>` before any rendering — no flash:
 
@@ -144,52 +156,102 @@ All Roboto Flex axes are driven via CSS custom properties on `:root`, set by JS 
 }
 ```
 
-### Viewport-responsive width axis
+### Generative Per-Character Axis System (Hero V2 — Current)
 
-JS resize listener maps viewport width to `wdth` and `opsz` axes continuously:
+**Replaces the viewport-responsive axis system.** The hero now uses a per-character generative animation where each of the 7 letters in JUANEMO independently drifts to random axis values on a timed cycle.
 
-```ts
-function updateHeroAxes() {
-  const vw = window.innerWidth;
-  const minVw = 320, maxVw = 1920;
-  const progress = Math.min(Math.max((vw - minVw) / (maxVw - minVw), 0), 1);
+#### Shared Axis Utility — `lib/generativeAxes.ts`
 
-  const wdth = Math.round(25 + progress * (151 - 25));   // 25 → 151
-  const opsz = Math.round(8 + progress * (144 - 8));     // 8 → 144
-
-  const r = document.documentElement;
-  r.style.setProperty('--hero-wdth', wdth);
-  r.style.setProperty('--hero-opsz', opsz);
-}
-
-const debouncedResize = debounce(updateHeroAxes, 16); // ~60fps
-window.addEventListener('resize', debouncedResize);
-updateHeroAxes(); // run on mount
-```
-
-### Scroll-based compression
-
-Scroll listener maps 0–300px scroll to font size, weight, grade, tracking, and opacity:
+Single source of truth for axis ranges, used by Hero and future LogoMark:
 
 ```ts
-function updateHeroScroll() {
-  const progress = Math.min(window.scrollY / 300, 1);
-  const r = document.documentElement;
+export const AXIS_RANGES = {
+  wdth: { min: 25, max: 151 },
+  wght: { min: 300, max: 900 },  // floor at 300 — letters must never vanish
+  opsz: { min: 8, max: 144 },
+};
 
-  // wght: 900 → 500
-  r.style.setProperty('--hero-wght', Math.round(900 - progress * 400));
+export function randomAxes(): AxisValues;   // returns random wdth/wght/opsz
+export function axisString(axes): string;   // returns font-variation-settings string
+```
 
-  // GRAD fades back to 0 from mood value
-  const moodGrad = parseFloat(r.style.getPropertyValue('--hero-grad')) || 0;
-  r.style.setProperty('--hero-grad-active', Math.round(moodGrad * (1 - progress)));
+#### Animation Cycle — Drift + Hold
 
-  r.style.setProperty('--scroll-progress', progress);
+The hero runs on a two-phase cycle: **hold** (still) → **shift** (staggered transition) → repeat.
+
+| Constant | Value | Purpose |
+|---|---|---|
+| `HOLD_DURATION` | 8000ms | How long the wordmark sits still between shifts |
+| `TRANS_DURATION` | 1500ms | Base transition duration per letter (±200ms variation) |
+| `STAGGER` | 80ms | Delay between each letter's transition start |
+| `SPRING_EASING` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Spring easing with overshoot — non-negotiable |
+
+#### Full-Width Scaling — `scaleX` + `ResizeObserver`
+
+The word always fills the container width via `transform: scaleX()`. A `ResizeObserver` on the word element fires as `font-variation-settings` transitions cause letter widths to change, keeping the scale in sync live during animations. Also refits on window resize.
+
+```ts
+// Measures natural word width, calculates scale to fill container
+const scale = containerWidth / naturalWidth;
+word.style.transform = `scaleX(${scale})`;
+```
+
+#### Key Architecture Decisions
+- Each letter is a `<span>` with independent `font-variation-settings`
+- `suppressHydrationWarning` on spans to handle client-side randomization
+- Initial state: randomized instantly (no animation), then hold phase begins
+- `prefers-reduced-motion`: transitions become instant, states still change
+- Mood script removed from `layout.tsx` `<head>` — generative system fully replaces it
+
+### Viewport-Responsive Structural Axes (Phase 2 — Superseded by Hero V2)
+
+_The viewport-responsive axis system (`updateHeroAxes()`) is no longer used by the Hero component. `lib/heroListeners.ts` is preserved in the codebase for potential future use but Hero no longer imports it._
+
+### Scroll-based compression (DEFERRED)
+
+**Status:** Implemented during Phase 2 but visually broken in practice. Disabled per JC's direction. To be redesigned if revisited.
+
+Original spec: scroll listener maps 0–300px scroll to font size, weight, grade, tracking, and opacity.
+
+**Important:** The scroll handler captures the initial mood GRAD value via closure at attach time, not by reading `--hero-grad` on each frame. Reading on each frame would compound the reduction (a bug in the original spec). The actual implementation uses `attachHeroListeners()` which captures the mood GRAD once and fades from that value:
+
+```ts
+// lib/heroListeners.ts — actual implementation
+function createScrollHandler(initialMoodGrad: number) {
+  return function updateHeroScroll(): void {
+    const progress = Math.min(window.scrollY / 300, 1);
+    const r = document.documentElement;
+
+    // wght: 900 → 500
+    r.style.setProperty('--hero-wght', String(Math.round(900 - progress * 400)));
+
+    // GRAD fades toward 0 from the original mood value (captured once)
+    r.style.setProperty('--hero-grad', String(Math.round(initialMoodGrad * (1 - progress))));
+
+    // scroll progress for CSS calculations (font-size, opacity, letter-spacing)
+    r.style.setProperty('--scroll-progress', String(progress));
+  };
 }
 
-window.addEventListener('scroll', () => {
-  requestAnimationFrame(updateHeroScroll);
-});
+export function attachHeroListeners(): () => void {
+  // Capture mood GRAD before scroll modifies it
+  const initialMoodGrad = parseFloat(
+    document.documentElement.style.getPropertyValue('--hero-grad')
+  ) || 0;
+  const updateHeroScroll = createScrollHandler(initialMoodGrad);
+
+  const debouncedResize = debounce(updateHeroAxes, 16);
+  window.addEventListener('resize', debouncedResize);
+  window.addEventListener('scroll', () => requestAnimationFrame(updateHeroScroll));
+  updateHeroAxes(); // run immediately on mount
+
+  return () => { /* cleanup listeners */ };
+}
 ```
+
+**Public API from `lib/heroListeners.ts`:**
+- `updateHeroAxes()` — maps viewport width to `wdth`/`opsz` axes. Can be called standalone.
+- `attachHeroListeners()` — attaches both resize and scroll listeners. Returns a cleanup function for unmounting. Captures mood GRAD via closure.
 
 ```css
 .hero-text {
@@ -222,54 +284,115 @@ function fitHeroText(el: HTMLElement) {
 
 ---
 
-## Project Data
+## Experiment Data (V2.0 Architecture)
 
-Projects are stored in a single TypeScript file:
+Experiments are stored in a single TypeScript file. The home route redirects to the latest (first in array). Array is in reverse chronological order (newest first).
 
 ```ts
-// data/projects.ts
-export const projects = [
+// data/experiments.ts
+export interface Experiment {
+  slug: string;           // URL slug — /experiments/[slug]
+  name: string;           // Display name in index overlay
+  description: string;    // One-line description
+  publishedDate: string;  // Human-readable date
+}
+
+export const experiments: Experiment[] = [
   {
-    name: "State of Creative Jobs",
-    description: "Research tool tracking demand, salary, and AI risk across 20 creative job titles.",
-    url: "https://state-of-creative-jobs.vercel.app",
-    year: 2025,
-    tags: ["Next.js", "TypeScript", "Claude Code"],
+    slug: "generative-type",
+    name: "Generative Typography",
+    description: "Per-character variable font drift — the wordmark is never the same twice.",
+    publishedDate: "March 2025",
   },
-  // add new entries here
-]
+  // add new experiments here — newest first
+];
 ```
 
-Adding a project = adding one object to this array. No CMS, no database, no friction.
+Adding an experiment = creating a page component at `/app/experiments/[slug]/page.tsx` and adding one entry to the data array. No CMS, no database, no friction.
+
+**Note:** The old `data/projects.ts` (with `name`, `description`, `url`, `publishedDate`) is superseded by `data/experiments.ts`. External projects like "State of Creative Jobs" can be listed in the INDEX overlay as external links if desired, but they are not experiments.
 
 ---
 
-## File Structure
+## Routing Architecture (V2.0)
+
+```
+/                               → redirects to /experiments/[latest-slug]
+/experiments/generative-type    → Experiment #1 (JUANEMO generative wordmark)
+/experiments/[future-slug]      → Future experiments
+```
+
+- Home (`/`) reads `experiments[0].slug` from the data file and redirects
+- Each experiment route renders a full-viewport, no-scroll experience
+- Shared layout wraps all experiment pages with LogoMark + INDEX trigger
+
+### Next.js Implementation
+
+```
+app/
+  page.tsx                      # Redirect to latest experiment
+  layout.tsx                    # Root layout: fonts, theme, LogoMark, INDEX trigger
+  experiments/
+    [slug]/
+      page.tsx                  # Dynamic route — loads experiment component by slug
+  components/
+    LogoMark.tsx                # Static generative logo (randomized per load)
+    IndexOverlay.tsx            # Full-screen experiment index overlay
+    experiments/
+      GenerativeType.tsx        # Experiment #1 component
+```
+
+### Full-Screen Experiment Shell
+
+Every experiment renders inside a shared container that enforces the viewport-sized, no-scroll paradigm:
+
+```css
+.experiment-shell {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-bg);
+}
+```
+
+---
+
+## File Structure (V2.0 Architecture)
 
 ```
 juanemo/
 ├── app/
-│   ├── layout.tsx          # Root layout, font loading, mood script in <head>, theme init
-│   ├── page.tsx            # Main page (hero + project list + footer)
-│   └── globals.css         # CSS custom properties (color, spacing, motion, font axes)
+│   ├── layout.tsx              # Root layout: fonts, theme init, LogoMark, INDEX trigger
+│   ├── page.tsx                # Home — redirects to latest experiment
+│   ├── globals.css             # CSS custom properties (color, spacing, motion, type utilities)
+│   └── experiments/
+│       └── [slug]/
+│           └── page.tsx        # Dynamic route — loads experiment component by slug
 ├── components/
-│   ├── Hero.tsx            # JUANEMO variable font hero + accent rule
-│   ├── ProjectList.tsx     # Project index with eyebrows, tags, CTA arrows
-│   └── Footer.tsx          # Three-column footer bar + theme toggle
+│   ├── LogoMark.tsx            # Static generative logo — randomized per load, links to /
+│   ├── LogoMark.module.css
+│   ├── IndexOverlay.tsx        # Full-screen experiment index overlay
+│   ├── IndexOverlay.module.css
+│   ├── ExperimentShell.tsx     # Shared full-viewport container for experiments
+│   ├── ExperimentShell.module.css
+│   └── experiments/
+│       └── GenerativeType.tsx  # Experiment #1: per-character drift + scaleXY
+│       └── GenerativeType.module.css
 ├── data/
-│   └── projects.ts         # Project data array — edit here to add projects
+│   └── experiments.ts          # Experiment data array — { slug, name, description, publishedDate }
 ├── lib/
-│   ├── moods.ts            # Mood definitions and random selector
-│   ├── fitText.ts          # Binary search font-size fitter
-│   └── heroListeners.ts    # Resize + scroll listeners for axis updates
-├── public/
-│   └── fonts/              # (if self-hosting woff2 files directly)
-├── GOALS.md
-├── PRD.md
-├── TRD.md
-├── DESIGN_SYSTEM.md
+│   ├── generativeAxes.ts       # Shared axis randomization — AXIS_RANGES, randomAxes(), axisString()
+│   ├── moods.ts                # Mood definitions (preserved for future experiments)
+│   ├── fitText.ts              # Binary search font-size fitter (preserved for future experiments)
+│   └── heroListeners.ts        # Resize + scroll listeners (preserved for future experiments)
+├── prototypes/                 # HTML experiment prototypes (creative development)
+├── Specs/                      # Project spec documents
+├── vercel.json                 # Framework hint for Vercel deployment
 └── README.md
 ```
+
+**Note:** The old `components/Hero.tsx`, `ProjectList.tsx`, and `Footer.tsx` will be refactored. Hero becomes `experiments/GenerativeType.tsx`. ProjectList content moves into `IndexOverlay.tsx`. Footer is removed from experiment pages (may return in a different form).
 
 ---
 
@@ -318,6 +441,7 @@ Variable font support is baseline for all modern browsers. No polyfill needed.
 ## Deployment
 
 - **Host:** Vercel (connect GitHub repo `mrnemo273/juanemo`)
+- **Config:** `vercel.json` with `"framework": "nextjs"` — **required** because Vercel auto-detect defaulted to static site and failed looking for a `public` output directory. Confirm Vercel project settings have Framework Preset set to "Next.js" so the config file isn't doing double duty.
 - **Domain:** TBD — can use `juanemo.vercel.app` initially
 - **Auto-deploy:** Every push to `main` deploys to production
 - **Preview deploys:** Every PR gets a preview URL
@@ -330,3 +454,18 @@ Variable font support is baseline for all modern browsers. No polyfill needed.
 - Per-project mood assignment on hover
 - Generative background element
 - Sound layer
+- Consider removing `opsz` from mood `<head>` script — the resize listener overwrites it on mount. Current behavior works (mood opsz briefly visible before JS mount).
+
+---
+
+## Changelog
+
+| Date | Change | By |
+|---|---|---|
+| 2026-03-17 | Initial TRD created | JC / Scrummaster |
+| 2026-03-17 | Post-Phase 1: Updated Next.js version to 16.1.7/React 19.2.3. Added Turbopack default note. Clarified Fontsource handles font hosting (no public/fonts/ needed). Expanded vercel.json deployment note per builder experience. Added opsz deferred question. | Scrummaster (from Phase 1 builder notes) |
+| 2026-03-17 | Post-Phase 2: CRITICAL font import fix (`full.css` required for all axes). Axis architecture rewrite: wght now viewport-responsive (100–900), viewport min changed to 500px. Mood system marked ON HOLD with width-safe/width-affecting axis classification. Scroll compression marked DEFERRED. Axis reference table updated. | Scrummaster (from Phase 2 builder notes) |
+| 2026-03-17 | Post-Phase 3: Project data model updated (`year`/`tags` → `publishedDate`). File structure updated with CSS Modules and actual component descriptions. Footer.tsx built early (was Phase 4). | Scrummaster (from Phase 3 builder notes) |
+| 2026-03-18 | Hero V2: Viewport-responsive axis system superseded by generative per-character drift. New `lib/generativeAxes.ts`. Hero uses scaleX + ResizeObserver for full-width fitting. Font-size increased to `clamp(60px, 17vw, 280px)`, hero 70vh desktop / 40vh mobile. Mood script removed from layout.tsx. File structure updated. | Scrummaster (from Hero V2 builder notes) |
+| 2026-03-18 | Hero V3: ScaleXY fill (both axes). Hidden clone measurement (no flash). Mobile axis caps: wdth 40–120, wght 300–750. Mobile hero 35vh. `randomAxesForWord()` — 1 extreme char + rest moderate on mobile. TypeScript `AxisRanges` interface. | Scrummaster (from Hero V3 builder notes) |
+| 2026-03-19 | **V2.0 Architecture pivot.** Site restructured as journal of full-screen experiments. New routing (`/experiments/[slug]`), data model (`experiments.ts`), file structure. ProjectList/Footer removed from experiment pages. IndexOverlay, LogoMark, ExperimentShell added. | Scrummaster (JC creative direction) |

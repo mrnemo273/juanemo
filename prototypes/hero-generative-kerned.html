@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Generative Drift + Adaptive Kerning</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --page-padding: clamp(16px, 3vw, 48px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* --- Controls --- */
+  .controls {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--outer-space);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .controls .title { color: var(--bittersweet); letter-spacing: 0.15em; white-space: nowrap; }
+  .control-group { display: flex; align-items: center; gap: 8px; }
+  .control-group label { color: var(--dun); opacity: 0.6; white-space: nowrap; }
+  .control-group input[type="range"] { width: 80px; accent-color: var(--bittersweet); }
+  .control-group .value { color: var(--bone); min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+  .btn {
+    padding: 5px 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--dun);
+    background: none; border: 1px solid var(--outer-space);
+    border-radius: 3px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--bittersweet); color: var(--bittersweet); }
+  .btn.active { border-color: var(--bittersweet); background: var(--bittersweet); color: var(--gunmetal); }
+
+  /* --- Hero --- */
+  .hero {
+    width: 100%;
+    height: 50vh;
+    padding: var(--page-padding);
+    margin-top: 52px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: relative;
+  }
+
+  .word {
+    display: flex;
+    align-items: baseline;
+    white-space: nowrap;
+    transform-origin: top left;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(60px, 17vw, 280px);
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings, margin-left;
+    /* Axes get spring overshoot, kerning glides smoothly — no double-bounce */
+    transition: font-variation-settings 1.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin-left 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* --- Kern measurement helper — invisible, used to read native kerning --- */
+  .kern-guide {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(60px, 17vw, 280px);
+    line-height: 0.85;
+    font-kerning: auto;
+    /* No letter-spacing — we want pure kerning measurement */
+    letter-spacing: 0;
+  }
+  .kern-guide span {
+    display: inline; /* must be inline, not inline-block, for kerning to work */
+  }
+
+  /* --- Comparison demo --- */
+  .comparison {
+    padding: 48px var(--page-padding);
+    border-top: 1px solid var(--outer-space);
+  }
+  .comparison-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--bittersweet); margin-bottom: 24px;
+  }
+  .comparison-row {
+    margin-bottom: 48px;
+  }
+  .comparison-row .sublabel {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--dun); opacity: 0.3; margin-bottom: 8px;
+  }
+  .comparison-word {
+    display: flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+  .comparison-word .char {
+    font-size: clamp(40px, 8vw, 100px);
+    transition: font-variation-settings 1.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                margin-left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* --- Progress --- */
+  .progress-track {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--outer-space); z-index: 101;
+  }
+  .progress-bar { height: 100%; background: var(--bittersweet); width: 0%; }
+
+  /* --- Info --- */
+  .info {
+    position: fixed; bottom: 4px; left: 24px; z-index: 102;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--dun); opacity: 0.3;
+    font-variant-numeric: tabular-nums; display: flex; gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .hero { min-height: 40vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <span class="title">Adaptive Kern</span>
+  <div class="control-group">
+    <label>Hold</label>
+    <input type="range" id="holdSlider" min="3" max="30" value="8" step="1">
+    <span class="value" id="holdVal">8s</span>
+  </div>
+  <div class="control-group">
+    <label>Transition</label>
+    <input type="range" id="transSlider" min="500" max="4000" value="1500" step="100">
+    <span class="value" id="transVal">1.5s</span>
+  </div>
+  <div class="control-group">
+    <button class="btn ease-btn active" data-ease="spring">Spring</button>
+    <button class="btn ease-btn" data-ease="smooth">Smooth</button>
+    <button class="btn ease-btn" data-ease="steps">Steps</button>
+  </div>
+  <div class="control-group">
+    <button class="btn" id="pauseBtn">Pause</button>
+    <button class="btn" id="shuffleBtn">Shuffle</button>
+    <button class="btn" id="toggleKernBtn">Kern: On</button>
+  </div>
+</div>
+
+<!-- Hero -->
+<header class="hero" id="hero">
+  <div class="word" id="word"></div>
+</header>
+
+<!-- Side-by-side comparison -->
+<div class="comparison">
+  <div class="comparison-label">Kerning Comparison — Same Axes, Different Spacing</div>
+  <div class="comparison-row">
+    <div class="sublabel">With adaptive kerning</div>
+    <div class="comparison-word" id="compKerned"></div>
+  </div>
+  <div class="comparison-row">
+    <div class="sublabel">Without kerning (uniform letter-spacing only)</div>
+    <div class="comparison-word" id="compUnkerned"></div>
+  </div>
+</div>
+
+<div class="info"><span id="infoKern"></span></div>
+<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const heroEl = document.getElementById('hero');
+const wordEl = document.getElementById('word');
+const progressBar = document.getElementById('progressBar');
+
+const AXIS_RANGES = {
+  wdth: { min: 25, max: 151 },
+  wght: { min: 300, max: 900 },
+  opsz: { min: 8, max: 144 },
+};
+
+let holdDuration = 8000;
+let transDuration = 1500;
+let paused = false;
+let kerningEnabled = true;
+
+const EASINGS = {
+  spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  smooth: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  steps: 'steps(6)',
+};
+let currentEasing = 'spring';
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+function randomAxes() {
+  return {
+    wdth: rand(AXIS_RANGES.wdth.min, AXIS_RANGES.wdth.max),
+    wght: rand(AXIS_RANGES.wght.min, AXIS_RANGES.wght.max),
+    opsz: rand(AXIS_RANGES.opsz.min, AXIS_RANGES.opsz.max),
+  };
+}
+
+function axisString(a) {
+  return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`;
+}
+
+// ============================================================
+// KERN MEASUREMENT ENGINE
+//
+// For each character, we compute the kerning offset by comparing
+// where the browser naturally places it (with kerning) vs where
+// it would sit with no kerning (sum of individual widths).
+//
+// We create a hidden guide element that renders the full word
+// with each char's CURRENT axis values, using inline spans so
+// native kerning applies. Then we measure each span's position.
+// ============================================================
+
+// Hidden guide element for kerning measurement
+const kernGuide = document.createElement('div');
+kernGuide.className = 'kern-guide';
+// Build guide spans — inline (not inline-block) so browser kerns them
+LETTERS.forEach(letter => {
+  const span = document.createElement('span');
+  span.textContent = letter;
+  kernGuide.appendChild(span);
+});
+heroEl.appendChild(kernGuide);
+
+/**
+ * Measures the native kerning offsets for each character.
+ * Each char in `charData` must have `.axes` with current axis values.
+ * Returns an array of margin-left values (in px) for characters 1-6
+ * (char 0 always has 0 offset).
+ */
+function measureKernOffsets(charData) {
+  const guideSpans = kernGuide.querySelectorAll('span');
+
+  // Apply each character's current axis values to the guide
+  charData.forEach((c, i) => {
+    guideSpans[i].style.fontVariationSettings = axisString(c.axes);
+  });
+
+  // Force layout
+  void kernGuide.offsetWidth;
+
+  // Measure: where does the browser place each span with kerning?
+  const kernedPositions = [];
+  guideSpans.forEach(span => {
+    kernedPositions.push(span.getBoundingClientRect());
+  });
+
+  // Now compute what positions would be WITHOUT kerning
+  // (sum of individual character widths placed sequentially)
+  const unkernedX = [kernedPositions[0].left]; // first char starts at same place
+  for (let i = 1; i < kernedPositions.length; i++) {
+    unkernedX.push(unkernedX[i - 1] + kernedPositions[i - 1].width);
+  }
+
+  // The difference = kerning adjustment needed
+  const offsets = kernedPositions.map((rect, i) => {
+    if (i === 0) return 0;
+    return rect.left - unkernedX[i];
+  });
+
+  return offsets;
+}
+
+// ============================================================
+// CHARACTER SETUP
+// ============================================================
+
+function createCharSet(container) {
+  return LETTERS.map(letter => {
+    const el = document.createElement('span');
+    el.className = 'char';
+    el.textContent = letter;
+    const axes = randomAxes();
+    el.style.fontVariationSettings = axisString(axes);
+    el.style.letterSpacing = '-0.03em'; // base tracking
+    container.appendChild(el);
+    return { el, axes };
+  });
+}
+
+const chars = createCharSet(wordEl);
+
+// Comparison sets
+const compKernedEl = document.getElementById('compKerned');
+const compUnkernedEl = document.getElementById('compUnkerned');
+const compKerned = createCharSet(compKernedEl);
+const compUnkerned = createCharSet(compUnkernedEl);
+
+// Apply kern offsets to a set of chars
+function applyKerning(charData, enable) {
+  if (!enable) {
+    charData.forEach(c => { c.el.style.marginLeft = '0px'; });
+    return;
+  }
+  const offsets = measureKernOffsets(charData);
+  charData.forEach((c, i) => {
+    c.el.style.marginLeft = offsets[i] + 'px';
+  });
+
+  // Update info
+  const pairs = LETTERS.slice(1).map((l, i) =>
+    `${LETTERS[i]}${l}: ${offsets[i + 1] > 0 ? '+' : ''}${offsets[i + 1].toFixed(1)}px`
+  );
+  document.getElementById('infoKern').textContent = 'kern: ' + pairs.join('  ');
+}
+
+// ============================================================
+// FULL-WIDTH SCALE (same hidden clone approach)
+// ============================================================
+
+const measureEl = wordEl.cloneNode(true);
+measureEl.style.position = 'absolute';
+measureEl.style.visibility = 'hidden';
+measureEl.style.pointerEvents = 'none';
+measureEl.style.transform = 'none';
+measureEl.style.left = '0'; measureEl.style.top = '0';
+measureEl.id = '';
+heroEl.appendChild(measureEl);
+
+function syncMeasureClone() {
+  const cloneChars = measureEl.querySelectorAll('span');
+  chars.forEach((c, i) => {
+    if (cloneChars[i]) {
+      cloneChars[i].style.fontVariationSettings = c.el.style.fontVariationSettings;
+      cloneChars[i].style.marginLeft = c.el.style.marginLeft;
+    }
+  });
+}
+
+function fitWord() {
+  syncMeasureClone();
+  void measureEl.offsetWidth;
+
+  const nw = measureEl.scrollWidth;
+  const nh = measureEl.getBoundingClientRect().height;
+  const s = getComputedStyle(heroEl);
+  const cw = heroEl.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+  const ch = heroEl.clientHeight - parseFloat(s.paddingTop) - parseFloat(s.paddingBottom);
+
+  if (nw <= 0 || nh <= 0) return;
+  const scaleX = cw / nw;
+  const scaleY = ch / nh;
+
+  wordEl.style.transition = `transform 0.6s ${EASINGS[currentEasing]}`;
+  wordEl.style.transform = `scale(${scaleX}, ${scaleY})`;
+}
+
+const ro = new ResizeObserver(fitWord);
+ro.observe(measureEl);
+window.addEventListener('resize', fitWord);
+
+// Initial kerning + fit
+requestAnimationFrame(() => {
+  applyKerning(chars, kerningEnabled);
+  applyKerning(compKerned, true);
+  compUnkerned.forEach(c => { c.el.style.marginLeft = '0px'; });
+  requestAnimationFrame(fitWord);
+});
+
+// ============================================================
+// GENERATIVE DRIFT + HOLD
+// ============================================================
+
+function shuffleCharSet(charData, applyKern, isComparison) {
+  charData.forEach((c, i) => {
+    const stagger = i * 80;
+    const duration = transDuration + rand(-200, 200);
+    setTimeout(() => {
+      c.axes = randomAxes();
+      c.el.style.transition =
+        `font-variation-settings ${duration}ms ${EASINGS[currentEasing]}, ` +
+        `margin-left ${duration}ms ${EASINGS[currentEasing]}`;
+      c.el.style.fontVariationSettings = axisString(c.axes);
+    }, stagger);
+  });
+
+  // After all chars have their new axes, re-measure kern
+  const totalStagger = LETTERS.length * 80 + 50;
+  setTimeout(() => {
+    if (applyKern) applyKerning(charData, true);
+    if (!isComparison) {
+      syncMeasureClone();
+      fitWord();
+    }
+  }, totalStagger);
+
+  // Re-measure kern once after transition settles — not during
+  // Mid-transition re-measurements caused secondary bouncing through scaleXY
+  setTimeout(() => {
+    if (applyKern) applyKerning(charData, true);
+    if (!isComparison) fitWord();
+  }, totalStagger + transDuration + 200);
+}
+
+function shuffleAll() {
+  // Hero — with kerning
+  shuffleCharSet(chars, kerningEnabled, false);
+
+  // Comparison — same axes for both, kerned vs unkerned
+  const sharedAxes = LETTERS.map(() => randomAxes());
+
+  compKerned.forEach((c, i) => {
+    const stagger = i * 80;
+    const duration = transDuration + rand(-200, 200);
+    setTimeout(() => {
+      c.axes = sharedAxes[i];
+      c.el.style.transition =
+        `font-variation-settings ${duration}ms ${EASINGS[currentEasing]}, ` +
+        `margin-left ${duration}ms ${EASINGS[currentEasing]}`;
+      c.el.style.fontVariationSettings = axisString(c.axes);
+    }, stagger);
+  });
+  compUnkerned.forEach((c, i) => {
+    const stagger = i * 80;
+    const duration = transDuration + rand(-200, 200);
+    setTimeout(() => {
+      c.axes = sharedAxes[i];
+      c.el.style.transition =
+        `font-variation-settings ${duration}ms ${EASINGS[currentEasing]}`;
+      c.el.style.fontVariationSettings = axisString(c.axes);
+      c.el.style.marginLeft = '0px';
+    }, stagger);
+  });
+
+  // Re-measure comparison kerning during transition
+  const totalStagger = LETTERS.length * 80 + 50;
+  [200, 500, 800, 1200, transDuration].forEach(t => {
+    setTimeout(() => applyKerning(compKerned, true), totalStagger + t);
+  });
+}
+
+let cycleTimer;
+function startTransition() {
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  shuffleAll();
+  const totalTransTime = transDuration + (LETTERS.length * 80) + 200;
+  cycleTimer = setTimeout(startHold, totalTransTime);
+}
+
+function startHold() {
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progressBar.style.transition = `width ${holdDuration}ms linear`;
+      progressBar.style.width = '100%';
+    });
+  });
+  cycleTimer = setTimeout(() => {
+    progressBar.style.transition = 'none';
+    progressBar.style.width = '0%';
+    startTransition();
+  }, holdDuration);
+}
+
+startHold();
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+document.getElementById('holdSlider').addEventListener('input', e => {
+  holdDuration = parseInt(e.target.value) * 1000;
+  document.getElementById('holdVal').textContent = e.target.value + 's';
+});
+
+document.getElementById('transSlider').addEventListener('input', e => {
+  transDuration = parseInt(e.target.value);
+  document.getElementById('transVal').textContent = (transDuration / 1000).toFixed(1) + 's';
+});
+
+document.querySelectorAll('.ease-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ease-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentEasing = btn.dataset.ease;
+    fitWord();
+  });
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  paused = !paused;
+  const btn = document.getElementById('pauseBtn');
+  btn.textContent = paused ? 'Resume' : 'Pause';
+  btn.classList.toggle('active', paused);
+  if (paused) { clearTimeout(cycleTimer); progressBar.style.transition = 'none'; }
+  else startHold();
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  clearTimeout(cycleTimer);
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  startTransition();
+});
+
+document.getElementById('toggleKernBtn').addEventListener('click', () => {
+  kerningEnabled = !kerningEnabled;
+  const btn = document.getElementById('toggleKernBtn');
+  btn.textContent = kerningEnabled ? 'Kern: On' : 'Kern: Off';
+  btn.classList.toggle('active', !kerningEnabled);
+  applyKerning(chars, kerningEnabled);
+  fitWord();
+});
+</script>
+
+</body>
+</html>

@@ -8,9 +8,11 @@ This document is the onboarding brief for any **planner agent** working on the J
 
 ## Project Overview
 
-**Juanemo** is a personal creative site for Juan-Carlos Morales (JC / Nemo) — a creative director building at the intersection of design, technology, and AI. The site is a typographic showcase powered by Roboto Flex's 13-axis variable font system, with a mood engine that makes every page load feel different.
+**Juanemo** is a **journal of full-screen creative experiments** by Juan-Carlos Morales (JC / Nemo) — a creative director building at the intersection of design, technology, and AI. Each experiment fills the entire browser window — no scrolling, no chrome. The browser is a canvas, not a document.
 
-This is not a generic portfolio. It has a specific creative lineage (Flash-era generative design), a locked-in visual identity, and a point of view. Agents must execute within that vision, not improvise outside it.
+This is the modern Praystation. It has a specific creative lineage (Flash-era generative design), a locked-in visual identity, and a point of view. Agents must execute within that vision, not improvise outside it.
+
+**Architecture:** The site was restructured in V2.0 from a single-page portfolio to a journal of full-screen experiments. Each experiment lives at `/experiments/[slug]`. The home route redirects to the latest. A generative LogoMark (top-left) and INDEX overlay (full-screen experiment list) are the only persistent navigation.
 
 ---
 
@@ -123,7 +125,7 @@ These come from `GOALS.md` and `DESIGN_SYSTEM.md`. Every agent on this project m
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js 16.1.7 (App Router, Turbopack default) |
 | Language | TypeScript |
 | Styling | CSS Modules + CSS custom properties |
 | Hero font | Roboto Flex (self-hosted via Fontsource) |

@@ -207,6 +207,7 @@ All of the following must be true before Phase 1 is complete:
 
 ### Problems Encountered
 - `create-next-app` prompted for React Compiler (new in v16) — handled via stdin redirect
+- Vercel did not auto-detect Next.js framework on first deploy — defaulted to static site and failed looking for a `public` output directory. Fixed by adding `vercel.json` with `"framework": "nextjs"`. Worth confirming Vercel project settings have Framework Preset set to "Next.js" so the config file isn't doing double duty.
 - No issues with font packages or TypeScript compilation
 
 ### Deviations from Spec

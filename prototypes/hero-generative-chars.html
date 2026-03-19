@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Generative Per-Character Wordmark</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* --- Controls bar --- */
+  .controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--outer-space);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .controls .title {
+    color: var(--bittersweet);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    color: var(--dun);
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .control-group input[type="range"] {
+    width: 80px;
+    accent-color: var(--bittersweet);
+  }
+  .control-group .value {
+    color: var(--bone);
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .control-group button {
+    padding: 5px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    background: none;
+    border: 1px solid var(--outer-space);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .control-group button:hover {
+    border-color: var(--bittersweet);
+    color: var(--bittersweet);
+  }
+  .control-group button.active {
+    border-color: var(--bittersweet);
+    background: var(--bittersweet);
+    color: var(--gunmetal);
+  }
+
+  /* --- Demo sections --- */
+  .demo {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 24px 60px;
+    position: relative;
+  }
+  .demo + .demo { border-top: 1px solid var(--outer-space); }
+
+  .demo-label {
+    position: absolute;
+    top: 100px;
+    left: 24px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .demo-number { color: var(--dun); opacity: 0.5; }
+  .demo-desc {
+    position: absolute;
+    bottom: 40px;
+    left: 24px;
+    right: 24px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--dun);
+    opacity: 0.7;
+    max-width: 640px;
+  }
+
+  /* --- Shared character styles --- */
+  .word {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    width: 100%;
+  }
+  .char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings;
+  }
+
+  /* --- Variant A: Large, breathing --- */
+  #demoA .word { padding: 0 12px; }
+  #demoA .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+  }
+
+  /* --- Variant B: Stacked smaller, different speeds --- */
+  #demoB .rows {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  #demoB .word { justify-content: center; }
+  #demoB .char {
+    font-size: clamp(40px, 8vw, 120px);
+    letter-spacing: -0.02em;
+  }
+  #demoB .row-2 .char { color: var(--outer-space); }
+  #demoB .row-3 .char { color: rgba(214, 197, 171, 0.15); }
+
+  /* --- Variant C: Mouse proximity influence --- */
+  #demoC .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    transition: color 0.3s ease;
+  }
+
+  /* --- Variant D: Click to freeze/shuffle --- */
+  #demoD .char {
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    cursor: pointer;
+  }
+  #demoD .char.frozen {
+    color: var(--bittersweet);
+  }
+</style>
+</head>
+<body>
+
+<!-- Controls -->
+<div class="controls">
+  <span class="title">Generative Wordmark</span>
+  <div class="control-group">
+    <label>Speed</label>
+    <input type="range" id="speedSlider" min="500" max="5000" value="2000" step="100">
+    <span class="value" id="speedVal">2.0s</span>
+  </div>
+  <div class="control-group">
+    <label>Easing</label>
+    <button id="easeSmooth" class="active">Smooth</button>
+    <button id="easeSpring">Spring</button>
+    <button id="easeLinear">Linear</button>
+    <button id="easeSteps">Steps</button>
+  </div>
+  <div class="control-group">
+    <button id="pauseBtn">Pause</button>
+    <button id="shuffleBtn">Shuffle Now</button>
+  </div>
+</div>
+
+<!-- DEMO A: Core generative wordmark -->
+<section id="demoA" class="demo">
+  <span class="demo-label"><span class="demo-number">A</span> — Generative Drift</span>
+  <div class="word" id="wordA"></div>
+  <p class="demo-desc">Each letter independently drifts to a new random weight + width on its own staggered timer. The wordmark is never the same twice — always shifting, always unique. This is the core concept.</p>
+</section>
+
+<!-- DEMO B: Echoed rows -->
+<section id="demoB" class="demo">
+  <span class="demo-label"><span class="demo-number">B</span> — Layered Echo</span>
+  <div class="rows">
+    <div class="word row-1" id="wordB1"></div>
+    <div class="word row-2" id="wordB2"></div>
+    <div class="word row-3" id="wordB3"></div>
+  </div>
+  <p class="demo-desc">Three stacked instances of JUANEMO, each with different animation speeds. The top layer leads, the others follow at delay — creating a typographic echo. The ghost layers use faded colors.</p>
+</section>
+
+<!-- DEMO C: Mouse proximity + generative -->
+<section id="demoC" class="demo">
+  <span class="demo-label"><span class="demo-number">C</span> — Proximity + Drift</span>
+  <div class="word" id="wordC"></div>
+  <p class="demo-desc">Generative drift runs as ambient behavior, but letters near your cursor get pulled toward bold + extended. Move away and they relax back to their random target. Two systems layered: generative + interactive.</p>
+</section>
+
+<!-- DEMO D: Click to freeze -->
+<section id="demoD" class="demo">
+  <span class="demo-label"><span class="demo-number">D</span> — Freeze Frame</span>
+  <div class="word" id="wordD"></div>
+  <p class="demo-desc">Click any letter to freeze it in its current state (turns Bittersweet). Click again to release. You're composing your own version of the wordmark by choosing which moments to keep. A collaborative generative system.</p>
+</section>
+
+<script>
+// ============================================================
+// GENERATIVE ENGINE
+// ============================================================
+
+const LETTERS = 'JUANEMO'.split('');
+
+// Axis ranges for randomization
+const AXIS = {
+  wdth: { min: 25,  max: 151 },
+  wght: { min: 100, max: 900 },
+  opsz: { min: 8,   max: 144 },
+};
+
+// State
+let speed = 2000;        // ms per transition
+let easing = 'cubic-bezier(0.16, 1, 0.3, 1)';
+let paused = false;
+
+function rand(min, max) {
+  return Math.round(min + Math.random() * (max - min));
+}
+
+function randomAxes() {
+  return {
+    wdth: rand(AXIS.wdth.min, AXIS.wdth.max),
+    wght: rand(AXIS.wght.min, AXIS.wght.max),
+    opsz: rand(AXIS.opsz.min, AXIS.opsz.max),
+  };
+}
+
+function applyAxes(el, axes, duration, easingOverride) {
+  const e = easingOverride || easing;
+  el.style.transition = `font-variation-settings ${duration}ms ${e}`;
+  el.style.fontVariationSettings =
+    `'wdth' ${axes.wdth}, 'wght' ${axes.wght}, 'opsz' ${axes.opsz}`;
+}
+
+// Create character spans in a container
+function createChars(container, className) {
+  const spans = [];
+  LETTERS.forEach((letter) => {
+    const span = document.createElement('span');
+    span.className = className || 'char';
+    span.textContent = letter;
+    const axes = randomAxes();
+    span.style.fontVariationSettings =
+      `'wdth' ${axes.wdth}, 'wght' ${axes.wght}, 'opsz' ${axes.opsz}`;
+    container.appendChild(span);
+    spans.push({ el: span, currentAxes: axes, targetAxes: axes, frozen: false });
+  });
+  return spans;
+}
+
+// ============================================================
+// DEMO A: Core generative drift
+// ============================================================
+
+const charsA = createChars(document.getElementById('wordA'));
+const timersA = [];
+
+function driftChar(charObj, stagger) {
+  function tick() {
+    if (paused || charObj.frozen) {
+      timersA.push(setTimeout(tick, 200));
+      return;
+    }
+    const newAxes = randomAxes();
+    charObj.targetAxes = newAxes;
+    // Each char gets slightly different duration for organic feel
+    const charSpeed = speed + rand(-300, 300);
+    applyAxes(charObj.el, newAxes, charSpeed);
+    charObj.currentAxes = newAxes;
+    timersA.push(setTimeout(tick, charSpeed + rand(0, 500)));
+  }
+  timersA.push(setTimeout(tick, stagger));
+}
+
+charsA.forEach((c, i) => driftChar(c, i * 300));
+
+// ============================================================
+// DEMO B: Layered echo
+// ============================================================
+
+const charsB1 = createChars(document.getElementById('wordB1'));
+const charsB2 = createChars(document.getElementById('wordB2'));
+const charsB3 = createChars(document.getElementById('wordB3'));
+
+function driftEcho(primary, echo1, echo2, stagger) {
+  function tick() {
+    if (paused) {
+      setTimeout(tick, 200);
+      return;
+    }
+    const newAxes = randomAxes();
+    const charSpeed = speed + rand(-300, 300);
+
+    // Primary: immediate
+    applyAxes(primary.el, newAxes, charSpeed);
+
+    // Echo 1: delayed, slightly different easing
+    setTimeout(() => {
+      applyAxes(echo1.el, newAxes, charSpeed * 1.3, 'cubic-bezier(0.4, 0, 0.2, 1)');
+    }, charSpeed * 0.3);
+
+    // Echo 2: more delayed, even slower
+    setTimeout(() => {
+      applyAxes(echo2.el, newAxes, charSpeed * 1.8, 'cubic-bezier(0.4, 0, 0.2, 1)');
+    }, charSpeed * 0.6);
+
+    setTimeout(tick, charSpeed + rand(0, 500));
+  }
+  setTimeout(tick, stagger);
+}
+
+LETTERS.forEach((_, i) => {
+  driftEcho(charsB1[i], charsB2[i], charsB3[i], i * 400);
+});
+
+// ============================================================
+// DEMO C: Mouse proximity + generative drift
+// ============================================================
+
+const charsC = createChars(document.getElementById('wordC'));
+let mouseX = -1000, mouseY = -1000;
+
+const demoC = document.getElementById('demoC');
+demoC.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+demoC.addEventListener('mouseleave', () => {
+  mouseX = -1000;
+  mouseY = -1000;
+});
+
+// Generative layer
+charsC.forEach((c, i) => {
+  function tick() {
+    if (paused) { setTimeout(tick, 200); return; }
+    c.targetAxes = randomAxes();
+    setTimeout(tick, speed + rand(0, 1000));
+  }
+  setTimeout(tick, i * 350);
+});
+
+// Proximity influence loop — runs every frame
+function proximityLoop() {
+  charsC.forEach((c) => {
+    const rect = c.el.getBoundingClientRect();
+    const charCenterX = rect.left + rect.width / 2;
+    const charCenterY = rect.top + rect.height / 2;
+    const dist = Math.sqrt(
+      Math.pow(mouseX - charCenterX, 2) +
+      Math.pow(mouseY - charCenterY, 2)
+    );
+
+    const influence = Math.max(0, 1 - dist / 250); // 0 = far, 1 = on top
+
+    // Blend between random target and "attracted" state (bold + wide)
+    const attracted = { wdth: 151, wght: 900, opsz: 144 };
+    const blended = {
+      wdth: Math.round(c.targetAxes.wdth + (attracted.wdth - c.targetAxes.wdth) * influence),
+      wght: Math.round(c.targetAxes.wght + (attracted.wght - c.targetAxes.wght) * influence),
+      opsz: Math.round(c.targetAxes.opsz + (attracted.opsz - c.targetAxes.opsz) * influence),
+    };
+
+    applyAxes(c.el, blended, 150, 'linear');
+
+    // Color: closer = brighter
+    if (influence > 0.3) {
+      c.el.style.color = `var(--bone)`;
+    } else {
+      c.el.style.color = `var(--dun)`;
+    }
+  });
+  requestAnimationFrame(proximityLoop);
+}
+proximityLoop();
+
+// ============================================================
+// DEMO D: Click to freeze
+// ============================================================
+
+const charsD = createChars(document.getElementById('wordD'));
+
+charsD.forEach((c, i) => {
+  // Click to freeze/unfreeze
+  c.el.addEventListener('click', () => {
+    c.frozen = !c.frozen;
+    c.el.classList.toggle('frozen', c.frozen);
+  });
+
+  // Generative drift
+  function tick() {
+    if (paused || c.frozen) {
+      setTimeout(tick, 200);
+      return;
+    }
+    const newAxes = randomAxes();
+    c.targetAxes = newAxes;
+    const charSpeed = speed + rand(-300, 300);
+    applyAxes(c.el, newAxes, charSpeed);
+    c.currentAxes = newAxes;
+    setTimeout(tick, charSpeed + rand(0, 500));
+  }
+  setTimeout(tick, i * 300);
+});
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+// Speed slider
+const speedSlider = document.getElementById('speedSlider');
+const speedVal = document.getElementById('speedVal');
+speedSlider.addEventListener('input', (e) => {
+  speed = parseInt(e.target.value);
+  speedVal.textContent = (speed / 1000).toFixed(1) + 's';
+});
+
+// Easing buttons
+const easings = {
+  easeSmooth: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  easeSpring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  easeLinear: 'linear',
+  easeSteps: 'steps(6)',
+};
+Object.entries(easings).forEach(([id, value]) => {
+  document.getElementById(id).addEventListener('click', () => {
+    easing = value;
+    document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // Re-activate pause/shuffle states
+    if (paused) document.getElementById('pauseBtn').classList.add('active');
+  });
+});
+
+// Pause
+const pauseBtn = document.getElementById('pauseBtn');
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  pauseBtn.classList.toggle('active', paused);
+});
+
+// Shuffle all now
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  const allChars = [...charsA, ...charsB1, ...charsB2, ...charsB3, ...charsC, ...charsD];
+  allChars.forEach(c => {
+    if (c.frozen) return;
+    const newAxes = randomAxes();
+    c.targetAxes = newAxes;
+    c.currentAxes = newAxes;
+    applyAxes(c.el, newAxes, 600);
+  });
+});
+</script>
+
+</body>
+</html>

@@ -476,50 +476,64 @@ Preload in `<head>` to eliminate FOUT:
 
 ---
 
-## 9. Component Reference
+## 9. Component Reference (V2.0 Architecture)
 
-### `<Hero>` (Phase 2 — Built)
-- `'use client'` component with `useEffect` + `useRef`
-- Full-width, `--hero-height` (50vh) on load
-- JUANEMO as real DOM `<div>` with `role="heading" aria-level={1}` — not SVG, not canvas
-- Color: `--color-text-muted` (Dun) — warmer against Gunmetal, per Figma
-- Viewport-responsive `wdth` + `wght` + `opsz` via `updateHeroAxes()` (resize listener)
-- `fitHeroText()` runs after axis update (with `requestAnimationFrame` gap for glyph re-render)
-- Padding: `calc(var(--page-margin) / 2)` — halved per JC feedback
-- Text docked top-left (`justify-content: flex-start; align-items: flex-start`) per JC feedback
-- `aria-label="Juanemo"` on the element
-- Mood system: **on hold** (script commented out)
-- Scroll compression: **deferred** (was visually broken)
-- Accent rule: **deferred** (waiting for hero composition to settle)
+### `<ExperimentShell>` — Full-Viewport Container
+- Wraps every experiment in a consistent full-screen container
+- `width: 100vw; height: 100vh; overflow: hidden; position: relative`
+- Background: `var(--color-bg)` (Gunmetal default)
+- No scrolling — the viewport IS the frame
+- Experiments render inside this shell
 
-### `<ProjectList>` (Phase 3 — Built)
-- Newspaper-style full-bleed vertical list — no cards, no max-width constraint
-- Each entry is a numbered grid: `01`, `02` in Bittersweet (weight 300, same size as title) + content column
-- Title: all-caps, `clamp(28px, 3vw, 40px)`, weight 500, `-0.02em` tracking
-- Below title: `.label-lg` eyebrow showing `publishedDate` string
-- Description: body copy (15px, `--color-text-soft`)
-- "View Project →" CTA: `--color-text-muted` at rest, `--color-accent` on hover, arrow nudges 3px right
-- Opens `_blank` with `rel="noopener noreferrer"`
-- Thin 1px HR separators (`--color-surface`) between entries
-- Mobile (≤600px): numbers stack on top of content
-- Data: `data/projects.ts` — `Project` interface has `name`, `description`, `url`, `publishedDate`
+### `<LogoMark>` — Static Generative Identity
+- `'use client'` component — randomized once per load, then frozen
+- Props: `size?: number` (default 22), `className?: string`
+- Renders "JUANEMO" as individual `<span>` elements within `<a href="/">`
+- Each letter gets independent `randomAxes()` values on mount via `useEffect`
+- Same axis ranges and `lib/generativeAxes.ts` as the hero experiments
+- Position: fixed top-left, `--page-margin` from edges, `z-index: 50`
+- Renders in `app/layout.tsx` — visible on all pages
+- `aria-label="Juanemo — home"`
+- Color: `var(--color-text-muted)` (Dun), letter-spacing `-0.02em`
+- Handle hydration: render neutral axes on server, randomize in `useEffect`
 
-### `<Footer>` (Phase 3 — Built)
-- Three-column layout, full-width with `--page-margin` padding
-- Left: `juanemo.com`
-- Center: `© 2026 Juan-Carlos Morales`
-- Right: Email + LinkedIn contact links
-- All text in `.label` styles (11px, 500 weight, 0.1em tracking, uppercase, `--color-text-faint`)
-- Links hover to `--color-accent` (Bittersweet)
-- 1px top border (`--color-surface`)
-- Mobile (≤600px): stacks vertically, centered
+### `<IndexOverlay>` — Full-Screen Experiment Navigation
+- Full-screen overlay (`100vw × 100vh`), dark background (`--color-bg`)
+- Triggered by INDEX label (top-right) or keyboard shortcut
+- Lists all experiments in reverse chronological order (newest first)
+- Each entry: experiment name + published date, minimal typography
+- Click → navigate to `/experiments/[slug]`, overlay closes
+- Keyboard: Escape to close, Tab to navigate entries
+- Transition: smooth fade or slide (300ms, `--ease-in-out`)
+- Data source: `data/experiments.ts`
+
+### `<GenerativeType>` — Experiment #1 (Refactored from Hero)
+- The current Hero component, refactored to live at `components/experiments/GenerativeType.tsx`
+- `'use client'` component with `useEffect`, `useRef`, `useCallback`
+- 7 individual `<span>` elements, each with independent `font-variation-settings`
+- Generative drift + hold cycle: hold 8s → staggered shift (80ms, 1.5s transitions) → repeat
+- Spring easing: `cubic-bezier(0.34, 1.56, 0.64, 1)` — overshoots and settles
+- **ScaleXY fill**: `transform: scale(scaleX, scaleY)` via hidden clone + `ResizeObserver` (no measurement flash)
+- Font size: `clamp(60px, 17vw, 280px)`, letter-spacing `-0.03em`, line-height `0.85`
+- Color: `--color-text-muted` (Dun)
+- Container: fixed `height: 50vh` desktop, `35vh` mobile (≤600px)
+- Padding: `var(--page-margin)`, docked top-left, `transform-origin: top left`
+- Desktop axis ranges: wdth 25–151, wght 300–900, opsz 8–144
+- Mobile axis ranges: wdth 40–120, wght 300–750, opsz 8–120 (via `randomAxesForWord()` — 1 extreme char + rest moderate)
+- Intro: letters stagger-fade in (100ms apart, 400ms fade each)
+- `role="heading" aria-level={1}`, `aria-label="Juanemo"`
+- `prefers-reduced-motion`: transitions instant on both `.char` and `.word`
+
+### Archived Components (V1 — Superseded)
+- `<ProjectList>` — newspaper-style index. Content moves to `<IndexOverlay>`.
+- `<Footer>` — three-column footer. Removed from experiment pages. May return in a different form.
 
 ---
 
 ## 10. Design Principles for Agents
 
 1. **Typography is the product.** Every decision serves the type.
-2. **Bittersweet is a line, not a color.** One horizontal rule per composition. Never on text, never as fill.
+2. **Bittersweet is used with extreme restraint.** Originally a single horizontal rule per composition. Phase 3 expanded its use to project entry numbers (`01`, `02`) as a typographic accent — JC-approved. Still never used as body text color or background fill.
 3. **Dun, not Bone, for display type on dark.** The warmth difference is subtle but real and confirmed by Figma.
 4. **The dash separator `---` with negative tracking is a typographic signature.** Use it for list items and the name treatment — not as decoration.
 5. **Each mood must look deliberate.** SHARP should look like someone chose SHARP.

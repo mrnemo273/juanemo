@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Generative Drift with Hold</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* --- Controls --- */
+  .controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--outer-space);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .controls .title {
+    color: var(--bittersweet);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    color: var(--dun);
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .control-group input[type="range"] {
+    width: 80px;
+    accent-color: var(--bittersweet);
+  }
+  .control-group .value {
+    color: var(--bone);
+    min-width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    padding: 5px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    background: none;
+    border: 1px solid var(--outer-space);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--bittersweet); color: var(--bittersweet); }
+  .btn.active { border-color: var(--bittersweet); background: var(--bittersweet); color: var(--gunmetal); }
+
+  /* --- Hero --- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 24px 60px;
+  }
+
+  .word {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+
+  .char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(50px, 13vw, 200px);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings;
+  }
+
+  /* --- Status indicator --- */
+  .status {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 14px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--outer-space);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dun);
+    opacity: 0.4;
+    transition: all 0.3s;
+  }
+  .status-dot.active {
+    background: var(--bittersweet);
+    opacity: 1;
+  }
+  .status-label {
+    color: var(--dun);
+    opacity: 0.6;
+  }
+  .status-timer {
+    color: var(--bone);
+    font-variant-numeric: tabular-nums;
+    min-width: 30px;
+  }
+
+  /* Progress bar under the controls */
+  .progress-track {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--outer-space);
+    z-index: 101;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--bittersweet);
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  .progress-bar.transitioning {
+    transition: width 0s;
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <span class="title">Drift + Hold</span>
+  <div class="control-group">
+    <label>Hold</label>
+    <input type="range" id="holdSlider" min="3" max="30" value="8" step="1">
+    <span class="value" id="holdVal">8s</span>
+  </div>
+  <div class="control-group">
+    <label>Transition</label>
+    <input type="range" id="transSlider" min="500" max="4000" value="1500" step="100">
+    <span class="value" id="transVal">1.5s</span>
+  </div>
+  <div class="control-group">
+    <label>Easing</label>
+    <button class="btn ease-btn" data-ease="smooth">Smooth</button>
+    <button class="btn ease-btn active" data-ease="spring">Spring</button>
+    <button class="btn ease-btn" data-ease="steps">Steps</button>
+  </div>
+  <div class="control-group">
+    <label>Axes</label>
+    <button class="btn axis-btn active" data-mode="wdth+wght">W+W</button>
+    <button class="btn axis-btn" data-mode="all">All</button>
+  </div>
+  <div class="control-group">
+    <button class="btn" id="shuffleBtn">Shuffle Now</button>
+  </div>
+</div>
+<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+<section class="hero">
+  <div class="word" id="word"></div>
+</section>
+
+<div class="status">
+  <span class="status-dot" id="statusDot"></span>
+  <span class="status-label" id="statusLabel">Holding</span>
+  <span class="status-timer" id="statusTimer">8</span>
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const container = document.getElementById('word');
+
+const AXIS_RANGES = {
+  wdth: { min: 25,  max: 151 },
+  wght: { min: 300, max: 900 },  // floor raised from 100 → 300 so letters never vanish
+  opsz: { min: 8,   max: 144 },
+  GRAD: { min: -200, max: 150 },
+  XTRA: { min: 323,  max: 603 },
+  XOPQ: { min: 27,   max: 175 },
+  YOPQ: { min: 25,   max: 135 },
+  YTUC: { min: 528,  max: 760 },
+  slnt: { min: -10,  max: 0 },
+};
+
+let holdDuration = 8000;   // ms to admire the configuration
+let transDuration = 1500;  // ms for the transition between states
+let axisMode = 'wdth+wght';
+
+const EASINGS = {
+  smooth: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  steps:  'steps(6)',
+};
+let currentEasing = 'spring';
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+function randomAxes() {
+  const a = { wdth: 100, wght: 400, opsz: 80, GRAD: 0, XTRA: 468, XOPQ: 88, YOPQ: 78, YTUC: 620, slnt: 0 };
+  if (axisMode === 'wdth+wght') {
+    a.wdth = rand(AXIS_RANGES.wdth.min, AXIS_RANGES.wdth.max);
+    a.wght = rand(AXIS_RANGES.wght.min, AXIS_RANGES.wght.max);
+    a.opsz = rand(AXIS_RANGES.opsz.min, AXIS_RANGES.opsz.max);
+  } else {
+    Object.keys(AXIS_RANGES).forEach(k => { a[k] = rand(AXIS_RANGES[k].min, AXIS_RANGES[k].max); });
+  }
+  return a;
+}
+
+function axisString(a) {
+  return Object.entries(a).map(([k, v]) => `'${k}' ${v}`).join(', ');
+}
+
+// Create chars
+const chars = LETTERS.map((letter, i) => {
+  const el = document.createElement('span');
+  el.className = 'char';
+  el.textContent = letter;
+  const axes = randomAxes();
+  el.style.fontVariationSettings = axisString(axes);
+  container.appendChild(el);
+  return { el, axes };
+});
+
+// UI elements
+const progressBar = document.getElementById('progressBar');
+const statusDot = document.getElementById('statusDot');
+const statusLabel = document.getElementById('statusLabel');
+const statusTimer = document.getElementById('statusTimer');
+
+// ============================================================
+// CYCLE ENGINE: transition → hold → transition → hold ...
+// ============================================================
+
+let state = 'holding'; // 'transitioning' or 'holding'
+let cycleTimer = null;
+let countdownInterval = null;
+let holdRemaining = 0;
+
+function shuffleAll() {
+  // Stagger each character's transition slightly for organic feel
+  chars.forEach((c, i) => {
+    const stagger = i * 80; // 80ms between each letter
+    const charDuration = transDuration + rand(-200, 200);
+
+    setTimeout(() => {
+      c.axes = randomAxes();
+      c.el.style.transition = `font-variation-settings ${charDuration}ms ${EASINGS[currentEasing]}`;
+      c.el.style.fontVariationSettings = axisString(c.axes);
+    }, stagger);
+  });
+}
+
+function startTransition() {
+  state = 'transitioning';
+  statusDot.classList.add('active');
+  statusLabel.textContent = 'Shifting';
+  statusTimer.textContent = '';
+  progressBar.classList.add('transitioning');
+  progressBar.style.width = '0%';
+
+  shuffleAll();
+
+  // After the longest stagger + transition finishes, start holding
+  const totalTransTime = transDuration + (LETTERS.length * 80) + 200;
+  cycleTimer = setTimeout(() => startHold(), totalTransTime);
+}
+
+function startHold() {
+  state = 'holding';
+  statusDot.classList.remove('active');
+  statusLabel.textContent = 'Holding';
+  holdRemaining = holdDuration;
+
+  // Animate progress bar across the hold period
+  progressBar.classList.remove('transitioning');
+  progressBar.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progressBar.style.transition = `width ${holdDuration}ms linear`;
+      progressBar.style.width = '100%';
+    });
+  });
+
+  // Countdown display
+  clearInterval(countdownInterval);
+  updateCountdown();
+  countdownInterval = setInterval(() => {
+    holdRemaining -= 100;
+    updateCountdown();
+  }, 100);
+
+  cycleTimer = setTimeout(() => {
+    clearInterval(countdownInterval);
+    // Reset progress bar instantly
+    progressBar.style.transition = 'none';
+    progressBar.style.width = '0%';
+    startTransition();
+  }, holdDuration);
+}
+
+function updateCountdown() {
+  const secs = Math.max(0, Math.ceil(holdRemaining / 1000));
+  statusTimer.textContent = secs + 's';
+}
+
+// Kick off
+startHold();
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+// Hold duration
+const holdSlider = document.getElementById('holdSlider');
+const holdVal = document.getElementById('holdVal');
+holdSlider.addEventListener('input', e => {
+  holdDuration = parseInt(e.target.value) * 1000;
+  holdVal.textContent = e.target.value + 's';
+});
+
+// Transition duration
+const transSlider = document.getElementById('transSlider');
+const transVal = document.getElementById('transVal');
+transSlider.addEventListener('input', e => {
+  transDuration = parseInt(e.target.value);
+  transVal.textContent = (transDuration / 1000).toFixed(1) + 's';
+});
+
+// Easing
+document.querySelectorAll('.ease-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ease-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentEasing = btn.dataset.ease;
+  });
+});
+
+// Axis mode
+document.querySelectorAll('.axis-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.axis-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    axisMode = btn.dataset.mode;
+  });
+});
+
+// Shuffle now — interrupt current cycle
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  clearTimeout(cycleTimer);
+  clearInterval(countdownInterval);
+  progressBar.style.transition = 'none';
+  progressBar.style.width = '0%';
+  startTransition();
+});
+</script>
+
+</body>
+</html>

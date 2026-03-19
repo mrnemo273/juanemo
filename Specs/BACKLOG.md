@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-17 — Initial creation (pre-build)
+2026-03-19 — **V2.0 Architecture pivot.** Site restructured as journal of full-screen experiments. All previous phases complete or superseded.
 
 ---
 
@@ -11,97 +11,85 @@ This is the single source of truth for all work items on the Juanemo project. Th
 
 | Status | Meaning |
 |---|---|
-| `🔲 TODO` | Scoped for V1, not yet started |
+| `🔲 TODO` | Scoped, not yet started |
 | `🔵 IN PROGRESS` | Currently being worked in an active phase |
 | `✅ DONE` | Completed and approved by JC |
-| `🔁 REWORK` | Completed but JC requested changes |
-| `📋 V2` | Deferred — not in scope for V1 |
-
-Each item references the phase it belongs to. When a phase completes, the scrummaster moves items from TODO/IN PROGRESS → DONE (or REWORK if changes are needed).
+| `⏸ DEFERRED` | Paused or superseded |
+| `📋 V2+` | Deferred — not in scope for current sprint |
 
 ---
 
-## V1 Backlog
+## Completed Work (Foundation)
 
-### Phase 1 — Scaffolding & Design Tokens
+All previous phases built the foundation that the V2.0 architecture builds on. These are done:
 
-| # | Item | Status | Notes |
-|---|---|---|---|
-| 1.1 | Initialize Next.js 14+ project (App Router, TypeScript, ESLint) | 🔲 TODO | |
-| 1.2 | Install Roboto Flex and DM Sans via Fontsource | 🔲 TODO | |
-| 1.3 | Create `globals.css` with full token system (colors, spacing, motion, font axes) | 🔲 TODO | All tokens from DESIGN_SYSTEM.md |
-| 1.4 | Implement dark/light mode CSS token switching via `[data-theme]` | 🔲 TODO | Dark default |
-| 1.5 | Create type utility classes (display, headline, body variants, labels, dash-separator, cta, accent-rule) | 🔲 TODO | |
-| 1.6 | Set up `app/layout.tsx` with font imports, theme init script, mood init script | 🔲 TODO | Both scripts in `<head>` before paint |
-| 1.7 | Create `data/projects.ts` with TypeScript interface and initial entry | 🔲 TODO | |
-| 1.8 | Create `lib/moods.ts` — mood definitions export | 🔲 TODO | |
-| 1.9 | Create `lib/fitText.ts` — binary search font-size fitter | 🔲 TODO | |
-| 1.10 | Create `lib/heroListeners.ts` — resize + scroll listener functions | 🔲 TODO | |
-| 1.11 | Verify `npm run build` passes with no errors | 🔲 TODO | |
-
-### Phase 2 — Hero Component
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| 2.1 | Create `Hero.tsx` + `Hero.module.css` — JUANEMO as real DOM text | 🔲 TODO | Roboto Flex, all-caps, Dun color |
-| 2.2 | Wire viewport-responsive width axis (wdth 25–151, opsz 8–144) | 🔲 TODO | Resize listener, 320–1920px mapping |
-| 2.3 | Implement fitText — JUANEMO fills container edge to edge | 🔲 TODO | Binary search, runs on mount + resize |
-| 2.4 | Implement scroll compression (wght, GRAD, size, opacity, tracking) | 🔲 TODO | 0–300px scroll range |
-| 2.5 | Add Bittersweet accent rule (2px, structurally positioned) | 🔲 TODO | |
-| 2.6 | Verify mood system integration — 5 moods visibly distinct, no flash | 🔲 TODO | |
-| 2.7 | Responsive QA: 320px, 768px, 1280px, 1920px, 2560px | 🔲 TODO | |
-| 2.8 | `prefers-reduced-motion` disables transitions | 🔲 TODO | |
-
-### Phase 3 — Project List & Data Layer
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| 3.1 | Finalize `data/projects.ts` with TypeScript interface and population | 🔲 TODO | |
-| 3.2 | Create `ProjectList.tsx` + `ProjectList.module.css` | 🔲 TODO | Eyebrow, title link, description, tags |
-| 3.3 | CTA arrow behavior (muted → Bittersweet, 3px nudge on hover) | 🔲 TODO | |
-| 3.4 | Responsive layout within `--page-margin`, vertical rhythm | 🔲 TODO | |
-| 3.5 | Verify adding a new project object renders immediately | 🔲 TODO | |
-
-### Phase 4 — Footer & Theme Toggle
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| 4.1 | Create `Footer.tsx` + `Footer.module.css` — three-column layout | 🔲 TODO | |
-| 4.2 | Dash separator name treatment: `JUAN---CARLOS MORALES` | 🔲 TODO | `-0.15em` tracking |
-| 4.3 | "BUILT WITH CLAUDE CODE →" link (Bittersweet hover, links to claude.ai) | 🔲 TODO | |
-| 4.4 | Theme toggle: `DARK · LIGHT` text labels, localStorage persistence | 🔲 TODO | No flash on load |
-| 4.5 | Compose full page in `app/page.tsx`: Hero → Projects → Footer | 🔲 TODO | |
-| 4.6 | Responsive footer at all breakpoints | 🔲 TODO | |
-
-### Phase 5 — Polish, Performance & Deploy
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| 5.1 | Font preloading — `<link rel="preload">` for Roboto Flex woff2 | 🔲 TODO | |
-| 5.2 | Lighthouse audit: LCP < 2s, CLS = 0, Performance 90+ | 🔲 TODO | |
-| 5.3 | Accessibility audit: WCAG AA contrast, aria-labels, keyboard nav | 🔲 TODO | |
-| 5.4 | Cross-browser testing: Chrome, Safari, Firefox (desktop + mobile) | 🔲 TODO | |
-| 5.5 | Responsive QA: full range 320–2560px | 🔲 TODO | |
-| 5.6 | Deploy to Vercel, verify production build | 🔲 TODO | |
-| 5.7 | Write README.md (run locally, add a project, stack credits) | 🔲 TODO | |
+| Phase | Status | Key Deliverables |
+|---|---|---|
+| Phase 1 — Scaffolding | ✅ DONE | Next.js 16, tokens, fonts (`full.css`), CSS custom properties |
+| Phase 2 — Hero V1 | ✅ DONE (superseded) | Viewport-responsive axes. Mood system tested and deferred. |
+| Phase 3 — Project List | ✅ DONE (superseded) | Newspaper-style index, Footer, data model. Moving to IndexOverlay. |
+| Hero V2 — Generative Drift | ✅ DONE | Per-character drift + hold, spring easing, scaleX, ResizeObserver |
+| Hero V3 — ScaleXY + Mobile | ✅ DONE | ScaleXY fill, hidden clone, mobile axis caps, `randomAxesForWord()` |
 
 ---
 
-## V2 Backlog (Deferred)
+## V2.0 Architecture — Experiment Journal 🔵
 
-Items from PRD and TRD marked as future/deferred. These do not block V1 launch.
+### ARC.1 — Routing & Data Model
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| ARC.1.1 | Create `data/experiments.ts` — new data model (slug, name, description, publishedDate) | 🔲 TODO | Replaces `data/projects.ts` |
+| ARC.1.2 | Create `/app/experiments/[slug]/page.tsx` — dynamic route for experiments | 🔲 TODO | Loads experiment component by slug |
+| ARC.1.3 | Update `/app/page.tsx` — redirect to latest experiment | 🔲 TODO | Reads `experiments[0].slug`, redirects |
+| ARC.1.4 | Update `/app/layout.tsx` — add LogoMark + INDEX trigger to shared layout | 🔲 TODO | Persistent across all experiment pages |
+
+### ARC.2 — New Components
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| ARC.2.1 | Create `ExperimentShell.tsx` — full-viewport no-scroll container | 🔲 TODO | `100vw × 100vh`, `overflow: hidden` |
+| ARC.2.2 | Create `LogoMark.tsx` — static generative logo | 🔲 TODO | Spec in PHASE_HERO_V2.md (HV2.4). Fixed top-left. |
+| ARC.2.3 | Create `IndexOverlay.tsx` — full-screen experiment list | 🔲 TODO | Dark overlay, typographic list, reverse chronological |
+| ARC.2.4 | Refactor `Hero.tsx` → `experiments/GenerativeType.tsx` | 🔲 TODO | Same component, new location. Experiment #1. |
+
+### ARC.3 — Cleanup & Integration
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| ARC.3.1 | Remove `ProjectList.tsx` and `Footer.tsx` from experiment pages | 🔲 TODO | Content migrates to IndexOverlay |
+| ARC.3.2 | Remove scrolling from experiment pages (`overflow: hidden`) | 🔲 TODO | |
+| ARC.3.3 | Verify GenerativeType fills 100vh inside ExperimentShell | 🔲 TODO | |
+| ARC.3.4 | Build + responsive QA (320–2560px) | 🔲 TODO | |
+| ARC.3.5 | Deploy to Vercel, verify production | 🔲 TODO | |
+
+### ARC.4 — Theme Toggle (Carried from Phase 4)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| ARC.4.1 | Theme toggle: `DARK · LIGHT` in footer area or INDEX overlay | 🔲 TODO | `<head>` script already in place |
+| ARC.4.2 | Verify light mode across all components | 🔲 TODO | |
+
+---
+
+## V2+ Backlog (Future)
 
 | # | Item | Source | Notes |
 |---|---|---|---|
-| V2.1 | Generative background element (subtle, typographic, or particle-based) | PRD, TRD | Flash-era homage |
-| V2.2 | Project hover states — preview or texture reveal | PRD | |
-| V2.3 | "Making of" easter egg — surface Claude Code prompts used per project | PRD | |
-| V2.4 | Sound layer — ambient, minimal, opt-in | PRD, TRD | |
-| V2.5 | Additional moods beyond the initial 5 | PRD | |
-| V2.6 | Per-project mood assignment on hover | PRD, TRD | Each project triggers a specific mood |
-| V2.7 | Mood name surfaced visibly (hidden element, console.log easter egg) | TRD | |
-| V2.8 | Analytics integration (Vercel Analytics or Plausible) | PRD | "Added silently" — low priority |
-| V2.9 | Font subsetting (Latin + uppercase only) for file size optimization | TRD | Only if font file is large |
+| V2.1 | Generative background element | PRD V1 | Could be its own experiment |
+| V2.2 | Sound layer — ambient, minimal, opt-in | PRD V1 | Future experiment |
+| V2.3 | Mouse-responsive axis experiment | Prototype session | `prototypes/hero-effects.html` demo #1 |
+| V2.4 | Gradient fill wordmark experiment | Prototype session | `prototypes/hero-effects.html` demo #2 |
+| V2.5 | Outline → fill reveal experiment | Prototype session | `prototypes/hero-effects.html` demo #3 |
+| V2.6 | Per-character proximity experiment | Prototype session | `prototypes/hero-generative-chars.html` demo C |
+| V2.7 | Layered echo experiment | Prototype session | `prototypes/hero-generative-chars.html` demo B |
+| V2.8 | Freeze frame experiment | Prototype session | `prototypes/hero-generative-chars.html` demo D |
+| V2.9 | Logo specimen grid page | Prototype session | `prototypes/hero-with-logo.html` — logo at multiple sizes |
+| B.1 | Mood system v2 — width-safe axes only (GRAD, slnt, YTUC) | Phase 2 | Could enhance any experiment |
+| B.2 | Verify Vercel Framework Preset = "Next.js" | Phase 1 | |
+| B.3 | Confirm contact email address | Phase 3 | `hello@juanemo.com` is placeholder |
+| B.4 | Font preloading — `<link rel="preload">` | Phase 1 | |
+| B.5 | Lighthouse audit: Performance 90+, Accessibility 95+ | Phase 5 | |
 
 ---
 
@@ -109,4 +97,7 @@ Items from PRD and TRD marked as future/deferred. These do not block V1 launch.
 
 | Date | Change | By |
 |---|---|---|
-| 2026-03-17 | Initial backlog created from SPRINT_PLAN.md, PRD.md, and TRD.md | Scrummaster |
+| 2026-03-17 | Initial backlog — Phases 1–5 from original sprint plan | Scrummaster |
+| 2026-03-17 | Phases 1–3 complete. Hero V2, V3 complete. | Scrummaster |
+| 2026-03-18 | Hero V2 + V3 complete. Generative per-character drift, scaleXY, mobile caps. | Scrummaster |
+| 2026-03-19 | **V2.0 Architecture pivot.** Backlog restructured for experiment journal. Old phases archived. New ARC.1–ARC.4 work items. V2+ backlog populated with prototype experiment ideas. | Scrummaster (JC creative direction) |

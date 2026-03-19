@@ -113,7 +113,7 @@ At each viewport verify:
   - Brief project description (1-2 sentences)
   - How to run locally: `npm install && npm run dev`
   - How to add a project: edit `data/projects.ts`, add an object, push to main
-  - Stack: Next.js 14+, TypeScript, CSS Modules, Roboto Flex, DM Sans
+  - Stack: Next.js 16, TypeScript, CSS Modules, Roboto Flex, DM Sans
   - Font credits: Roboto Flex (Google), DM Sans (Colophon Foundry via Google Fonts)
   - Deployed on Vercel
 - [ ] Keep it concise — this is a personal project, not a library

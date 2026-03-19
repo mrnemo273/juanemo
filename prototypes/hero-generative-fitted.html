@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Generative Fitted Wordmark</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--gunmetal);
+    color: var(--bone);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* --- Controls --- */
+  .controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--outer-space);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .controls .title {
+    color: var(--bittersweet);
+    letter-spacing: 0.15em;
+    white-space: nowrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    color: var(--dun);
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .control-group input[type="range"] {
+    width: 80px;
+    accent-color: var(--bittersweet);
+  }
+  .control-group .value {
+    color: var(--bone);
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    padding: 5px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    background: none;
+    border: 1px solid var(--outer-space);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--bittersweet); color: var(--bittersweet); }
+  .btn.active { border-color: var(--bittersweet); background: var(--bittersweet); color: var(--gunmetal); }
+
+  /* --- Hero container --- */
+  .hero {
+    width: 100%;
+    height: 50vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0 calc(clamp(24px, 5vw, 80px) / 2);
+    overflow: hidden;
+    margin-top: 60px;
+  }
+
+  .word-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+  }
+
+  .char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    line-height: 0.85;
+    color: var(--dun);
+    display: inline-block;
+    will-change: font-variation-settings, transform;
+    /* Scale transition uses spring easing, axes use smooth */
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                font-variation-settings 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: left baseline;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* --- Info bar at bottom --- */
+  .info {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px;
+    background: rgba(31, 38, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--outer-space);
+    font-size: 11px;
+    color: var(--dun);
+    opacity: 0.7;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .info .label { color: var(--bittersweet); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; }
+  .info .mono { font-variant-numeric: tabular-nums; color: var(--bone); }
+
+  /* --- Accent rule --- */
+  .accent-rule {
+    width: 100%;
+    height: 2px;
+    background: var(--bittersweet);
+    margin-top: 4px;
+  }
+
+  /* --- Below-fold content placeholder --- */
+  .below {
+    padding: 64px calc(clamp(24px, 5vw, 80px));
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .below p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--dun);
+    opacity: 0.5;
+    max-width: 560px;
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <span class="title">Fitted Generative</span>
+  <div class="control-group">
+    <label>Speed</label>
+    <input type="range" id="speedSlider" min="600" max="5000" value="2000" step="100">
+    <span class="value" id="speedVal">2.0s</span>
+  </div>
+  <div class="control-group">
+    <label>Easing</label>
+    <button class="btn ease-btn active" data-ease="spring">Spring</button>
+    <button class="btn ease-btn" data-ease="smooth">Smooth</button>
+    <button class="btn ease-btn" data-ease="steps">Steps</button>
+  </div>
+  <div class="control-group">
+    <label>Axes</label>
+    <button class="btn axis-btn active" data-mode="wdth+wght">Width + Weight</button>
+    <button class="btn axis-btn" data-mode="wdth">Width Only</button>
+    <button class="btn axis-btn" data-mode="all">All Axes</button>
+  </div>
+  <div class="control-group">
+    <button class="btn" id="pauseBtn">Pause</button>
+    <button class="btn" id="shuffleBtn">Shuffle</button>
+  </div>
+</div>
+
+<header class="hero" id="hero">
+  <div class="word-container" id="wordContainer"></div>
+</header>
+<div class="accent-rule"></div>
+
+<div class="below">
+  <p>The wordmark fills its container edge-to-edge at all times. Each letter independently drifts to new random axis values, and the system re-fits after every change. The spring easing overshoots slightly before settling — so the text feels like it's pushing into its space.</p>
+  <p>Resize your browser window to see the container change. The letters will re-fit to the new width while maintaining their individual axis states.</p>
+</div>
+
+<div class="info">
+  <span><span class="label">Container</span> <span class="mono" id="infoWidth">—</span></span>
+  <span><span class="label">Font Size</span> <span class="mono" id="infoSize">—</span></span>
+  <span id="charInfo"></span>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+
+const LETTERS = 'JUANEMO'.split('');
+const container = document.getElementById('wordContainer');
+
+const AXIS_RANGES = {
+  wdth: { min: 25,  max: 151 },
+  wght: { min: 100, max: 900 },
+  opsz: { min: 8,   max: 144 },
+  GRAD: { min: -200, max: 150 },
+  XTRA: { min: 323,  max: 603 },
+  XOPQ: { min: 27,   max: 175 },
+  YOPQ: { min: 25,   max: 135 },
+  YTUC: { min: 528,  max: 760 },
+  slnt: { min: -10,  max: 0 },
+};
+
+let speed = 2000;
+let paused = false;
+let axisMode = 'wdth+wght'; // 'wdth', 'wdth+wght', 'all'
+
+const EASINGS = {
+  spring: {
+    axes: 'cubic-bezier(0.16, 1, 0.3, 1)',
+    scale: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  },
+  smooth: {
+    axes: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    scale: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  },
+  steps: {
+    axes: 'steps(4)',
+    scale: 'steps(6)',
+  },
+};
+let currentEasing = 'spring';
+
+function rand(min, max) { return Math.round(min + Math.random() * (max - min)); }
+
+// ============================================================
+// CHARACTER SETUP
+// ============================================================
+
+const chars = LETTERS.map((letter) => {
+  const el = document.createElement('span');
+  el.className = 'char';
+  el.textContent = letter;
+
+  // Start with mid-range values
+  const axes = {
+    wdth: rand(60, 140),
+    wght: rand(300, 700),
+    opsz: rand(40, 120),
+    GRAD: 0,
+    XTRA: 468,
+    XOPQ: 88,
+    YOPQ: 78,
+    YTUC: 620,
+    slnt: 0,
+  };
+
+  applyAxesToEl(el, axes);
+  container.appendChild(el);
+
+  return { el, axes };
+});
+
+function applyAxesToEl(el, axes) {
+  el.style.fontVariationSettings = Object.entries(axes)
+    .map(([k, v]) => `'${k}' ${v}`)
+    .join(', ');
+}
+
+// ============================================================
+// FIT TEXT — scale each char so total fills container
+// ============================================================
+
+// We use a shared base font-size and then CSS transform: scaleX
+// to stretch/compress the entire word to fit. This means each letter
+// keeps its own axis state but the word always fills the container.
+
+function fitWord() {
+  const containerWidth = container.clientWidth;
+  if (containerWidth <= 0) return;
+
+  // Reset transforms and font-size to measure natural width
+  const baseFontSize = Math.min(containerWidth * 0.2, 300); // rough starting size
+  chars.forEach(c => {
+    c.el.style.fontSize = baseFontSize + 'px';
+    c.el.style.transform = 'scaleX(1)';
+  });
+
+  // Force layout
+  void container.offsetWidth;
+
+  // Measure total natural width of all chars
+  let totalNatural = 0;
+  chars.forEach(c => { totalNatural += c.el.getBoundingClientRect().width; });
+
+  if (totalNatural <= 0) return;
+
+  // Calculate uniform scaleX so word fills container exactly
+  const scale = containerWidth / totalNatural;
+
+  const e = EASINGS[currentEasing];
+  chars.forEach(c => {
+    c.el.style.transition =
+      `transform 0.6s ${e.scale}, font-variation-settings ${speed * 0.8}ms ${e.axes}`;
+    c.el.style.transform = `scaleX(${scale})`;
+  });
+
+  // Update info
+  document.getElementById('infoWidth').textContent = containerWidth + 'px';
+  document.getElementById('infoSize').textContent = Math.round(baseFontSize) + 'px';
+}
+
+// ============================================================
+// GENERATIVE DRIFT ENGINE
+// ============================================================
+
+function randomizeChar(charObj) {
+  const a = charObj.axes;
+
+  if (axisMode === 'wdth') {
+    a.wdth = rand(AXIS_RANGES.wdth.min, AXIS_RANGES.wdth.max);
+    a.opsz = rand(AXIS_RANGES.opsz.min, AXIS_RANGES.opsz.max);
+  } else if (axisMode === 'wdth+wght') {
+    a.wdth = rand(AXIS_RANGES.wdth.min, AXIS_RANGES.wdth.max);
+    a.wght = rand(AXIS_RANGES.wght.min, AXIS_RANGES.wght.max);
+    a.opsz = rand(AXIS_RANGES.opsz.min, AXIS_RANGES.opsz.max);
+  } else { // all
+    Object.keys(AXIS_RANGES).forEach(key => {
+      a[key] = rand(AXIS_RANGES[key].min, AXIS_RANGES[key].max);
+    });
+  }
+
+  const e = EASINGS[currentEasing];
+  charObj.el.style.transition =
+    `transform 0.6s ${e.scale}, font-variation-settings ${speed * 0.8}ms ${e.axes}`;
+
+  applyAxesToEl(charObj.el, a);
+}
+
+// Each char drifts on its own staggered schedule
+chars.forEach((c, i) => {
+  function tick() {
+    if (!paused) {
+      randomizeChar(c);
+      // Re-fit after axes settle (wait for axis transition)
+      setTimeout(() => fitWord(), 50);
+    }
+    const next = speed + rand(-400, 600) + i * 150;
+    setTimeout(tick, Math.max(400, next));
+  }
+  setTimeout(tick, i * 250 + rand(0, 300));
+});
+
+// ============================================================
+// RESIZE HANDLER
+// ============================================================
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(fitWord, 16);
+});
+
+// Initial fit
+requestAnimationFrame(() => {
+  requestAnimationFrame(fitWord);
+});
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+// Speed
+const speedSlider = document.getElementById('speedSlider');
+const speedVal = document.getElementById('speedVal');
+speedSlider.addEventListener('input', (e) => {
+  speed = parseInt(e.target.value);
+  speedVal.textContent = (speed / 1000).toFixed(1) + 's';
+});
+
+// Easing
+document.querySelectorAll('.ease-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ease-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentEasing = btn.dataset.ease;
+  });
+});
+
+// Axis mode
+document.querySelectorAll('.axis-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.axis-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    axisMode = btn.dataset.mode;
+    // Shuffle immediately to show effect
+    chars.forEach(c => randomizeChar(c));
+    setTimeout(fitWord, 50);
+  });
+});
+
+// Pause
+const pauseBtn = document.getElementById('pauseBtn');
+pauseBtn.addEventListener('click', () => {
+  paused = !paused;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  pauseBtn.classList.toggle('active', paused);
+});
+
+// Shuffle
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  chars.forEach(c => randomizeChar(c));
+  setTimeout(fitWord, 50);
+});
+
+// Character info on hover
+const charInfo = document.getElementById('charInfo');
+chars.forEach(c => {
+  c.el.addEventListener('mouseenter', () => {
+    const a = c.axes;
+    charInfo.innerHTML = `<span class="label">${c.el.textContent}</span> <span class="mono">wdth:${a.wdth} wght:${a.wght} opsz:${a.opsz}</span>`;
+  });
+});
+</script>
+
+</body>
+</html>
