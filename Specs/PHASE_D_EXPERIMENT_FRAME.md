@@ -367,12 +367,43 @@ The word anchors **top-left** and scales toward bottom-right:
 
 ---
 
+### R.7 — Builder Notes (Refinement Implementation — 2026-03-19)
+
+#### Decisions Made
+
+- **Section architecture**: Each section (A–D) is a separate React component (`SectionDrift`, `SectionEcho`, `SectionProximity`, `SectionFreeze`) rendered via a Fragment from `GenerativeType`. This gives each section its own refs, effects, and cleanup — no shared mutable state leaking between sections.
+- **Section A scaleXY fix**: Replaced the `.container` wrapper with the `<section>` element itself as the measurement target. Added `ResizeObserver` on the section (not just the clone) and double-rAF for initial `fitWord()` to ensure layout resolves before measurement. Added `overflow: hidden` to the clone to prevent scroll-height interference.
+- **Viewport flex children**: Added `flex-shrink: 0` to `.viewport > *` so sections maintain `min-height: 100%` and don't compress in the flex column.
+- **Section B echo timing**: Matches prototype exactly — row 1 leads, row 2 follows at `dur * 0.3` delay with `dur * 1.3` transition, row 3 at `dur * 0.6` delay with `dur * 1.8` transition. Row 2 uses `--color-outer-space`, row 3 uses `rgba(214, 197, 171, 0.1)`.
+- **Section C proximity**: Uses `requestAnimationFrame` loop matching prototype. Radius 250px, influence factor `max(0, 1 - dist/250)`. Letters attracted toward `wdth: 151, wght: 900, opsz: 144`. Color shifts to `--color-bone` when influence > 0.3.
+- **Section D freeze**: Click toggles `frozen` state per character. Frozen chars get `--color-bittersweet` via CSS class and skip drift updates. Shuffle respects frozen state.
+- **Controls affect all sections**: Each section reads controls via `useContext(ExperimentControlsContext)` with a `controlsRef` pattern (stays current without re-running effects). Shuffle key triggers re-randomization in all sections.
+- **Data model**: Added `sections?: string[]` to `Experiment` interface. Generative Type experiment includes `['Generative Drift', 'Layered Echo', 'Proximity + Drift', 'Freeze Frame']`.
+
+#### Problems Encountered
+
+- None significant. Build passed on first attempt after rewrite.
+
+#### Deviations from Prototype
+
+- **Section A uses scaleXY fill** (word stretches to fill viewport) while prototype uses centered `clamp()` sizing. This is intentional — the scaleXY behavior was the original design intent and the spec explicitly requires edge-to-edge fill for Section A.
+- **Sections B/C/D use centered layout with `clamp()` font sizing** matching the prototype exactly.
+- **Font family**: Uses `'Roboto Flex Variable'` (the locally-loaded variable font) instead of prototype's Google Fonts `'Roboto Flex'`. This is correct — matches the existing project setup with preloaded fonts.
+
+#### Items for Scrummaster
+
+- **Performance**: Section C's proximity effect runs a `requestAnimationFrame` loop continuously while the section is mounted. This is how the prototype works, but if performance is a concern on low-end devices, could add IntersectionObserver to pause the loop when Section C isn't visible.
+- **Accessibility**: Section D freeze chars use `onClick` on spans. Consider adding `role="button"` and keyboard handler for accessibility. The prototype doesn't have this either.
+- **ExperimentShell cleanup**: Old `ExperimentShell.tsx` and `ExperimentShell.module.css` still on disk, not imported. Can be deleted.
+
+---
+
 ## Completion Summary
 
 | Field | Value |
 |---|---|
 | Date completed | 2026-03-19 |
-| All tasks done? | Yes (D.1–D.5, D.7–D.12 complete; D.6 deferred — single-section only) |
+| All tasks done? | Yes — D.1–D.12 all complete including D.6 multi-section |
 | Build passing? | Yes — `npm run build` zero errors |
-| Deviations? | D.6 section pattern deferred to multi-section experiment phase |
-| New items for backlog? | Multi-section experiment content (Echo, Proximity, Freeze Frame); cleanup of ExperimentShell files |
+| Deviations? | Section A keeps scaleXY fill (intentional, per spec); B/C/D match prototype centered layout |
+| New items for backlog? | Performance optimization for Section C rAF loop; accessibility for Section D click targets; ExperimentShell cleanup |

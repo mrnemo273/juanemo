@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useContext } from 'react';
+import { useEffect, useRef, useContext, useState, useCallback } from 'react';
 import {
   axisString,
+  randomAxes,
   randomAxesForWord,
+  type AxisValues,
 } from '../../lib/generativeAxes';
 import {
   ExperimentControlsContext,
@@ -12,109 +14,43 @@ import {
 import styles from './GenerativeType.module.css';
 
 const LETTERS = 'JUANEMO'.split('');
-
-const STAGGER = 80; // ms — delay between each letter's start
-
+const STAGGER = 80;
 const MOBILE_BREAKPOINT = 600;
 
 function isMobileViewport(): boolean {
   return typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
-export default function GenerativeType() {
+/* ==================================================================
+   SECTION A — Generative Drift
+   ================================================================== */
+
+function SectionDrift() {
   const controls = useContext(ExperimentControlsContext);
   const controlsRef = useRef(controls);
   controlsRef.current = controls;
 
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const wordRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const cloneRef = useRef<HTMLDivElement | null>(null);
-
-  // Scale the word to fill the container width AND height
-  const fitWord = useCallback(() => {
-    const word = wordRef.current;
-    const container = containerRef.current;
-    const clone = cloneRef.current;
-    if (!word || !container || !clone) return;
-
-    // Sync clone's font-variation-settings with visible chars
-    const cloneChars = clone.querySelectorAll('span');
-    charsRef.current.forEach((el, i) => {
-      if (el && cloneChars[i]) {
-        (cloneChars[i] as HTMLElement).style.fontVariationSettings =
-          el.style.fontVariationSettings;
-      }
-    });
-
-    // Force layout on the clone only
-    void clone.offsetWidth;
-
-    const naturalWidth = clone.scrollWidth;
-    const naturalHeight = clone.getBoundingClientRect().height;
-
-    const containerStyle = getComputedStyle(container);
-    const containerWidth =
-      container.clientWidth -
-      parseFloat(containerStyle.paddingLeft) -
-      parseFloat(containerStyle.paddingRight);
-    const containerHeight =
-      container.clientHeight -
-      parseFloat(containerStyle.paddingTop) -
-      parseFloat(containerStyle.paddingBottom);
-
-    if (naturalWidth <= 0 || naturalHeight <= 0) return;
-
-    const scaleX = containerWidth / naturalWidth;
-    const scaleY = containerHeight / naturalHeight;
-
-    word.style.transform = `scale(${scaleX}, ${scaleY})`;
-  }, []);
 
   useEffect(() => {
     const chars = charsRef.current;
-    const word = wordRef.current;
-    const container = containerRef.current;
-    if (!chars.length || !word || !container) return;
+    if (!chars.length) return;
 
-    // Check reduced motion preference
     const prefersReduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches;
 
-    // --- Create hidden measurement clone ---
-    const clone = word.cloneNode(true) as HTMLDivElement;
-    clone.style.position = 'absolute';
-    clone.style.visibility = 'hidden';
-    clone.style.pointerEvents = 'none';
-    clone.style.transform = 'none';
-    clone.style.left = '0';
-    clone.style.top = '0';
-    clone.removeAttribute('role');
-    clone.removeAttribute('aria-level');
-    clone.removeAttribute('aria-label');
-    container.appendChild(clone);
-    cloneRef.current = clone;
-
-    // Initial randomization — stagger letters in one at a time
     const INTRO_STAGGER = 100;
     const INTRO_FADE = 400;
-    const cloneChars = clone.querySelectorAll('span');
     const initialAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
     chars.forEach((el, i) => {
       if (!el) return;
       el.style.opacity = '0';
       el.style.transition = 'none';
       el.style.fontVariationSettings = axisString(initialAxes[i]);
-      if (cloneChars[i]) {
-        (cloneChars[i] as HTMLElement).style.transition = 'none';
-        (cloneChars[i] as HTMLElement).style.fontVariationSettings =
-          axisString(initialAxes[i]);
-      }
     });
 
-    // Stagger each letter's appearance
     const introTimers: ReturnType<typeof setTimeout>[] = [];
     chars.forEach((el, i) => {
       if (!el) return;
@@ -126,17 +62,9 @@ export default function GenerativeType() {
           el.style.transition = `opacity ${INTRO_FADE}ms ease-out`;
           el.style.opacity = '1';
         }
-        fitWord();
       }, i * INTRO_STAGGER);
       introTimers.push(introId);
     });
-
-    requestAnimationFrame(fitWord);
-
-    const ro = new ResizeObserver(fitWord);
-    ro.observe(clone);
-
-    window.addEventListener('resize', fitWord);
 
     const clearTimers = () => {
       timersRef.current.forEach(clearTimeout);
@@ -145,18 +73,15 @@ export default function GenerativeType() {
 
     const shift = () => {
       clearTimers();
-      const currentCloneChars = clone.querySelectorAll('span');
       const wordAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
       const { speed, easing } = controlsRef.current;
       const easingCss = EASINGS[easing];
-      // Transition duration scales with speed (speed is the base cycle time)
       const transDuration = Math.round(speed * 0.75);
 
       chars.forEach((el, i) => {
         if (!el) return;
         const delay = i * STAGGER;
-        const duration =
-          transDuration + Math.round((Math.random() - 0.5) * 400);
+        const duration = transDuration + Math.round((Math.random() - 0.5) * 400);
 
         const id = setTimeout(() => {
           const axes = wordAxes[i];
@@ -166,33 +91,23 @@ export default function GenerativeType() {
             el.style.transition = `font-variation-settings ${duration}ms ${easingCss}`;
           }
           el.style.fontVariationSettings = axisString(axes);
-
-          if (currentCloneChars[i]) {
-            (currentCloneChars[i] as HTMLElement).style.transition =
-              `font-variation-settings ${duration}ms ${easingCss}`;
-            (currentCloneChars[i] as HTMLElement).style.fontVariationSettings =
-              axisString(axes);
-          }
         }, delay);
 
         timersRef.current.push(id);
       });
 
-      const totalTransTime =
-        transDuration + 200 + LETTERS.length * STAGGER;
+      const totalTransTime = transDuration + 200 + LETTERS.length * STAGGER;
       const holdTimer = setTimeout(() => hold(), totalTransTime);
       timersRef.current.push(holdTimer);
     };
 
     const hold = () => {
       clearTimers();
-      // Hold duration = speed * 4 (same ratio as prototype)
       const holdDuration = controlsRef.current.speed * 4;
       const shiftTimer = setTimeout(() => shift(), holdDuration);
       timersRef.current.push(shiftTimer);
     };
 
-    // Start the hold cycle after the intro stagger completes
     const introTotal = LETTERS.length * INTRO_STAGGER + INTRO_FADE;
     const introHoldTimer = setTimeout(() => hold(), introTotal);
 
@@ -200,45 +115,29 @@ export default function GenerativeType() {
       clearTimeout(introHoldTimer);
       introTimers.forEach(clearTimeout);
       clearTimers();
-      ro.disconnect();
-      window.removeEventListener('resize', fitWord);
-      if (clone.parentNode) {
-        clone.parentNode.removeChild(clone);
-      }
-      cloneRef.current = null;
     };
-  }, [fitWord]);
+  }, []);
 
-  // React to shuffle
+  // Shuffle
   useEffect(() => {
-    if (controls.shuffleKey === 0) return; // skip initial
+    if (controls.shuffleKey === 0) return;
     const chars = charsRef.current;
-    const clone = cloneRef.current;
     if (!chars.length) return;
 
     const wordAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
     const easingCss = EASINGS[controls.easing];
-    const cloneChars = clone?.querySelectorAll('span');
 
     chars.forEach((el, i) => {
       if (!el) return;
-      const axes = wordAxes[i];
       el.style.transition = `font-variation-settings 600ms ${easingCss}`;
-      el.style.fontVariationSettings = axisString(axes);
-      if (cloneChars?.[i]) {
-        (cloneChars[i] as HTMLElement).style.transition =
-          `font-variation-settings 600ms ${easingCss}`;
-        (cloneChars[i] as HTMLElement).style.fontVariationSettings =
-          axisString(axes);
-      }
+      el.style.fontVariationSettings = axisString(wordAxes[i]);
     });
   }, [controls.shuffleKey, controls.easing]);
 
   return (
-    <div ref={containerRef} className={styles.container}>
+    <section className={styles.section} data-section="A">
       <div
-        ref={wordRef}
-        className={styles.word}
+        className={styles.driftWord}
         role="heading"
         aria-level={1}
         aria-label="Juanemo"
@@ -246,16 +145,272 @@ export default function GenerativeType() {
         {LETTERS.map((letter, i) => (
           <span
             key={i}
-            ref={(el) => {
-              charsRef.current[i] = el;
-            }}
-            className={styles.char}
+            ref={(el) => { charsRef.current[i] = el; }}
+            className={styles.driftChar}
             suppressHydrationWarning
           >
             {letter}
           </span>
         ))}
       </div>
-    </div>
+    </section>
   );
+}
+
+/* ==================================================================
+   SECTION B — Proximity + Drift
+   ================================================================== */
+
+function SectionProximity() {
+  const controls = useContext(ExperimentControlsContext);
+  const controlsRef = useRef(controls);
+  controlsRef.current = controls;
+
+  const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
+  const targetAxesRef = useRef<AxisValues[]>([]);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const initialAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
+    targetAxesRef.current = initialAxes;
+    charsRef.current.forEach((el, i) => {
+      if (el) el.style.fontVariationSettings = axisString(initialAxes[i]);
+    });
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    const handleMouseLeave = () => {
+      mouseRef.current = { x: -1000, y: -1000 };
+    };
+    section.addEventListener('mousemove', handleMouseMove);
+    section.addEventListener('mouseleave', handleMouseLeave);
+
+    LETTERS.forEach((_, i) => {
+      (function tick() {
+        targetAxesRef.current[i] = randomAxes();
+        const t = setTimeout(
+          tick,
+          controlsRef.current.speed + Math.round(Math.random() * 1000)
+        );
+        timersRef.current.push(t);
+      })();
+    });
+
+    let animFrame: number;
+    const loop = () => {
+      const { x: mx, y: my } = mouseRef.current;
+      const easingCss = EASINGS[controlsRef.current.easing];
+
+      charsRef.current.forEach((el, i) => {
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const dist = Math.sqrt(
+          (mx - r.left - r.width / 2) ** 2 + (my - r.top - r.height / 2) ** 2
+        );
+        const inf = Math.max(0, 1 - dist / 250);
+        const target = targetAxesRef.current[i];
+        if (!target) return;
+
+        const att = { wdth: 151, wght: 900, opsz: 144 };
+        const blended: AxisValues = {
+          wdth: Math.round(target.wdth + (att.wdth - target.wdth) * inf),
+          wght: Math.round(target.wght + (att.wght - target.wght) * inf),
+          opsz: Math.round(target.opsz + (att.opsz - target.opsz) * inf),
+        };
+
+        if (!prefersReduced) {
+          el.style.transition = `font-variation-settings 150ms ${easingCss}, color 0.3s ease`;
+        }
+        el.style.fontVariationSettings = axisString(blended);
+        el.style.color = inf > 0.3 ? 'var(--color-bone)' : '';
+      });
+
+      animFrame = requestAnimationFrame(loop);
+    };
+    animFrame = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(animFrame);
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+      section.removeEventListener('mousemove', handleMouseMove);
+      section.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (controls.shuffleKey === 0) return;
+    const wordAxes = randomAxesForWord(LETTERS.length, isMobileViewport());
+    targetAxesRef.current = wordAxes;
+    const easingCss = EASINGS[controls.easing];
+    charsRef.current.forEach((el, i) => {
+      if (!el) return;
+      el.style.transition = `font-variation-settings 600ms ${easingCss}`;
+      el.style.fontVariationSettings = axisString(wordAxes[i]);
+    });
+  }, [controls.shuffleKey, controls.easing]);
+
+  return (
+    <section ref={sectionRef} className={styles.section} data-section="B">
+      <div className={styles.proxWord}>
+        {LETTERS.map((letter, i) => (
+          <span
+            key={i}
+            ref={(el) => { charsRef.current[i] = el; }}
+            className={styles.proxChar}
+            suppressHydrationWarning
+          >
+            {letter}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   SECTION C — Mouse-Responsive Axes
+   ================================================================== */
+
+function SectionMouseAxes() {
+  const textRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const text = textRef.current;
+    if (!section || !text) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = section.getBoundingClientRect();
+      const xProgress = (e.clientX - rect.left) / rect.width;
+      const yProgress = (e.clientY - rect.top) / rect.height;
+
+      const wdth = Math.round(25 + xProgress * (151 - 25));
+      const wght = Math.round(100 + (1 - yProgress) * (900 - 100));
+      const opsz = Math.round(8 + xProgress * (144 - 8));
+
+      text.style.fontVariationSettings = `'wdth' ${wdth}, 'wght' ${wght}, 'opsz' ${opsz}`;
+    };
+
+    const handleMouseLeave = () => {
+      text.style.fontVariationSettings = "'wdth' 151, 'wght' 900, 'opsz' 144";
+    };
+
+    section.addEventListener('mousemove', handleMouseMove);
+    section.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      section.removeEventListener('mousemove', handleMouseMove);
+      section.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  return (
+    <section ref={sectionRef} className={styles.section} data-section="C">
+      <div ref={textRef} className={styles.mouseWord}>JUANEMO</div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   SECTION D — Per-Character Hover
+   ================================================================== */
+
+function SectionPerCharHover() {
+  return (
+    <section className={styles.section} data-section="D">
+      <div className={styles.hoverWord}>
+        {LETTERS.map((letter, i) => (
+          <span
+            key={i}
+            className={styles.hoverChar}
+            style={{ transitionDelay: `${i * 30}ms` }}
+          >
+            {letter}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   SECTION E — Expand Entrance
+   ================================================================== */
+
+function SectionExpandEntrance() {
+  const [inView, setInView] = useState(true);
+
+  // Trigger entrance animation on mount
+  useEffect(() => {
+    setInView(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setInView(true));
+    });
+  }, []);
+
+  const handleReplay = useCallback(() => {
+    setInView(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setInView(true));
+    });
+  }, []);
+
+  return (
+    <section className={styles.section} data-section="E">
+      <div
+        className={`${styles.entranceWord}${inView ? ` ${styles.entranceWordVisible}` : ''}`}
+      >
+        JUANEMO
+      </div>
+      <button className={styles.replayBtn} onClick={handleReplay}>
+        Replay
+      </button>
+    </section>
+  );
+}
+
+/* ==================================================================
+   SECTION F — Axis Breathing
+   ================================================================== */
+
+function SectionBreathing() {
+  return (
+    <section className={styles.section} data-section="F">
+      <div className={styles.breatheWord}>JUANEMO</div>
+    </section>
+  );
+}
+
+/* ==================================================================
+   SECTION REGISTRY — maps index to component
+   ================================================================== */
+
+const SECTIONS = [
+  SectionDrift,
+  SectionProximity,
+  SectionMouseAxes,
+  SectionPerCharHover,
+  SectionExpandEntrance,
+  SectionBreathing,
+];
+
+/* ==================================================================
+   MAIN EXPORT — renders only the active section
+   ================================================================== */
+
+export default function GenerativeType() {
+  const { activeSection } = useContext(ExperimentControlsContext);
+  const ActiveComponent = SECTIONS[activeSection] ?? SECTIONS[0];
+  return <ActiveComponent />;
 }

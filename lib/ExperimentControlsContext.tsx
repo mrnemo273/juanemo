@@ -8,12 +8,14 @@ export interface ExperimentControls {
   speed: number;        // ms — transition duration
   easing: EasingType;   // spring or smooth
   shuffleKey: number;   // increments on shuffle — experiments react to changes
+  activeSection: number; // index of currently visible section
 }
 
 const defaultControls: ExperimentControls = {
   speed: 2000,
   easing: 'spring',
   shuffleKey: 0,
+  activeSection: 0,
 };
 
 export const ExperimentControlsContext =

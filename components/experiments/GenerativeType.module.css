@@ -1,44 +1,222 @@
 /* ==========================================================================
-   GenerativeType Experiment — Generative per-character drift + ScaleXY fill
-   Each letter in JUANEMO independently drifts to random axis values.
-   The wordmark fills both width and height of its container.
+   GenerativeType Experiment — 6 paginated type variations
+   A: Drift  B: Proximity  C: Mouse Axes  D: Per-Char Hover
+   E: Expand Entrance  F: Breathing
    ========================================================================== */
 
-.container {
+/* ----------------------------------------------------------
+   SHARED SECTION BASE
+   ---------------------------------------------------------- */
+.section {
+  min-height: 100%;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  width: 100%;
-  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   padding: var(--page-padding);
-  overflow: hidden;
-  position: relative; /* for absolute-positioned measurement clone */
+  position: relative;
+  flex-shrink: 0;
 }
 
-.word {
+/* ----------------------------------------------------------
+   SECTION A — GENERATIVE DRIFT
+   ---------------------------------------------------------- */
+.driftWord {
   display: flex;
   align-items: baseline;
-  white-space: nowrap;
-  transform-origin: top left;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  justify-content: center;
 }
 
-.char {
+.driftChar {
   font-family: 'Roboto Flex Variable', sans-serif;
   text-transform: uppercase;
-  font-size: clamp(60px, 17vw, 280px);
+  font-size: clamp(50px, 13vw, 200px);
   letter-spacing: -0.03em;
   line-height: 0.85;
-  color: var(--color-text-muted);
+  color: var(--color-dun);
   display: inline-block;
   will-change: font-variation-settings;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .char {
-    transition: none !important;
+/* ----------------------------------------------------------
+   SECTION B — PROXIMITY + DRIFT
+   ---------------------------------------------------------- */
+.proxWord {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.proxChar {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(50px, 13vw, 200px);
+  letter-spacing: -0.03em;
+  line-height: 0.85;
+  color: var(--color-dun);
+  display: inline-block;
+  will-change: font-variation-settings;
+  transition: color 0.3s ease;
+}
+
+/* ----------------------------------------------------------
+   SECTION C — MOUSE-RESPONSIVE AXES
+   ---------------------------------------------------------- */
+.mouseWord {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(50px, 13vw, 200px);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-dun);
+  white-space: nowrap;
+  font-weight: 900;
+  font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144;
+  transition: font-variation-settings 0.08s linear;
+  cursor: crosshair;
+}
+
+/* ----------------------------------------------------------
+   SECTION D — PER-CHARACTER HOVER
+   ---------------------------------------------------------- */
+.hoverWord {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  cursor: default;
+}
+
+.hoverChar {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(50px, 13vw, 200px);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-dun);
+  font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144;
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.3s ease,
+              font-variation-settings 0.3s ease;
+}
+
+.hoverChar:hover {
+  color: var(--color-bittersweet);
+  transform: translateY(-20px);
+  font-variation-settings: 'wdth' 25, 'wght' 100, 'opsz' 8;
+}
+
+/* ----------------------------------------------------------
+   SECTION E — EXPAND ENTRANCE
+   ---------------------------------------------------------- */
+.entranceWord {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(50px, 13vw, 200px);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-dun);
+  white-space: nowrap;
+  font-variation-settings: 'wdth' 25, 'wght' 100, 'opsz' 8;
+  opacity: 0;
+}
+
+.entranceWordVisible {
+  animation: expandIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes expandIn {
+  0% {
+    font-variation-settings: 'wdth' 25, 'wght' 100, 'opsz' 8;
+    opacity: 0;
+    letter-spacing: 0.3em;
   }
-  .word {
-    transition: none !important;
+  30% {
+    opacity: 1;
+  }
+  100% {
+    font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144;
+    opacity: 1;
+    letter-spacing: -0.04em;
   }
 }
+
+.replayBtn {
+  margin-top: 32px;
+  padding: 8px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  background: none;
+  border: 1px solid rgba(214, 197, 171, 0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.replayBtn:hover {
+  border-color: var(--color-bittersweet);
+  color: var(--color-bittersweet);
+}
+
+/* ----------------------------------------------------------
+   SECTION F — AXIS BREATHING
+   ---------------------------------------------------------- */
+.breatheWord {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(50px, 13vw, 200px);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--color-dun);
+  white-space: nowrap;
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%   { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+  50%  { font-variation-settings: 'wdth' 100, 'wght' 300, 'opsz' 80; letter-spacing: 0.02em; }
+  100% { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+}
+
+/* ----------------------------------------------------------
+   RESPONSIVE + REDUCED MOTION
+   ---------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .driftChar,
+  .proxChar,
+  .hoverChar {
+    transition: none !important;
+  }
+  .breatheWord,
+  .entranceWordVisible {
+    animation: none;
+  }
+  .breatheWord {
+    font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144;
+  }
+  .entranceWord {
+    opacity: 1;
+    font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144;
+  }
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: 8px;
+  }
+  .driftChar,
+  .proxChar,
+  .hoverChar {
+    font-size: clamp(50px, 16vw, 200px);
+  }
+  .mouseWord,
+  .entranceWord,
+  .breatheWord {
+    font-size: clamp(50px, 16vw, 200px);
+  }
+}
+

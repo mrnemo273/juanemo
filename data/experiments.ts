@@ -5,6 +5,7 @@ export interface Experiment {
   description: string;
   longDescription: string;
   publishedDate: string;
+  sections?: string[];
 }
 
 export const experiments: Experiment[] = [
@@ -16,5 +17,13 @@ export const experiments: Experiment[] = [
     longDescription:
       "Per-character variable font drift using Roboto Flex\u2019s 13 axes. Each letter independently randomizes weight, width, and optical size on a timed hold \u2192 shift cycle with spring easing.",
     publishedDate: "March 2025",
+    sections: [
+      "Generative Drift",
+      "Proximity + Drift",
+      "Mouse-Responsive Axes",
+      "Per-Character Hover",
+      "Expand Entrance",
+      "Axis Breathing",
+    ],
   },
 ];

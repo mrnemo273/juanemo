@@ -26,6 +26,7 @@ export default async function ExperimentPage({
       title={experiment.name}
       date={experiment.publishedDate}
       description={experiment.longDescription}
+      sections={experiment.sections}
     >
       <Component />
     </ExperimentFrame>
