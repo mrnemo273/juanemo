@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-19 — **V2.0 Architecture pivot.** Site restructured as journal of full-screen experiments. All previous phases complete or superseded.
+2026-03-19 — Phase A complete. Phase B (Navigation Layer) complete.
 
 ---
 
@@ -35,33 +35,29 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 ## V2.0 Architecture — Experiment Journal 🔵
 
-### ARC.1 — Routing & Data Model
+### Phase A — Architecture Pivot ✅
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| ARC.1.1 | Create `data/experiments.ts` — new data model (slug, name, description, publishedDate) | 🔲 TODO | Replaces `data/projects.ts` |
-| ARC.1.2 | Create `/app/experiments/[slug]/page.tsx` — dynamic route for experiments | 🔲 TODO | Loads experiment component by slug |
-| ARC.1.3 | Update `/app/page.tsx` — redirect to latest experiment | 🔲 TODO | Reads `experiments[0].slug`, redirects |
-| ARC.1.4 | Update `/app/layout.tsx` — add LogoMark + INDEX trigger to shared layout | 🔲 TODO | Persistent across all experiment pages |
+| A.1 | Create `data/experiments.ts` | ✅ DONE | slug, name, description, publishedDate. 1 entry. |
+| A.2 | Create `ExperimentShell.tsx` | ✅ DONE | Server component, `100vw × 100vh`, `overflow: hidden` |
+| A.3 | Refactor `Hero.tsx` → `GenerativeType.tsx` | ✅ DONE | `<div>` container (was `<header>`), fills parent 100%×100%. Class renamed `.container`. |
+| A.4 | Create `/experiments/[slug]/page.tsx` dynamic route | ✅ DONE | Slug→component mapping, `generateStaticParams()` |
+| A.5 | Update `page.tsx` — redirect to latest experiment | ✅ DONE | |
+| A.6 | Clean up `layout.tsx` | ✅ DONE | Already clean — Hero/ProjectList/Footer were in page.tsx not layout |
+| A.7 | Disable document scroll | ✅ DONE | `html, body { overflow: hidden; height: 100vh; }` |
+| A.8 | Build + QA | ✅ DONE | Zero errors, static generation works |
 
-### ARC.2 — New Components
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| ARC.2.1 | Create `ExperimentShell.tsx` — full-viewport no-scroll container | 🔲 TODO | `100vw × 100vh`, `overflow: hidden` |
-| ARC.2.2 | Create `LogoMark.tsx` — static generative logo | 🔲 TODO | Spec in PHASE_HERO_V2.md (HV2.4). Fixed top-left. |
-| ARC.2.3 | Create `IndexOverlay.tsx` — full-screen experiment list | 🔲 TODO | Dark overlay, typographic list, reverse chronological |
-| ARC.2.4 | Refactor `Hero.tsx` → `experiments/GenerativeType.tsx` | 🔲 TODO | Same component, new location. Experiment #1. |
-
-### ARC.3 — Cleanup & Integration
+### Phase B — Navigation Layer (LogoMark + IndexOverlay) ✅
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| ARC.3.1 | Remove `ProjectList.tsx` and `Footer.tsx` from experiment pages | 🔲 TODO | Content migrates to IndexOverlay |
-| ARC.3.2 | Remove scrolling from experiment pages (`overflow: hidden`) | 🔲 TODO | |
-| ARC.3.3 | Verify GenerativeType fills 100vh inside ExperimentShell | 🔲 TODO | |
-| ARC.3.4 | Build + responsive QA (320–2560px) | 🔲 TODO | |
-| ARC.3.5 | Deploy to Vercel, verify production | 🔲 TODO | |
+| B.1 | Create `LogoMark.tsx` — static generative logo | ✅ DONE | Fixed top-left, per-character `randomAxes()` on mount, 22px, Dun |
+| B.2 | Create `IndexOverlay.tsx` — full-screen experiment list | ✅ DONE | Dark overlay, typographic list, fade transition, focus trap |
+| B.3 | Create INDEX trigger (top-right) | ✅ DONE | `<button>` with `aria-expanded`, `--color-text-faint` → Dun on hover |
+| B.4 | Integrate into `layout.tsx` | ✅ DONE | `Navigation.tsx` client wrapper in layout, before `{children}` |
+| B.5 | Navigation state management | ✅ DONE | `useState` in Navigation.tsx, toggle/close callbacks |
+| B.6 | Build + QA (keyboard accessibility, responsive) | ✅ DONE | Escape, Tab, focus trap. Tested 320–1920px. Zero build errors. |
 
 ### ARC.4 — Theme Toggle (Carried from Phase 4)
 
@@ -90,6 +86,8 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | B.3 | Confirm contact email address | Phase 3 | `hello@juanemo.com` is placeholder |
 | B.4 | Font preloading — `<link rel="preload">` | Phase 1 | |
 | B.5 | Lighthouse audit: Performance 90+, Accessibility 95+ | Phase 5 | |
+| B.6 | Clean up vestigial `main` max-width rule in globals.css | Phase A builder | No effect on experiment pages but could interfere with future non-experiment pages |
+| B.7 | Remove `--hero-height: 50vh` CSS property from globals.css | Phase A builder | No longer used by any component |
 
 ---
 
@@ -101,3 +99,5 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | 2026-03-17 | Phases 1–3 complete. Hero V2, V3 complete. | Scrummaster |
 | 2026-03-18 | Hero V2 + V3 complete. Generative per-character drift, scaleXY, mobile caps. | Scrummaster |
 | 2026-03-19 | **V2.0 Architecture pivot.** Backlog restructured for experiment journal. Old phases archived. New ARC.1–ARC.4 work items. V2+ backlog populated with prototype experiment ideas. | Scrummaster (JC creative direction) |
+| 2026-03-19 | Phase A complete. Clean refactor — no deviations. GenerativeType uses `<div>` (was `<header>`), class renamed `.container`. Old components preserved. Vestigial `main` max-width rule and `--hero-height` CSS property noted for cleanup. | Scrummaster (from Phase A builder notes) |
+| 2026-03-19 | Phase B complete. LogoMark, IndexOverlay, Navigation wrapper, INDEX trigger all live. Keyboard accessible, responsive. Minor deviations: DM Sans for overlay names (not Roboto Flex), date below name. Backlog items added: overlay close button for mobile, placeholder experiments, LogoMark `<a>` → `<Link>` upgrade. | Phase B builder |

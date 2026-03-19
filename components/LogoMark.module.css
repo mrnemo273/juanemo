@@ -1,0 +1,25 @@
+/* ==========================================================================
+   LogoMark — Static generative identity, top-left
+   Same Roboto Flex per-character randomization as the hero, but frozen.
+   ========================================================================== */
+
+.logoMark {
+  position: fixed;
+  top: 16px;
+  left: var(--page-margin);
+  z-index: 50;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.logoChar {
+  font-family: 'Roboto Flex Variable', sans-serif;
+  text-transform: uppercase;
+  line-height: 0.85;
+  color: var(--color-text-muted);
+  letter-spacing: -0.02em;
+  display: inline-block;
+}

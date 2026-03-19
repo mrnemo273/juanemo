@@ -508,7 +508,7 @@ Preload in `<head>` to eliminate FOUT:
 - Data source: `data/experiments.ts`
 
 ### `<GenerativeType>` — Experiment #1 (Refactored from Hero)
-- The current Hero component, refactored to live at `components/experiments/GenerativeType.tsx`
+- Refactored from Hero to `components/experiments/GenerativeType.tsx` (Phase A)
 - `'use client'` component with `useEffect`, `useRef`, `useCallback`
 - 7 individual `<span>` elements, each with independent `font-variation-settings`
 - Generative drift + hold cycle: hold 8s → staggered shift (80ms, 1.5s transitions) → repeat
@@ -516,8 +516,9 @@ Preload in `<head>` to eliminate FOUT:
 - **ScaleXY fill**: `transform: scale(scaleX, scaleY)` via hidden clone + `ResizeObserver` (no measurement flash)
 - Font size: `clamp(60px, 17vw, 280px)`, letter-spacing `-0.03em`, line-height `0.85`
 - Color: `--color-text-muted` (Dun)
-- Container: fixed `height: 50vh` desktop, `35vh` mobile (≤600px)
+- Container: `width: 100%; height: 100%` (fills ExperimentShell's `100vh`), `<div>` element (was `<header>`)
 - Padding: `var(--page-margin)`, docked top-left, `transform-origin: top left`
+- Class: `.container` (renamed from `.hero` in Phase A)
 - Desktop axis ranges: wdth 25–151, wght 300–900, opsz 8–144
 - Mobile axis ranges: wdth 40–120, wght 300–750, opsz 8–120 (via `randomAxesForWord()` — 1 extreme char + rest moderate)
 - Intro: letters stagger-fade in (100ms apart, 400ms fade each)

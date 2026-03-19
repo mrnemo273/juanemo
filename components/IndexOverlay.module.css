@@ -1,0 +1,75 @@
+/* ==========================================================================
+   IndexOverlay — Full-screen experiment navigation
+   Typographic table of contents. No cards, no thumbnails, no grid.
+   ========================================================================== */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--page-margin);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--ease-in-out);
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entryLink {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  outline: none;
+}
+
+.entryLink:focus-visible {
+  outline: 2px solid var(--color-text-faint);
+  outline-offset: 8px;
+  border-radius: 4px;
+}
+
+.entryName {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.entryLink:hover .entryName,
+.entryLink:focus-visible .entryName {
+  color: var(--color-text);
+}
+
+.entryDate {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}

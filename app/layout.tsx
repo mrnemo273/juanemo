@@ -3,6 +3,7 @@ import '@fontsource-variable/roboto-flex/full.css';
 import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 import "./globals.css";
+import Navigation from "../components/Navigation";
 
 export const metadata: Metadata = {
   title: "Juanemo",
@@ -28,6 +29,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <Navigation />
         {children}
       </body>
     </html>
