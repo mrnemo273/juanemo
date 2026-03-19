@@ -88,6 +88,9 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | B.5 | Lighthouse audit: Performance 90+, Accessibility 95+ | Phase 5 | |
 | B.6 | Clean up vestigial `main` max-width rule in globals.css | Phase A builder | No effect on experiment pages but could interfere with future non-experiment pages |
 | B.7 | Remove `--hero-height: 50vh` CSS property from globals.css | Phase A builder | No longer used by any component |
+| B.8 | Add explicit close button to IndexOverlay for mobile | Phase B builder | Currently Escape-only — mobile users need a tap target |
+| B.9 | Add placeholder experiments to test overlay density/scroll | Phase B builder | Only 1 experiment currently — overlay is sparse |
+| B.10 | Consider upgrading LogoMark `<a href="/">` → `<Link>` | Phase B builder | Full reload re-randomizes logo (nice touch), but `<Link>` would be smoother. Trade-off. |
 
 ---
 

@@ -13,14 +13,20 @@
   letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
-  color: var(--color-text-faint);
+  color: rgba(235, 226, 214, 0.6);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 4px 0;
   transition: color var(--duration-fast) var(--ease-out-expo);
 }
 
 .indexTrigger:hover {
   color: var(--color-text-muted);
+}
+
+.indexTrigger:focus-visible {
+  outline: 2px solid var(--color-text-faint);
+  outline-offset: 4px;
+  border-radius: 2px;
 }

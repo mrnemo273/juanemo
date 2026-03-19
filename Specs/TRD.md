@@ -370,6 +370,8 @@ juanemo/
 │       └── [slug]/
 │           └── page.tsx        # Dynamic route — loads experiment component by slug
 ├── components/
+│   ├── Navigation.tsx          # Client wrapper: LogoMark + INDEX trigger + IndexOverlay state
+│   ├── Navigation.module.css
 │   ├── LogoMark.tsx            # Static generative logo — randomized per load, links to /
 │   ├── LogoMark.module.css
 │   ├── IndexOverlay.tsx        # Full-screen experiment index overlay

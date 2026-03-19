@@ -26,6 +26,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/roboto-flex-latin-full.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/dm-sans-latin-400-normal.woff2"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>

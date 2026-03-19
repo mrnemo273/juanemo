@@ -4,6 +4,43 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   0. Font Preload @font-face — stable public paths, matched by preload links
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Roboto Flex Variable';
+  font-style: normal;
+  font-display: block;
+  font-weight: 100 1000;
+  src: url('/fonts/roboto-flex-latin-full.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/dm-sans-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('/fonts/dm-sans-latin-500-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* --------------------------------------------------------------------------
    1. CSS Custom Properties — Color, Spacing, Motion, Hero Axes
    -------------------------------------------------------------------------- */
 
@@ -35,8 +72,6 @@
 
   /* Layout */
   --page-margin:  clamp(24px, 5vw, 80px);
-  --hero-height:  50vh;
-  --max-width:    1600px;
   --card-radius:  16px;
   --tag-radius:   8px;
 
@@ -91,6 +126,7 @@ html,
 body {
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -103,11 +139,6 @@ body {
   background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-main {
-  max-width: var(--max-width);
-  margin: 0 auto;
 }
 
 a {

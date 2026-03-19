@@ -74,6 +74,14 @@ export default function IndexOverlay({ isOpen, onClose }: IndexOverlayProps) {
       aria-label="Experiment index"
       onKeyDown={handleKeyDown}
     >
+      <button
+        className={styles.closeButton}
+        onClick={onClose}
+        aria-label="Close experiment index"
+        tabIndex={isOpen ? 0 : -1}
+      >
+        CLOSE
+      </button>
       <nav>
         <ul className={styles.list}>
           {sortedExperiments.map((exp, i) => (
@@ -83,6 +91,7 @@ export default function IndexOverlay({ isOpen, onClose }: IndexOverlayProps) {
                 className={styles.entryLink}
                 ref={i === 0 ? firstLinkRef : undefined}
                 onClick={onClose}
+                tabIndex={isOpen ? 0 : -1}
               >
                 <span className={styles.entryName}>{exp.name}</span>
                 <span className={styles.entryDate}>{exp.publishedDate}</span>

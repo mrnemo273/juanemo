@@ -497,14 +497,23 @@ Preload in `<head>` to eliminate FOUT:
 - Color: `var(--color-text-muted)` (Dun), letter-spacing `-0.02em`
 - Handle hydration: render neutral axes on server, randomize in `useEffect`
 
-### `<IndexOverlay>` — Full-Screen Experiment Navigation
-- Full-screen overlay (`100vw × 100vh`), dark background (`--color-bg`)
-- Triggered by INDEX label (top-right) or keyboard shortcut
-- Lists all experiments in reverse chronological order (newest first)
-- Each entry: experiment name + published date, minimal typography
-- Click → navigate to `/experiments/[slug]`, overlay closes
-- Keyboard: Escape to close, Tab to navigate entries
-- Transition: smooth fade or slide (300ms, `--ease-in-out`)
+### `<Navigation>` — Client Wrapper (Phase B)
+- `'use client'` component in `app/layout.tsx`, before `{children}`
+- Manages overlay open/closed state via `useState`
+- Renders: `<LogoMark>` (fixed top-left) + INDEX `<button>` trigger (fixed top-right) + `<IndexOverlay>`
+- INDEX trigger: `<button>` (not `<span>`) for native keyboard accessibility + `aria-expanded`
+- Text: `INDEX` in `.label` style, `--color-text-faint` at rest, `--color-text-muted` (Dun) on hover
+
+### `<IndexOverlay>` — Full-Screen Experiment Navigation (Phase B)
+- Full-screen overlay (`100vw × 100vh`), fixed, `z-index: 60`, background `var(--color-bg)` (solid)
+- Uses `opacity + pointer-events` pattern (not `display: none`) — DOM stays mounted for fade transition
+- When closed: `opacity: 0; pointer-events: none` — zero interference with experiments
+- Lists experiments from `data/experiments.ts` in reverse chronological order
+- Each entry: experiment name in DM Sans at `clamp(32px, 5vw, 64px)`, weight 300, `--color-text-muted` (Dun). Hover → `--color-text` (Bone).
+- Date eyebrow **below** name (not above) — reads more naturally as a table-of-contents
+- Uses Next.js `<Link>` for client-side routing, closes overlay on click
+- Keyboard: Escape closes, Tab navigates, first link focused on open via `requestAnimationFrame`
+- Transition: opacity fade, 300ms, `--ease-in-out`
 - Data source: `data/experiments.ts`
 
 ### `<GenerativeType>` — Experiment #1 (Refactored from Hero)
