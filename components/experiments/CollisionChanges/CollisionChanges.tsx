@@ -486,7 +486,8 @@ export default function CollisionChanges() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleChordPick = useCallback((idx: number) => {
+  const handleChordPick = useCallback(async (idx: number) => {
+    await handleAudioStart();
     setSelectedChord(idx);
     setDropdownOpen(false);
     progression.jumpToChord(idx);
@@ -494,7 +495,7 @@ export default function CollisionChanges() {
     const freqs = [...chord.frequencies];
     if (chord.ninth) freqs.push(chord.ninth.frequency);
     playChordStrum(freqs);
-  }, [progression]);
+  }, [progression, handleAudioStart]);
 
   // Close dropdown on outside click
   useEffect(() => {
