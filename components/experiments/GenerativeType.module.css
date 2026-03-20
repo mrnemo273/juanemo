@@ -141,27 +141,6 @@
   }
 }
 
-.replayBtn {
-  margin-top: 32px;
-  padding: 8px 20px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-dun);
-  background: none;
-  border: 1px solid rgba(214, 197, 171, 0.12);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.replayBtn:hover {
-  border-color: var(--color-bittersweet);
-  color: var(--color-bittersweet);
-}
-
 /* ----------------------------------------------------------
    SECTION F — AXIS BREATHING
    ---------------------------------------------------------- */

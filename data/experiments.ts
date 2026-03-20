@@ -1,3 +1,16 @@
+export interface SectionConfig {
+  letter: string;
+  name: string;
+  hint: string;
+  hintAction?: string;
+  description: string;
+  instructions: {
+    icon: string;
+    text: string;
+  }[];
+  controls: string[];
+}
+
 export interface Experiment {
   slug: string;
   number: string;
@@ -6,24 +19,103 @@ export interface Experiment {
   longDescription: string;
   publishedDate: string;
   sections?: string[];
+  sectionConfigs?: SectionConfig[];
 }
+
+export const sectionConfigs: SectionConfig[] = [
+  {
+    letter: 'A',
+    name: 'Generative Drift',
+    hint: 'Watch the letters shift',
+    description:
+      'Each letter of JUANEMO independently randomizes its weight, width, and optical size on a timed hold \u2192 shift cycle. The result is a wordmark that never looks the same twice \u2014 a living identity that drifts through the variable font\u2019s 13-axis design space.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> \u2014 the letters shift automatically on a timed cycle.' },
+      { icon: 'refresh', text: '<strong>Shuffle</strong> \u2014 re-randomize all letters instantly.' },
+      { icon: 'clock', text: '<strong>Speed</strong> \u2014 change how long letters hold before shifting.' },
+    ],
+    controls: ['speed', 'easing', 'shuffle'],
+  },
+  {
+    letter: 'B',
+    name: 'Proximity + Drift',
+    hint: 'Move your cursor near the letters',
+    description:
+      'Ambient drift runs in the background, but letters near your cursor get pulled toward bold and extended. Move away and they relax back. The interaction radius is 250px.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover near</strong> \u2014 letters get bolder and wider as your cursor approaches.' },
+      { icon: 'move', text: '<strong>Pull away</strong> \u2014 letters relax back into the ambient drift.' },
+    ],
+    controls: ['speed', 'easing'],
+  },
+  {
+    letter: 'C',
+    name: 'Mouse-Responsive Axes',
+    hint: 'Move your cursor across the viewport',
+    description:
+      "Cursor position maps directly to the font's variable axes. Horizontal = width, vertical = weight. The entire wordmark follows your hand.",
+    instructions: [
+      { icon: 'move', text: '<strong>Move horizontally</strong> \u2014 controls letter width. Left = condensed, right = extended.' },
+      { icon: 'move-v', text: '<strong>Move vertically</strong> \u2014 controls letter weight. Top = light, bottom = bold.' },
+    ],
+    controls: [],
+  },
+  {
+    letter: 'D',
+    name: 'Per-Character Hover',
+    hint: 'Hover over individual letters',
+    description:
+      'Pure CSS \u2014 no JavaScript animation. Hovering a letter collapses its axes to minimum values and lifts it up. Sweep across the word to create a wave.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover a letter</strong> \u2014 it collapses to its narrowest, lightest form and lifts.' },
+      { icon: 'move', text: '<strong>Sweep across</strong> \u2014 move quickly across the word for a wave effect.' },
+    ],
+    controls: [],
+  },
+  {
+    letter: 'E',
+    name: 'Expand Entrance',
+    hint: 'Plays on load',
+    hintAction: 'Replay',
+    description:
+      'CSS keyframe animation \u2014 letters start ultra-condensed and expand to full width with staggered delay. A theatrical reveal, like curtains opening.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> \u2014 the animation plays automatically on load.' },
+      { icon: 'refresh', text: '<strong>Replay</strong> \u2014 tap Replay next to the section name to trigger the entrance again.' },
+    ],
+    controls: [],
+  },
+  {
+    letter: 'F',
+    name: 'Axis Breathing',
+    hint: 'Watch the rhythm',
+    description:
+      'All letters animate in unison on a slow inhale/exhale cycle \u2014 weight, width, and letter-spacing oscillate together. The wordmark breathes.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Observe</strong> \u2014 the wordmark breathes continuously. No interaction needed.' },
+      { icon: 'clock', text: '<strong>Speed</strong> \u2014 controls the breathing tempo. Slow = hypnotic; fast = anxious.' },
+    ],
+    controls: ['speed'],
+  },
+];
 
 export const experiments: Experiment[] = [
   {
-    slug: "generative-type",
-    number: "01",
-    name: "Generative Typography",
-    description: "Per-character variable font drift — the wordmark is never the same twice.",
+    slug: 'generative-type',
+    number: '01',
+    name: 'Generative Typography',
+    description: 'Per-character variable font drift \u2014 the wordmark is never the same twice.',
     longDescription:
-      "Per-character variable font drift using Roboto Flex\u2019s 13 axes. Each letter independently randomizes weight, width, and optical size on a timed hold \u2192 shift cycle with spring easing.",
-    publishedDate: "March 2025",
+      'Per-character variable font drift using Roboto Flex\u2019s 13 axes. Each letter independently randomizes weight, width, and optical size on a timed hold \u2192 shift cycle with spring easing.',
+    publishedDate: 'March 2025',
     sections: [
-      "Generative Drift",
-      "Proximity + Drift",
-      "Mouse-Responsive Axes",
-      "Per-Character Hover",
-      "Expand Entrance",
-      "Axis Breathing",
+      'Generative Drift',
+      'Proximity + Drift',
+      'Mouse-Responsive Axes',
+      'Per-Character Hover',
+      'Expand Entrance',
+      'Axis Breathing',
     ],
+    sectionConfigs,
   },
 ];

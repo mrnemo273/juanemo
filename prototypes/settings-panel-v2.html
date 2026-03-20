@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Settings Panel v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline-dark: rgba(214, 197, 171, 0.12);
+
+    --panel-speed: 0.5s;
+    --panel-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --panel-height: 260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gunmetal);
+  }
+
+  /* ==========================================================
+     SCENE — 7-row grid
+     Row 1: top bar
+     Row 2: keyline
+     Row 3: viewport (experiment + floating meta labels)
+     Row 4: expanding panel area (0 → var(--panel-height))
+     Row 5: keyline
+     Row 6: bottom controls (pagination + gear)
+     ========================================================== */
+  .scene {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1px 1fr 0px 1px auto;
+    background: var(--gunmetal);
+    transition: grid-template-rows var(--panel-speed) var(--panel-ease);
+  }
+
+  .scene.panel-open {
+    grid-template-rows: auto 1px 1fr var(--panel-height) 1px auto;
+  }
+
+  /* ==========================================================
+     TOP BAR
+     ========================================================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+    z-index: 10;
+  }
+
+  .topbar-date {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--dun);
+  }
+
+  .grid-trigger {
+    position: absolute;
+    right: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+    z-index: 40;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+  }
+  .grid-trigger:hover { opacity: 0.9; }
+  .grid-trigger span {
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    background: var(--dun);
+    display: block;
+  }
+
+  /* ==========================================================
+     KEYLINES
+     ========================================================== */
+  .keyline { width: 100%; background: var(--keyline-dark); }
+
+  /* ==========================================================
+     VIEWPORT — the 1fr area
+     Contains experiment + floating meta labels
+     ========================================================== */
+  .viewport {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+  }
+
+  /* Experiment title — 60px from top keyline, centered */
+  .meta-top {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .meta-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .meta-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* Section label — 60px from bottom keyline, centered */
+  .meta-bottom {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .section-letter {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .section-name {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* The generative word */
+  .gen-word {
+    display: flex;
+    align-items: baseline;
+  }
+  .gen-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(60px, 17vw, 280px);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    will-change: font-variation-settings;
+    display: inline-block;
+  }
+
+  /* ==========================================================
+     TOAST — instruction hint, appears on section switch
+     ========================================================== */
+  .toast {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: rgba(31, 38, 39, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(214, 197, 171, 0.08);
+    border-radius: 6px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s var(--panel-ease);
+    z-index: 15;
+    white-space: nowrap;
+  }
+
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
+  .toast-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  .toast-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--dun);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.4;
+  }
+
+  .toast-text {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* ==========================================================
+     EXPANDING PANEL — grows up from below bottom keyline
+     ========================================================== */
+  .panel-zone {
+    overflow: hidden;
+    background: var(--gunmetal);
+    position: relative;
+    z-index: 20;
+  }
+
+  .panel-content {
+    height: 100%;
+    opacity: 0;
+    padding: 0 var(--pad);
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .panel-open .panel-content {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s ease 0.12s;
+  }
+
+  /* Panel inner — two columns */
+  .panel-inner {
+    display: flex;
+    gap: clamp(32px, 5vw, 64px);
+    padding: 24px 0 20px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* LEFT: About + detailed instructions */
+  .panel-about {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .panel-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--keyline-dark);
+  }
+
+  .panel-description {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--dun);
+    opacity: 0.4;
+    max-width: 520px;
+  }
+
+  .panel-instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .instruction-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .instruction-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    background: rgba(214, 197, 171, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .instruction-icon svg {
+    width: 11px;
+    height: 11px;
+    fill: none;
+    stroke: var(--dun);
+    stroke-width: 1.5;
+    opacity: 0.3;
+  }
+
+  .instruction-text {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--dun);
+    opacity: 0.3;
+  }
+  .instruction-text strong {
+    font-weight: 500;
+    opacity: 1;
+    color: var(--dun);
+  }
+
+  /* RIGHT: Controls */
+  .panel-controls {
+    width: clamp(170px, 22vw, 240px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .control-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  .control-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    background: none;
+    border: 1px solid var(--keyline-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+  .ctrl-btn.active { border-color: var(--bittersweet); color: var(--bittersweet); opacity: 0.9; }
+
+  .shuffle-btn {
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    background: none;
+    border: 1px solid var(--keyline-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-self: flex-start;
+  }
+  .shuffle-btn:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+
+  /* No controls message */
+  .no-controls {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--dun);
+    opacity: 0.2;
+    font-style: italic;
+    padding-top: 4px;
+  }
+
+  /* ==========================================================
+     BOTTOM BAR — pagination tiles + gear, centered
+     ========================================================== */
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px var(--pad) 14px;
+    gap: 6px;
+  }
+
+  .page-tile {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--dun);
+    opacity: 0.25;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-tile:hover { opacity: 0.5; border-color: var(--keyline-dark); }
+  .page-tile.active {
+    opacity: 0.9;
+    border-color: var(--bittersweet);
+    color: var(--bittersweet);
+  }
+
+  /* Separator dot between tiles and gear */
+  .tile-sep {
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--dun);
+    opacity: 0.15;
+    margin: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* Gear icon */
+  .gear-trigger {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.25;
+    transition: opacity 0.2s, border-color 0.2s, transform 0.4s var(--panel-ease);
+    flex-shrink: 0;
+  }
+  .gear-trigger:hover { opacity: 0.5; border-color: var(--keyline-dark); }
+  .gear-trigger svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: var(--dun);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .panel-open .gear-trigger {
+    opacity: 0.8;
+    border-color: var(--bittersweet);
+    transform: rotate(90deg);
+  }
+  .panel-open .gear-trigger svg {
+    stroke: var(--bittersweet);
+  }
+
+  /* ==========================================================
+     MOBILE
+     ========================================================== */
+  @media (max-width: 600px) {
+    :root {
+      --panel-height: 320px;
+    }
+
+    .topbar-date { display: none; }
+
+    .meta-top { top: 32px; }
+    .meta-bottom { bottom: 32px; }
+
+    .panel-inner {
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .panel-controls {
+      width: 100%;
+    }
+
+    .bottombar {
+      padding: 10px var(--pad) 12px;
+    }
+
+    .page-tile {
+      width: 28px;
+      height: 28px;
+      font-size: 10px;
+    }
+
+    .gear-trigger {
+      width: 28px;
+      height: 28px;
+    }
+    .gear-trigger svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- ROW 1: TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-date">March 2025</span>
+    <a class="logo" id="logo"></a>
+    <button class="grid-trigger" aria-label="View experiments">
+      <span></span><span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- ROW 2: KEYLINE -->
+  <div class="keyline"></div>
+
+  <!-- ROW 3: VIEWPORT -->
+  <div class="viewport" id="viewport">
+    <!-- Floating meta: experiment title, 60px from top keyline -->
+    <div class="meta-top">
+      <span class="meta-number">01</span>
+      <span class="meta-title">Generative Typography</span>
+    </div>
+
+    <!-- Experiment content -->
+    <div class="gen-word" id="activeWord"></div>
+
+    <!-- Floating meta: section label, 60px from bottom keyline -->
+    <div class="meta-bottom">
+      <span class="section-letter" id="sectionLetter">A</span>
+      <span class="section-name" id="sectionName">Generative Drift</span>
+    </div>
+
+    <!-- Toast instruction hint -->
+    <div class="toast" id="toast">
+      <div class="toast-icon" id="toastIcon">
+        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <span class="toast-text" id="toastText">Watch the letters shift</span>
+    </div>
+  </div>
+
+  <!-- ROW 4: EXPANDING PANEL -->
+  <div class="panel-zone" id="panelZone">
+    <div class="panel-content" id="panelContent">
+      <div class="panel-inner" id="panelInner">
+
+        <!-- LEFT: About + Instructions -->
+        <div class="panel-about">
+          <div><div class="panel-label" id="panelLabel">About This Section</div></div>
+          <div class="panel-description" id="panelDesc">
+            Each letter of JUANEMO independently randomizes its weight, width, and optical size on a timed hold → shift cycle. The result is a wordmark that never looks the same twice.
+          </div>
+          <div class="panel-instructions" id="panelInstructions"></div>
+        </div>
+
+        <!-- RIGHT: Controls -->
+        <div class="panel-controls" id="panelControls">
+          <div><div class="panel-label">Controls</div></div>
+          <div class="control-group" id="ctrlSpeed">
+            <span class="control-label">Speed</span>
+            <div class="control-options">
+              <button class="ctrl-btn active" data-speed="2000">2s</button>
+              <button class="ctrl-btn" data-speed="4000">4s</button>
+              <button class="ctrl-btn" data-speed="8000">8s</button>
+            </div>
+          </div>
+          <div class="control-group" id="ctrlEasing">
+            <span class="control-label">Easing</span>
+            <div class="control-options">
+              <button class="ctrl-btn active" data-easing="spring">Spring</button>
+              <button class="ctrl-btn" data-easing="smooth">Smooth</button>
+            </div>
+          </div>
+          <button class="shuffle-btn" id="shuffleBtn">Shuffle</button>
+          <div class="no-controls" id="noControls" style="display:none;">This section is purely visual — no controls needed.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 5: KEYLINE -->
+  <div class="keyline"></div>
+
+  <!-- ROW 6: BOTTOM BAR — pagination + gear -->
+  <div class="bottombar" id="bottombar"></div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+const SMOOTH = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+let currentEasing = SPRING;
+let currentSpeed = 2000;
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+
+// --- SECTIONS DATA ---
+const sections = [
+  {
+    letter: 'A', name: 'Generative Drift',
+    hint: 'Watch the letters shift',
+    hintIcon: 'eye',
+    description: 'Each letter of JUANEMO independently randomizes its weight, width, and optical size on a timed hold → shift cycle. The result is a wordmark that never looks the same twice — a living identity that drifts through the variable font\'s 13-axis design space.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> — the letters shift automatically on a timed cycle.' },
+      { icon: 'refresh', text: '<strong>Shuffle</strong> — re-randomize all letters instantly.' },
+      { icon: 'clock', text: '<strong>Speed</strong> — change how long letters hold before shifting.' },
+    ],
+    controls: ['speed', 'easing', 'shuffle']
+  },
+  {
+    letter: 'B', name: 'Proximity + Drift',
+    hint: 'Move your cursor near the letters',
+    hintIcon: 'cursor',
+    description: 'Ambient drift runs in the background, but letters near your cursor get pulled toward bold and extended. Move away and they relax back. The interaction radius is 250px.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover near</strong> — letters get bolder and wider as your cursor approaches.' },
+      { icon: 'move', text: '<strong>Pull away</strong> — letters relax back into the ambient drift.' },
+    ],
+    controls: ['speed', 'easing']
+  },
+  {
+    letter: 'C', name: 'Mouse-Responsive Axes',
+    hint: 'Move your cursor across the viewport',
+    hintIcon: 'move',
+    description: 'Cursor position maps directly to the font\'s variable axes. Horizontal = width, vertical = weight. The entire wordmark follows your hand.',
+    instructions: [
+      { icon: 'move', text: '<strong>Move horizontally</strong> — controls letter width. Left = condensed, right = extended.' },
+      { icon: 'move-v', text: '<strong>Move vertically</strong> — controls letter weight. Top = light, bottom = bold.' },
+    ],
+    controls: []
+  },
+  {
+    letter: 'D', name: 'Per-Character Hover',
+    hint: 'Hover over individual letters',
+    hintIcon: 'cursor',
+    description: 'Pure CSS — no JavaScript animation. Hovering a letter collapses its axes to minimum values and lifts it up. Sweep across the word to create a wave.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover a letter</strong> — it collapses to its narrowest, lightest form and lifts.' },
+      { icon: 'move', text: '<strong>Sweep across</strong> — move quickly across the word for a wave effect.' },
+    ],
+    controls: []
+  },
+  {
+    letter: 'E', name: 'Expand Entrance',
+    hint: 'Click replay to watch again',
+    hintIcon: 'play',
+    description: 'CSS keyframe animation — letters start ultra-condensed and expand to full width with staggered delay. A theatrical reveal, like curtains opening.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> — the animation plays automatically on load.' },
+      { icon: 'refresh', text: '<strong>Replay</strong> — trigger the entrance animation again.' },
+    ],
+    controls: ['replay']
+  },
+  {
+    letter: 'F', name: 'Axis Breathing',
+    hint: 'Watch the rhythm',
+    hintIcon: 'eye',
+    description: 'All letters animate in unison on a slow inhale/exhale cycle — weight, width, and letter-spacing oscillate together. The wordmark breathes.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Observe</strong> — the wordmark breathes continuously. No interaction needed.' },
+      { icon: 'clock', text: '<strong>Speed</strong> — controls the breathing tempo. Slow = hypnotic; fast = anxious.' },
+    ],
+    controls: ['speed']
+  },
+];
+
+let activeSection = 0;
+const scene = document.getElementById('scene');
+let toastTimer = null;
+
+// --- LOGO ---
+const logo = document.getElementById('logo');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'logo-char';
+  s.textContent = l;
+  s.style.fontVariationSettings = aStr(rAxes());
+  logo.appendChild(s);
+});
+
+// --- ACTIVE WORD ---
+const activeWordEl = document.getElementById('activeWord');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'gen-char';
+  s.style.fontVariationSettings = aStr(rAxes());
+  s.textContent = l;
+  activeWordEl.appendChild(s);
+});
+
+// --- DRIFT ---
+let driftTimers = [];
+function startDrift() {
+  stopDrift();
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  function cycle() {
+    chars.forEach((el, i) => {
+      const t = setTimeout(() => {
+        el.style.transition = `font-variation-settings ${currentSpeed * 0.75 + rand(-200, 200)}ms ${currentEasing}`;
+        el.style.fontVariationSettings = aStr(rAxes());
+      }, i * 80);
+      driftTimers.push(t);
+    });
+    const next = setTimeout(cycle, currentSpeed * 4 + currentSpeed * 0.75 + LETTERS.length * 80);
+    driftTimers.push(next);
+  }
+  cycle();
+}
+function stopDrift() { driftTimers.forEach(clearTimeout); driftTimers = []; }
+startDrift();
+
+// --- BUILD BOTTOM BAR: pagination tiles + separator + gear ---
+const bottombar = document.getElementById('bottombar');
+
+sections.forEach((sec, i) => {
+  const tile = document.createElement('button');
+  tile.className = 'page-tile' + (i === 0 ? ' active' : '');
+  tile.textContent = sec.letter;
+  tile.addEventListener('click', () => switchSection(i));
+  bottombar.appendChild(tile);
+});
+
+// Separator dot
+const sep = document.createElement('div');
+sep.className = 'tile-sep';
+bottombar.appendChild(sep);
+
+// Gear icon
+const gear = document.createElement('button');
+gear.className = 'gear-trigger';
+gear.id = 'gearTrigger';
+gear.setAttribute('aria-label', 'Settings');
+gear.innerHTML = `<svg viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="3"/>
+  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+</svg>`;
+gear.addEventListener('click', () => {
+  scene.classList.toggle('panel-open');
+});
+bottombar.appendChild(gear);
+
+// --- TOAST ---
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+const toastIcon = document.getElementById('toastIcon');
+
+function showToast(text, icon) {
+  toastText.textContent = text;
+  toastIcon.innerHTML = `<svg viewBox="0 0 24 24">${getIconPath(icon)}</svg>`;
+  toast.classList.add('visible');
+
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('visible');
+  }, 3000);
+}
+
+// Show initial toast
+setTimeout(() => showToast(sections[0].hint, sections[0].hintIcon), 800);
+
+// --- SWITCH SECTION ---
+function switchSection(index) {
+  if (index === activeSection) return;
+  activeSection = index;
+  const sec = sections[index];
+
+  // Pagination
+  document.querySelectorAll('.page-tile').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+
+  // Meta labels
+  document.getElementById('sectionLetter').textContent = sec.letter;
+  document.getElementById('sectionName').textContent = sec.name;
+
+  // Toast
+  showToast(sec.hint, sec.hintIcon);
+
+  // Panel content
+  updatePanelContent(sec);
+
+  // Shuffle word
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  chars.forEach(el => {
+    el.style.transition = `font-variation-settings 600ms ${currentEasing}`;
+    el.style.fontVariationSettings = aStr(rAxes());
+  });
+}
+
+// --- UPDATE PANEL ---
+function updatePanelContent(sec) {
+  document.getElementById('panelLabel').textContent = sec.letter + ' — ' + sec.name;
+  document.getElementById('panelDesc').textContent = sec.description;
+
+  // Instructions
+  const instrContainer = document.getElementById('panelInstructions');
+  instrContainer.innerHTML = '';
+  sec.instructions.forEach(instr => {
+    const item = document.createElement('div');
+    item.className = 'instruction-item';
+    item.innerHTML = `
+      <div class="instruction-icon"><svg viewBox="0 0 24 24">${getIconPath(instr.icon)}</svg></div>
+      <div class="instruction-text">${instr.text}</div>
+    `;
+    instrContainer.appendChild(item);
+  });
+
+  // Controls visibility
+  const hasSpeed = sec.controls.includes('speed');
+  const hasEasing = sec.controls.includes('easing');
+  const hasShuffle = sec.controls.includes('shuffle');
+  const hasAny = sec.controls.length > 0;
+
+  document.getElementById('ctrlSpeed').style.display = hasSpeed ? '' : 'none';
+  document.getElementById('ctrlEasing').style.display = hasEasing ? '' : 'none';
+  document.getElementById('shuffleBtn').style.display = hasShuffle ? '' : 'none';
+  document.getElementById('noControls').style.display = hasAny ? 'none' : '';
+}
+
+// Init panel content
+updatePanelContent(sections[0]);
+
+function getIconPath(icon) {
+  const paths = {
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    refresh: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    cursor: '<path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>',
+    move: '<polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>',
+    'move-v': '<polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><line x1="12" y1="2" x2="12" y2="22"/>',
+    play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+  };
+  return paths[icon] || paths.eye;
+}
+
+// --- CONTROLS ---
+document.querySelectorAll('[data-speed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSpeed = parseInt(btn.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stopDrift(); startDrift();
+  });
+});
+
+document.querySelectorAll('[data-easing]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentEasing = btn.dataset.easing === 'spring' ? SPRING : SMOOTH;
+    document.querySelectorAll('[data-easing]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  chars.forEach(el => {
+    el.style.transition = `font-variation-settings 600ms ${currentEasing}`;
+    el.style.fontVariationSettings = aStr(rAxes());
+  });
+});
+
+// Escape to close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && scene.classList.contains('panel-open')) {
+    scene.classList.remove('panel-open');
+  }
+});
+</script>
+
+</body>
+</html>

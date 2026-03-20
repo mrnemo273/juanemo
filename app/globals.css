@@ -88,6 +88,11 @@
   --drawer-speed: 0.45s;
   --drawer-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
+  /* Settings Panel */
+  --panel-speed: 0.5s;
+  --panel-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --panel-height: 260px;
+
   /* Hero Axis Defaults */
   --hero-wdth: 100;
   --hero-wght: 900;

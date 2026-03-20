@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Settings Panel Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline-dark: rgba(214, 197, 171, 0.12);
+
+    /* Panel animation */
+    --panel-speed: 0.5s;
+    --panel-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Panel height when expanded */
+    --panel-height: 280px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gunmetal);
+  }
+
+  /* ==========================================================
+     SCENE — full viewport frame (7-row grid from Phase D/E)
+     ========================================================== */
+  .scene {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1px auto 1fr auto 1px auto;
+    background: var(--gunmetal);
+    position: relative;
+  }
+
+  /* ==========================================================
+     TOP BAR
+     ========================================================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+    z-index: 10;
+  }
+
+  .topbar-date {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--dun);
+  }
+
+  .grid-trigger {
+    position: absolute;
+    right: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+    z-index: 40;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+  }
+  .grid-trigger:hover { opacity: 0.9; }
+  .grid-trigger span {
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    background: var(--dun);
+    display: block;
+  }
+
+  /* ==========================================================
+     KEYLINES + TOP METABAR
+     ========================================================== */
+  .keyline { width: 100%; background: var(--keyline-dark); }
+
+  .metabar {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 20px var(--pad) 10px;
+  }
+  .meta-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .meta-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* ==========================================================
+     EXPERIMENT VIEWPORT — the 1fr row
+     ========================================================== */
+  .viewport {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    /* This row shrinks when the panel expands */
+    transition: none; /* grid handles the animation */
+  }
+
+  .gen-word {
+    display: flex;
+    align-items: baseline;
+  }
+  .gen-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(60px, 17vw, 280px);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    will-change: font-variation-settings;
+    display: inline-block;
+  }
+
+  /* ==========================================================
+     BOTTOM METABAR — section label + hint + gear icon
+     This is the row that "grows" into the settings panel
+     ========================================================== */
+  .bottom-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--pad);
+    height: 33px;
+    position: relative;
+    z-index: 20;
+    /* Needed so the expanded panel content is below */
+    overflow: hidden;
+  }
+
+  .bottom-meta-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-letter {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bittersweet);
+  }
+  .section-name {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.5;
+  }
+
+  /* Interaction hint — always visible, faint */
+  .hint {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--dun);
+    opacity: 0.2;
+    transition: opacity 0.3s;
+  }
+
+  /* Gear icon */
+  .gear-trigger {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--keyline-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.2s, border-color 0.2s, transform 0.4s var(--panel-ease);
+    flex-shrink: 0;
+  }
+  .gear-trigger:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+  .gear-trigger svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--dun);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Gear rotates when panel is open */
+  .panel-open .gear-trigger {
+    opacity: 0.7;
+    border-color: rgba(214, 197, 171, 0.25);
+    transform: rotate(90deg);
+  }
+
+  /* ==========================================================
+     EXPANDING PANEL — grows up from the bottom area
+     ========================================================== */
+
+  /*
+    The trick: we animate the grid-template-rows value.
+    The 5th row (bottom-meta area) grows from `auto` to a large value.
+    We use a wrapper div that holds both the collapsed bar AND the
+    expanded content, and animate its height via the grid.
+  */
+
+  .bottom-zone {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--gunmetal);
+    position: relative;
+    z-index: 20;
+  }
+
+  /* The expandable content area — hidden by default */
+  .panel-content {
+    flex: 1;
+    opacity: 0;
+    overflow-y: auto;
+    padding: 0 var(--pad);
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .panel-open .panel-content {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s ease 0.15s; /* delay fade-in until panel has started growing */
+  }
+
+  /* The grid row transition */
+  .scene {
+    transition: grid-template-rows var(--panel-speed) var(--panel-ease);
+  }
+  .scene.panel-open {
+    grid-template-rows: auto 1px auto 1fr var(--panel-height) 1px auto;
+  }
+
+  /* Panel inner layout — two columns */
+  .panel-inner {
+    display: flex;
+    gap: clamp(24px, 4vw, 48px);
+    padding: 20px 0 16px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* LEFT COLUMN — About this experiment + instructions */
+  .panel-about {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--keyline-dark);
+  }
+
+  .panel-description {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--dun);
+    opacity: 0.4;
+    max-width: 480px;
+  }
+
+  .panel-instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .instruction-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .instruction-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(214, 197, 171, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .instruction-icon svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: var(--dun);
+    stroke-width: 1.5;
+    opacity: 0.35;
+  }
+
+  .instruction-text {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--dun);
+    opacity: 0.35;
+  }
+  .instruction-text strong {
+    font-weight: 500;
+    opacity: 1;
+    color: var(--dun);
+  }
+
+  /* RIGHT COLUMN — Controls */
+  .panel-controls {
+    width: clamp(180px, 25vw, 260px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .control-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  .control-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    background: none;
+    border: 1px solid var(--keyline-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+  .ctrl-btn.active { border-color: var(--bittersweet); color: var(--bittersweet); opacity: 0.9; }
+
+  .shuffle-btn {
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.45;
+    background: none;
+    border: 1px solid var(--keyline-dark);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+  .shuffle-btn:hover { opacity: 0.8; border-color: rgba(214, 197, 171, 0.3); }
+
+  /* Pagination tiles */
+  .pagination {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .page-tile {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--dun);
+    opacity: 0.3;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-tile:hover { opacity: 0.6; border-color: var(--keyline-dark); }
+  .page-tile.active {
+    opacity: 0.9;
+    border-color: var(--bittersweet);
+    color: var(--bittersweet);
+  }
+
+  /* ==========================================================
+     BOTTOM BAR — description (left) · pagination (right)
+     ========================================================== */
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad);
+    gap: 24px;
+  }
+  .bottom-desc {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--dun);
+    opacity: 0.35;
+    max-width: 600px;
+  }
+
+  /* ==========================================================
+     MOBILE
+     ========================================================== */
+  @media (max-width: 600px) {
+    :root {
+      --panel-height: 340px;
+    }
+
+    .topbar-date { display: none; }
+    .bottom-desc { display: none; }
+
+    .bottombar {
+      justify-content: center;
+    }
+
+    .panel-inner {
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .panel-controls {
+      width: 100%;
+    }
+
+    .panel-about {
+      padding-bottom: 8px;
+    }
+
+    .bottom-meta {
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .hint { display: none; }
+
+    .gear-trigger {
+      position: absolute;
+      right: var(--pad);
+    }
+
+    .bottom-meta-left {
+      margin: 0 auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-date" id="activeDate">March 2025</span>
+    <a class="logo" id="logo"></a>
+    <button class="grid-trigger" id="gridTrigger" aria-label="View experiments">
+      <span></span><span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- KEYLINE -->
+  <div class="keyline"></div>
+
+  <!-- TOP META BAR -->
+  <div class="metabar">
+    <span class="meta-number">01</span>
+    <span class="meta-title">Generative Typography</span>
+  </div>
+
+  <!-- EXPERIMENT VIEWPORT -->
+  <div class="viewport" id="viewport">
+    <div class="gen-word" id="activeWord"></div>
+  </div>
+
+  <!-- BOTTOM ZONE — the row that grows -->
+  <div class="bottom-zone" id="bottomZone">
+    <!-- Collapsed bar (always visible) -->
+    <div class="bottom-meta" id="bottomMeta">
+      <div class="bottom-meta-left">
+        <span class="section-letter" id="sectionLetter">A</span>
+        <span class="section-name" id="sectionName">Generative Drift</span>
+        <span class="hint" id="hint">Watch the letters shift</span>
+      </div>
+      <button class="gear-trigger" id="gearTrigger" aria-label="Settings">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Expandable panel content -->
+    <div class="panel-content" id="panelContent">
+      <div class="panel-inner" id="panelInner">
+
+        <!-- LEFT: About + Instructions -->
+        <div class="panel-about">
+          <div>
+            <div class="panel-label">About This Section</div>
+          </div>
+          <div class="panel-description" id="panelDesc">
+            Each letter of JUANEMO independently randomizes its weight, width, and optical size on a timed hold → shift cycle. The result is a wordmark that never looks the same twice — a living identity that drifts through the variable font's 13-axis design space.
+          </div>
+          <div class="panel-instructions" id="panelInstructions">
+            <div class="instruction-item">
+              <div class="instruction-icon">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="instruction-text"><strong>Watch</strong> — the letters shift automatically on a timed cycle. Each character moves independently.</div>
+            </div>
+            <div class="instruction-item">
+              <div class="instruction-icon">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              </div>
+              <div class="instruction-text"><strong>Shuffle</strong> — tap the button below to instantly re-randomize all letters at once.</div>
+            </div>
+            <div class="instruction-item">
+              <div class="instruction-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="instruction-text"><strong>Speed</strong> — change how long letters hold before shifting. Slower speeds feel meditative; faster feels energetic.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Controls -->
+        <div class="panel-controls">
+          <div>
+            <div class="panel-label">Controls</div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Speed</span>
+            <div class="control-options">
+              <button class="ctrl-btn active" data-speed="2000">2s</button>
+              <button class="ctrl-btn" data-speed="4000">4s</button>
+              <button class="ctrl-btn" data-speed="8000">8s</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Easing</span>
+            <div class="control-options">
+              <button class="ctrl-btn active" data-easing="spring">Spring</button>
+              <button class="ctrl-btn" data-easing="smooth">Smooth</button>
+            </div>
+          </div>
+          <button class="shuffle-btn" id="shuffleBtn">Shuffle</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYLINE -->
+  <div class="keyline"></div>
+
+  <!-- BOTTOM BAR — pagination -->
+  <div class="bottombar">
+    <p class="bottom-desc">Per-character variable font drift using Roboto Flex's 13 axes.</p>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+const SMOOTH = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+let currentEasing = SPRING;
+let currentSpeed = 2000;
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+
+// --- SECTIONS DATA (per-experiment controls + instructions) ---
+const sections = [
+  {
+    letter: 'A', name: 'Generative Drift',
+    hint: 'Watch the letters shift',
+    description: 'Each letter of JUANEMO independently randomizes its weight, width, and optical size on a timed hold → shift cycle. The result is a wordmark that never looks the same twice — a living identity that drifts through the variable font\'s 13-axis design space.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> — the letters shift automatically on a timed cycle. Each character moves independently.' },
+      { icon: 'refresh', text: '<strong>Shuffle</strong> — tap the button below to instantly re-randomize all letters at once.' },
+      { icon: 'clock', text: '<strong>Speed</strong> — change how long letters hold before shifting. Slower feels meditative; faster feels energetic.' },
+    ],
+    controls: ['speed', 'easing', 'shuffle']
+  },
+  {
+    letter: 'B', name: 'Proximity + Drift',
+    hint: 'Move your cursor near the letters',
+    description: 'Ambient drift runs in the background, but letters near your cursor get pulled toward bold and extended. Move away and they relax back to their drifting state. The interaction radius is 250px.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover near</strong> — move your cursor close to letters. They\'ll get bolder and wider as you approach.' },
+      { icon: 'move', text: '<strong>Pull away</strong> — move far from a letter and it relaxes back into the ambient drift cycle.' },
+      { icon: 'clock', text: '<strong>Speed</strong> — controls the background drift cycle. The proximity response is always instant.' },
+    ],
+    controls: ['speed', 'easing']
+  },
+  {
+    letter: 'C', name: 'Mouse-Responsive Axes',
+    hint: 'Move your cursor across the viewport',
+    description: 'Your cursor position directly maps to the font\'s variable axes. Horizontal movement controls width (wdth), vertical controls weight (wght). Every letter responds in unison — the entire wordmark follows your hand.',
+    instructions: [
+      { icon: 'move', text: '<strong>Move horizontally</strong> — controls letter width. Left = condensed, right = extended.' },
+      { icon: 'move-v', text: '<strong>Move vertically</strong> — controls letter weight. Top = light, bottom = bold.' },
+      { icon: 'eye', text: '<strong>Explore</strong> — try the corners for extreme combinations. Center gives you the most neutral form.' },
+    ],
+    controls: []
+  },
+  {
+    letter: 'D', name: 'Per-Character Hover',
+    hint: 'Hover over individual letters',
+    description: 'Pure CSS interaction — no JavaScript animation. Hovering over a letter collapses its axes to minimum values and lifts it up. The result is a playful, tactile feeling where each letter responds to touch.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover a letter</strong> — it collapses to its narrowest, lightest form and lifts up.' },
+      { icon: 'move', text: '<strong>Move across</strong> — sweep your cursor across the word to create a wave effect.' },
+    ],
+    controls: []
+  },
+  {
+    letter: 'E', name: 'Expand Entrance',
+    hint: 'Click replay to watch again',
+    description: 'A CSS keyframe animation that starts each letter ultra-condensed and expands them to full width. The staggered delay creates a theatrical reveal — like curtains opening on a stage.',
+    instructions: [
+      { icon: 'play', text: '<strong>Watch</strong> — the animation plays automatically. Letters expand from condensed to full width.' },
+      { icon: 'refresh', text: '<strong>Replay</strong> — click the replay button to trigger the entrance animation again.' },
+    ],
+    controls: ['replay']
+  },
+  {
+    letter: 'F', name: 'Axis Breathing',
+    hint: 'Watch the rhythm',
+    description: 'All letters animate in unison on a slow inhale/exhale cycle — weight, width, and letter-spacing oscillate together. The wordmark breathes. No interaction needed; just observe the rhythm.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Observe</strong> — the wordmark breathes continuously. Weight expands on inhale, contracts on exhale.' },
+      { icon: 'clock', text: '<strong>Speed</strong> — controls the breathing tempo. Slow (8s) is hypnotic; fast (2s) is anxious.' },
+    ],
+    controls: ['speed']
+  },
+];
+
+let activeSection = 0;
+const scene = document.getElementById('scene');
+
+// --- LOGO ---
+const logo = document.getElementById('logo');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'logo-char';
+  s.textContent = l;
+  s.style.fontVariationSettings = aStr(rAxes());
+  logo.appendChild(s);
+});
+
+// --- ACTIVE EXPERIMENT WORD ---
+const activeWordEl = document.getElementById('activeWord');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'gen-char';
+  s.style.fontVariationSettings = aStr(rAxes());
+  s.textContent = l;
+  activeWordEl.appendChild(s);
+});
+
+// --- DRIFT ---
+let driftTimers = [];
+
+function startDrift() {
+  stopDrift();
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  function cycle() {
+    chars.forEach((el, i) => {
+      const t = setTimeout(() => {
+        el.style.transition = `font-variation-settings ${currentSpeed * 0.75 + rand(-200, 200)}ms ${currentEasing}`;
+        el.style.fontVariationSettings = aStr(rAxes());
+      }, i * 80);
+      driftTimers.push(t);
+    });
+    const next = setTimeout(cycle, currentSpeed * 4 + currentSpeed * 0.75 + LETTERS.length * 80);
+    driftTimers.push(next);
+  }
+  cycle();
+}
+
+function stopDrift() {
+  driftTimers.forEach(clearTimeout);
+  driftTimers = [];
+}
+
+startDrift();
+
+// --- PAGINATION TILES ---
+const pagination = document.getElementById('pagination');
+sections.forEach((sec, i) => {
+  const tile = document.createElement('button');
+  tile.className = 'page-tile' + (i === 0 ? ' active' : '');
+  tile.textContent = sec.letter;
+  tile.addEventListener('click', () => switchSection(i));
+  pagination.appendChild(tile);
+});
+
+// --- SWITCH SECTION ---
+function switchSection(index) {
+  if (index === activeSection) return;
+  activeSection = index;
+  const sec = sections[index];
+
+  // Update pagination
+  document.querySelectorAll('.page-tile').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+
+  // Update bottom meta bar
+  document.getElementById('sectionLetter').textContent = sec.letter;
+  document.getElementById('sectionName').textContent = sec.name;
+  document.getElementById('hint').textContent = sec.hint;
+
+  // Update panel content if open
+  updatePanelContent(sec);
+
+  // Shuffle the word for visual feedback
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  chars.forEach(el => {
+    el.style.transition = `font-variation-settings 600ms ${currentEasing}`;
+    el.style.fontVariationSettings = aStr(rAxes());
+  });
+}
+
+// --- UPDATE PANEL CONTENT ---
+function updatePanelContent(sec) {
+  document.getElementById('panelDesc').textContent = sec.description;
+
+  const instrContainer = document.getElementById('panelInstructions');
+  instrContainer.innerHTML = '';
+  sec.instructions.forEach(instr => {
+    const item = document.createElement('div');
+    item.className = 'instruction-item';
+    item.innerHTML = `
+      <div class="instruction-icon">
+        <svg viewBox="0 0 24 24">${getIconPath(instr.icon)}</svg>
+      </div>
+      <div class="instruction-text">${instr.text}</div>
+    `;
+    instrContainer.appendChild(item);
+  });
+
+  // Update controls visibility
+  const controlsEl = document.querySelector('.panel-controls');
+  const controlGroups = controlsEl.querySelectorAll('.control-group');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+
+  // Show/hide speed
+  controlGroups[0].style.display = sec.controls.includes('speed') ? '' : 'none';
+  // Show/hide easing
+  controlGroups[1].style.display = sec.controls.includes('easing') ? '' : 'none';
+  // Show/hide shuffle
+  shuffleBtn.style.display = sec.controls.includes('shuffle') ? '' : 'none';
+
+  // If no controls at all, show a message
+  if (sec.controls.length === 0) {
+    controlGroups[0].style.display = 'none';
+    controlGroups[1].style.display = 'none';
+    shuffleBtn.style.display = 'none';
+  }
+}
+
+function getIconPath(icon) {
+  const paths = {
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    refresh: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    cursor: '<path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>',
+    move: '<polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>',
+    'move-v': '<polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><line x1="12" y1="2" x2="12" y2="22"/>',
+    play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+  };
+  return paths[icon] || paths.eye;
+}
+
+// --- GEAR TOGGLE ---
+document.getElementById('gearTrigger').addEventListener('click', () => {
+  scene.classList.toggle('panel-open');
+});
+
+// --- CONTROLS ---
+document.querySelectorAll('[data-speed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSpeed = parseInt(btn.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stopDrift();
+    startDrift();
+  });
+});
+
+document.querySelectorAll('[data-easing]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentEasing = btn.dataset.easing === 'spring' ? SPRING : SMOOTH;
+    document.querySelectorAll('[data-easing]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  const chars = activeWordEl.querySelectorAll('.gen-char');
+  chars.forEach(el => {
+    el.style.transition = `font-variation-settings 600ms ${currentEasing}`;
+    el.style.fontVariationSettings = aStr(rAxes());
+  });
+});
+
+// Close panel on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && scene.classList.contains('panel-open')) {
+    scene.classList.remove('panel-open');
+  }
+});
+</script>
+
+</body>
+</html>

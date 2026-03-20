@@ -9,6 +9,7 @@ export interface ExperimentControls {
   easing: EasingType;   // spring or smooth
   shuffleKey: number;   // increments on shuffle — experiments react to changes
   activeSection: number; // index of currently visible section
+  replayKey: number;    // increments on replay — section E reacts to changes
 }
 
 const defaultControls: ExperimentControls = {
@@ -16,6 +17,7 @@ const defaultControls: ExperimentControls = {
   easing: 'spring',
   shuffleKey: 0,
   activeSection: 0,
+  replayKey: 0,
 };
 
 export const ExperimentControlsContext =

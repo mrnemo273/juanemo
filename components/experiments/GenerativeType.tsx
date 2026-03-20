@@ -349,7 +349,9 @@ function SectionPerCharHover() {
    ================================================================== */
 
 function SectionExpandEntrance() {
+  const controls = useContext(ExperimentControlsContext);
   const [inView, setInView] = useState(true);
+  const replayKeyRef = useRef(controls.replayKey);
 
   // Trigger entrance animation on mount
   useEffect(() => {
@@ -359,12 +361,16 @@ function SectionExpandEntrance() {
     });
   }, []);
 
-  const handleReplay = useCallback(() => {
+  // Listen for replay triggered from frame hint action
+  useEffect(() => {
+    if (controls.replayKey === 0) return;
+    if (controls.replayKey === replayKeyRef.current) return;
+    replayKeyRef.current = controls.replayKey;
     setInView(false);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setInView(true));
     });
-  }, []);
+  }, [controls.replayKey]);
 
   return (
     <section className={styles.section} data-section="E">
@@ -373,9 +379,6 @@ function SectionExpandEntrance() {
       >
         JUANEMO
       </div>
-      <button className={styles.replayBtn} onClick={handleReplay}>
-        Replay
-      </button>
     </section>
   );
 }
