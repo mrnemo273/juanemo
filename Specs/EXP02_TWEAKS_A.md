@@ -411,3 +411,8 @@ Resize is debounced at 150ms. Only new spawns/reinits use updated sizes.
 - **Orb sizing extended** to scale up to 3840px viewports (ultrawide/4K support): min 20–100px, max 40–250px. Original spec capped at 2560px.
 - **Hydration fix** — random initial chord caused React hydration mismatch (server vs client `Math.random()`). Fixed by deferring to client-side `useEffect`, then replaced entirely with "Select chord" placeholder approach.
 - **AudioContext state verification** — `initAudio()` now checks `Tone.getContext().state === 'running'` after `Tone.start()` and throws if not, allowing retry on next user gesture.
+- **Fixed nav bars** — top and bottom bars changed from CSS Grid rows to `position: fixed` with `z-index: 30`. They are now independent, global elements. Viewport sizes between them using `position: absolute` with calculated `top`/`bottom` offsets.
+- **Settings panel overlay** — panel is now `position: fixed` with `z-index: 25`, slides up from bottom over the experiment with a dark gunmetal scrim (`rgba(31,38,39,0.55)`, `z-index: 20`). Clicking the scrim closes the panel. Panel has its own top and bottom keylines.
+- **Pause on settings open** — `ExperimentControlsContext` now includes `paused: boolean`. When settings panel opens, physics RAF loop skips stepping, freezing orbs in place.
+- **Spawn spring animation** — orbs pop in with a subtle damped spring scale effect (~250ms). `spawnScale = 1 - 0.7 * exp(-6t) * cos(t * π * 2.5)`. Replays on chord change via `spawnTime` reset in `retuneParticles`.
+- **Metronome volume raised** — bumped ~8dB: base -22dB (was -30dB), accent -20dB (was -28dB), ghost -26dB (was -34dB).

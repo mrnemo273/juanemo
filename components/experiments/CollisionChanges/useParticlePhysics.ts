@@ -181,6 +181,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
       lerpStartFreqs.current.clear();
       lerpTargetFreqs.current.clear();
 
+      const now = performance.now();
       particles.forEach((p, i) => {
         const tIdx = i % targetFreqs.length;
         lerpStartFreqs.current.set(p.id, p.frequency);
@@ -190,6 +191,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
         p.chordTone = chordTones[tIdx];
         p.harmonicFunction = harmonicFunction;
         p.color = HARMONIC_COLORS[harmonicFunction];
+        p.spawnTime = now; // Reset to replay spring animation
       });
     },
     [],

@@ -427,12 +427,25 @@ export default function CollisionChanges() {
       for (const p of particles) {
         const alpha = p.fadeOut ? 0.3 : 1;
 
+        // Spawn spring scale — quick bouncy pop-in (~250ms)
+        const spawnAge = time - p.spawnTime;
+        let spawnScale = 1;
+        if (spawnAge < 250) {
+          const t = spawnAge / 250;
+          // Damped spring: starts at 0.3, overshoots to ~1.08, settles to 1.0
+          spawnScale = 1 - 0.7 * Math.exp(-6 * t) * Math.cos(t * Math.PI * 2.5);
+        }
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(spawnScale, spawnScale);
+
         // Flat fill (light) + vibrant stroke
         const noteColor = NOTE_COLORS[p.note] ?? p.color;
         const fillAlpha = 0.1 + p.brightness * 0.15;
         const strokeAlpha = 0.6 + p.brightness * 0.4;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = colorWithAlpha(noteColor, fillAlpha * alpha);
         ctx.fill();
         ctx.strokeStyle = colorWithAlpha(noteColor, strokeAlpha * alpha);
@@ -446,7 +459,9 @@ export default function CollisionChanges() {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = colorWithAlpha(noteColor, (0.6 + p.brightness * 0.3) * alpha);
         const displayNote = p.note.replace(/[0-9]/g, '').replace('#', '♯').replace(/(?<=^[A-G])b/, '♭');
-        ctx.fillText(displayNote, p.x, p.y);
+        ctx.fillText(displayNote, 0, 0);
+
+        ctx.restore();
       }
 
       // Centered chord name — large Georgia italic, very light (only after user selects)

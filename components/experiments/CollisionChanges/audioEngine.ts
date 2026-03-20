@@ -142,7 +142,7 @@ export function startMetronome(bpm: number, timeSignature: 3 | 4): void {
 
   // Jazz brush sound: filtered noise burst, very quiet
   brushFilter = new Tone.Filter({ frequency: 4000, type: 'bandpass', Q: 1.2 });
-  metronomeGain = new Tone.Gain(Tone.dbToGain(-30));
+  metronomeGain = new Tone.Gain(Tone.dbToGain(-22));
   brushSynth = new Tone.NoiseSynth({
     noise: { type: 'white' },
     envelope: {
@@ -158,10 +158,10 @@ export function startMetronome(bpm: number, timeSignature: 3 | 4): void {
   metronomeLoop = new Tone.Loop((time) => {
     const isAccent = metronomeBeat === 0;
     if (isAccent) {
-      metronomeGain!.gain.setValueAtTime(Tone.dbToGain(-28), time);
+      metronomeGain!.gain.setValueAtTime(Tone.dbToGain(-20), time);
       brushSynth!.set({ envelope: { decay: 0.09 } });
     } else {
-      metronomeGain!.gain.setValueAtTime(Tone.dbToGain(-34), time);
+      metronomeGain!.gain.setValueAtTime(Tone.dbToGain(-26), time);
       brushSynth!.set({ envelope: { decay: 0.06 } });
     }
     brushSynth!.triggerAttackRelease('32n', time);
