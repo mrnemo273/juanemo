@@ -537,10 +537,26 @@
   .metaTop { top: 32px; }
   .metaBottom { bottom: 32px; }
 
-  /* Hide hint on mobile — just letter + name */
-  .hintSep,
-  .hintText,
-  .hintAction { display: none; }
+  /* Hint visible on mobile — wraps to second centered line */
+  .metaBottom {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .hintSep { display: none; }
+
+  .hintText {
+    width: 100%;
+    text-align: center;
+  }
+
+  .hintAction {
+    padding: 6px 12px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
 
   .panelInner {
     flex-direction: column;

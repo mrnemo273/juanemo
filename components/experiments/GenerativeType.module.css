@@ -100,10 +100,22 @@
               font-variation-settings 0.3s ease;
 }
 
-.hoverChar:hover {
-  color: var(--color-bittersweet);
-  transform: translateY(-20px);
-  font-variation-settings: 'wdth' 25, 'wght' 100, 'opsz' 8;
+/* Hover only on devices with fine pointer (desktop) — avoids sticky :hover on touch */
+@media (hover: hover) and (pointer: fine) {
+  .hoverChar:hover {
+    color: var(--color-bittersweet);
+    transform: translateY(-20px);
+    font-variation-settings: 'wdth' 25, 'wght' 100, 'opsz' 8;
+  }
+}
+
+/* Touch devices: transitions applied via JS touch sweep */
+@media (hover: none) {
+  .hoverChar {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.3s ease,
+                font-variation-settings 0.3s ease;
+  }
 }
 
 /* ----------------------------------------------------------

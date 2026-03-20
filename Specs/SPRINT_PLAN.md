@@ -143,21 +143,69 @@ The generative typography system, design tokens, and font infrastructure carry f
 
 **Goal:** Replace the IndexOverlay with a right-side drawer (desktop) / bottom sheet (mobile) for experiment navigation. Add a Special Projects carousel.
 
-### What Needs to Be Built
+### What Was Built
 
-1. **DrawerNav component** — slides in from the right on desktop, slides up from bottom on mobile (≤600px)
-2. **Experiment list** grouped by month with 56×36 live thumbnails
-3. **Special Projects carousel** pinned to drawer bottom, auto-rotates every 4s
-4. **NavigationContext refactor** — replace `openIndex()`/`closeIndex()` with `openDrawer()`/`closeDrawer()`
-5. **Shared BottomSheet pattern** on mobile — both the nav drawer and the existing controls drawer use the same bottom-sheet component
-6. **Delete IndexOverlay** — fully replaced by drawer
+1. **DrawerNav component** — slides in from the right on desktop, CSS media query switches to bottom sheet on mobile (≤600px)
+2. **Experiment list** grouped by month with 56×36 live thumbnails (hydration-safe client-side randomization)
+3. **Special Projects carousel** pinned to drawer bottom, auto-rotates every 4s using refs for DOM updates (no re-renders)
+4. **NavigationContext refactor** — `openDrawer()`/`closeDrawer()`/`isDrawerOpen`, uses `usePathname` for active slug
+5. **Shared `<BottomSheet>` component** created for the mobile controls drawer (gear icon). Nav drawer handles its own bottom-sheet inline (too complex for generic wrapper).
+6. **IndexOverlay deleted** — fully replaced by drawer
+7. **Z-index layering** — scrim 60, nav drawer 70, controls backdrop 100, controls sheet 101
 
-### Key References
-- Spec: `Specs/PHASE_F_DRAWER_NAV.md`
-- Prototype: `prototypes/drawer-nav-v2.html`
-- Architecture context: `Specs/PHASE_D_EXPERIMENT_FRAME.md` (R.7 builder notes)
+### Status: ✅ Complete (deployed 2026-03-19)
 
-### Status: 🔲 TODO
+---
+
+## V2.0 Phase G: Settings Panel & Frame Redesign
+
+**Goal:** Redesign the experiment frame's bottom chrome. Replace inline controls and the old mobile drawer with a unified expanding settings panel, per-section instructions and controls, floating viewport meta labels, and a clean pagination + gear strip.
+
+### Key Changes
+
+1. **6-row grid** replaces the 7-row grid — old bottom meta bar removed, its content becomes floating labels inside the viewport
+2. **Expanding panel** — grid row 4 animates from `0px` to `260px` (320px mobile), pushing the viewport up. Content fades in 120ms after panel starts growing.
+3. **Per-section data model** — each section declares its hint text, instructions (icon + text), controls (speed/easing/shuffle), and optional inline actions (e.g., Replay)
+4. **Floating meta labels** — experiment title (60px from top keyline) and section label + hint (60px from bottom keyline), absolute-positioned inside viewport
+5. **40×40px pagination tiles + gear icon** — unified border treatment, centered in bottom bar
+6. **Section transition loader preserved** — the Phase D/E spinning arrow transition (100ms fade → 350ms spin → 100ms fade) must survive the grid restructure unchanged
+7. **Old mobile controls drawer deleted** — `<BottomSheet>` component removed, expanding panel works on all breakpoints
+
+### Spec: `Specs/PHASE_G_SETTINGS_PANEL.md`
+### Prototype: `prototypes/settings-panel-v3.html`
+
+### What Was Built
+
+1. **6-row CSS Grid** — old bottom meta bar row removed, replaced by floating absolute-positioned labels inside viewport
+2. **Expanding settings panel** — grid row 4 animates 0px → 260px (320px mobile) with `grid-template-rows` transition. Content fades in 120ms after growth starts.
+3. **Per-section data model** — `sectionConfigs` array in `data/experiments.ts` with hint, hintAction, description, instructions[], and controls[] per section
+4. **Floating meta labels** — experiment title (60px from top keyline) and section label + hint (60px from bottom keyline), `position: absolute` inside viewport
+5. **40×40px pagination tiles + gear icon** — unified 1px border treatment, centered in bottom bar, gear rotates 90° and turns Bittersweet when open
+6. **Replay via `replayKey` context** — Section E's inline Replay action uses a counter in `ExperimentControlsContext` (same pattern as `shuffleKey`)
+7. **Section transition loader preserved** — spinning arrow works in new grid, centers in shorter viewport when panel is open
+8. **BottomSheet deleted** — expanding panel is universal on all breakpoints
+
+### Status: ✅ Complete (deployed 2026-03-19)
+
+---
+
+## V2.0 Phase H: Mobile Interaction — Gyroscope + Touch
+
+**Goal:** Make sections B, C, and D fully interactive on mobile. Replace mouse-dependent interactions with device orientation (gyroscope) for B and C, touch-sweep for D. Update instructions per-platform.
+
+### Key Changes
+
+1. **`useDeviceOrientation` hook** — reusable gyro API wrapper with iOS permission flow, value smoothing (lerp), and normalized output (0–1)
+2. **Section B → Gyro Proximity** — phone tilt maps to a virtual cursor position, feeds the existing 250px proximity radius calculation
+3. **Section C → Gyro Axis Mapping** — gamma (left-right tilt) → width, beta (forward-back tilt) → weight
+4. **Section D → Touch Sweep** — `touchmove` triggers collapse + lift on characters near touch point, creating a wave effect
+5. **iOS permission via inline action** — "Enable Motion" appears in the hint line on sections B and C, uses existing `hintAction` pattern
+6. **Touch fallback** — if gyro is denied or unavailable, B and C fall back to touch-drag mapping
+7. **Platform-aware copy** — `hintMobile` and `instructionsMobile` fields in SectionConfig, auto-selected by viewport
+
+### Spec: `Specs/PHASE_H_MOBILE_INTERACTION.md`
+
+### Status: 🔲 Ready
 
 ---
 

@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-19 — **Phase E complete and deployed.** Experiment frame with pagination, loader, mobile drawer all live.
+2026-03-19 — **Phase H spec written.** Mobile interaction for sections B, C, D. Gyroscope for proximity/axes, touch-sweep for hover. Platform-aware instructions.
 
 ---
 
@@ -104,8 +104,18 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | B.6 | ~~Clean up vestigial `main` max-width rule~~ | ✅ Phase C | Removed |
 | B.7 | ~~Remove `--hero-height` and `--max-width` CSS properties~~ | ✅ Phase C | Removed |
 | B.8 | ~~Add close button to IndexOverlay for mobile~~ | ✅ Phase C | CLOSE button top-right, matches INDEX trigger style |
-| B.9 | Add placeholder experiments to test overlay density/scroll | Phase B builder | Only 1 experiment currently — overlay is sparse |
+| B.9 | ~~Add placeholder experiments to test overlay density/scroll~~ | ⏸ SUPERSEDED | IndexOverlay deleted in Phase F. Drawer nav handles single experiment fine. |
 | B.10 | Consider upgrading LogoMark `<a href="/">` → `<Link>` | Phase B builder | Full reload re-randomizes logo (nice touch), but `<Link>` would be smoother. Trade-off. |
+| B.11 | Focus return to grid icon on drawer close | Phase F builder | Needs ref to grid icon passed through NavigationContext or `returnFocusRef` pattern. A11y compliance. |
+| B.12 | Drag-to-dismiss on mobile bottom sheets | Phase F builder | Drag handle pill is visual-only. Needs `touchstart`/`touchmove`/`touchend` handling. Polish pass. |
+| B.13 | Wire up carousel slide links | Phase F builder | `SpecialProject.url` field exists but clicks are no-ops. Wire to `window.open()` or `router.push()`. |
+| B.14 | Delete ExperimentShell.tsx + CSS module | Phase D builder | Still on disk, never imported. Safe to remove. Noted since Phase D, still not cleaned up. |
+| B.15 | Multi-experiment testing for drawer nav | Phase F builder | Only 1 experiment in data. Verify month grouping, active highlighting, and navigation when more are added. |
+| B.16 | LogoMark — increase size ~10% and add letter-spacing | JC feedback | Feels tight at current size. Bump from 22px to ~24px, add slight tracking. Quick polish pass. |
+| B.17 | DrawerNav mobile trigger overlaps pagination tile A at 320–375px | Phase G builder | "N" button bottom-left conflicts with bottom bar tiles. Move trigger to top bar grid icon on mobile, or adjust position. Not a Phase G regression — Phase F positioning issue. |
+| B.18 | Keyboard navigation for pagination tiles (arrow keys) | Phase D/E + G builder | Arrow keys to cycle sections not implemented. A11y enhancement. |
+| B.19 | Generalize `replayKey` pattern for frame-triggered section actions | Phase G builder | Currently only used for Section E Replay. If future sections need frame-triggered actions, abstract the pattern. |
+| B.20 | ~~Show hint text on mobile — wrap to second line~~ | ⏸ ABSORBED → Phase H (H.7) | Rolled into Phase H — mobile hint visibility is part of the platform-aware instructions work. |
 
 ---
 
@@ -130,17 +140,48 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | NAV.3 | Navigation in light mode (Bone background) | ✅ Phase F | Drawer uses Bone background, creating the Gunmetal→Bone perceptual shift. |
 | NAV.4 | ~~Navigation as experiment tile grid~~ | ⏸ SUPERSEDED | Replaced by chronological list with thumbnails in drawer (Phase F). Better for growing experiment count. |
 
-### Phase F — Drawer Navigation 🔵
+### Phase H — Mobile Interaction: Gyroscope + Touch 🔵
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| F.1 | Remove IndexOverlay, rewire NavigationContext | 🔲 TODO | Delete IndexOverlay, replace `openIndex()` with `openDrawer()` in context |
-| F.2 | DrawerNav component — slide-in drawer with scrim | 🔲 TODO | `position: fixed`, right-side on desktop, bottom sheet on mobile |
-| F.3 | Experiment list grouped by month with thumbnails | 🔲 TODO | 56×36 thumbnails with mini randomized wordmarks |
-| F.4 | Special Projects carousel at drawer bottom | 🔲 TODO | Auto-rotates 4s, stops on close, dot navigation |
-| F.5 | Mobile bottom-sheet pattern | 🔲 TODO | Nav drawer + controls drawer both use bottom-sheet on ≤600px. Shared `BottomSheet` component. |
-| F.6 | Keyboard & accessibility — focus trap, reduced motion | 🔲 TODO | `role="dialog"`, `aria-modal`, Escape to close |
-| F.7 | Build + QA | 🔲 TODO | |
+| H.1 | `useDeviceOrientation` hook — gyro API with iOS permission, smoothing, normalization | 🔲 TODO | Reusable hook in `lib/useDeviceOrientation.ts`. Returns beta/gamma normalized 0–1. |
+| H.2 | Permission UI — "Enable Motion" inline hint action | 🔲 TODO | Uses existing `hintAction` pattern. Appears on B+C mobile before gyro granted. |
+| H.3 | Section B mobile — gyro proximity | 🔲 TODO | Tilt maps to virtual cursor position, feeds existing proximity calc. Touch fallback. |
+| H.4 | Section C mobile — gyro axis mapping | 🔲 TODO | Gamma→wdth, beta→wght. Same mapping as mouse but from tilt. Touch fallback. |
+| H.5 | Section D mobile — touch sweep | 🔲 TODO | `touchmove` triggers collapse+lift on characters near touch point. Wave effect. |
+| H.6 | Mobile detection helper — `getInteractionMode()` | 🔲 TODO | Returns `'mouse' \| 'touch' \| 'gyro'` based on viewport + device caps + permission. |
+| H.7 | Platform-aware hint text + instructions | 🔲 TODO | `hintMobile`, `instructionsMobile` fields in SectionConfig. Tilt/drag copy on mobile. |
+| H.8 | Gyro fallback after permission denied | 🔲 TODO | Seamless fallback to touch-drag. No broken state. |
+| H.9 | Build + QA | 🔲 TODO | Desktop unchanged, iOS Safari gyro, Android Chrome, touch fallback, no jitter. |
+
+### Phase G — Settings Panel & Frame Redesign ✅
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| G.1 | Restructure grid from 7-row to 6-row | ✅ DONE | `auto 1px 1fr 0px 1px auto` — old bottom meta bar removed |
+| G.2 | Floating meta labels inside viewport | ✅ DONE | Absolute-positioned, 60px from keylines (32px mobile), centered |
+| G.3 | Bottom bar — pagination tiles + gear only | ✅ DONE | 40×40px tiles, 1px bordered, no inline controls |
+| G.4 | Expanding settings panel (grid-row animation) | ✅ DONE | Row 4 grows from 0px → 260px (320px mobile), expo-out easing |
+| G.5 | Panel left column — about + instructions | ✅ DONE | Section label, description, icon+text instruction items |
+| G.6 | Panel right column — per-section controls | ✅ DONE | Only controls the section declares; "no controls" fallback |
+| G.7 | Per-section data model (SectionConfig) | ✅ DONE | `sectionConfigs` array in `data/experiments.ts`, top-level export |
+| G.8 | Remove old mobile controls drawer (BottomSheet) | ✅ DONE | BottomSheet.tsx + CSS deleted. Expanding panel is universal. |
+| G.9 | Open/close behavior + escape key | ✅ DONE | Gear toggles, Escape closes, section switch keeps panel open |
+| G.9a | Preserve section transition loader | ✅ DONE | Spinning arrow works in new 6-row grid, centers in shorter viewport when panel open |
+| G.10 | Mobile responsive (≤600px) | ✅ DONE | Panel stacks vertically, hints hidden, 32px label offset |
+| G.11 | Build + QA | ✅ DONE | Zero errors, no deviations from prototype |
+
+### Phase F — Drawer Navigation ✅
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| F.1 | Remove IndexOverlay, rewire NavigationContext | ✅ DONE | IndexOverlay deleted. Context exposes `openDrawer()`/`closeDrawer()`/`isDrawerOpen`. Uses `usePathname` for active slug. |
+| F.2 | DrawerNav component — slide-in drawer with scrim | ✅ DONE | Fixed right-side on desktop, bottom sheet via CSS media query on mobile. Scrim z-60, drawer z-70. |
+| F.3 | Experiment list grouped by month with thumbnails | ✅ DONE | 56×36 thumbnails with client-side randomized wordmarks (hydration-safe via useEffect). |
+| F.4 | Special Projects carousel at drawer bottom | ✅ DONE | Auto-rotates 4s, refs for DOM manipulation (no re-renders per tick), dot navigation restarts timer. |
+| F.5 | Mobile bottom-sheet pattern | ✅ DONE | Shared `<BottomSheet>` component created for controls drawer. Nav drawer handles its own bottom-sheet via CSS media query (too complex for generic wrapper). |
+| F.6 | Keyboard & accessibility — focus trap, reduced motion | ✅ DONE | `role="dialog"`, `aria-modal`, Escape to close. Focus return to trigger NOT yet implemented. |
+| F.7 | Build + QA | ✅ DONE | Zero build errors, zero hydration errors, deployed to main. |
 
 ---
 
@@ -155,5 +196,9 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | 2026-03-19 | Phase A complete. Clean refactor — no deviations. GenerativeType uses `<div>` (was `<header>`), class renamed `.container`. Old components preserved. Vestigial `main` max-width rule and `--hero-height` CSS property noted for cleanup. | Scrummaster (from Phase A builder notes) |
 | 2026-03-19 | Phase B complete. LogoMark, IndexOverlay, Navigation wrapper, INDEX trigger all live. Keyboard accessible, responsive. Minor deviations: DM Sans for overlay names (not Roboto Flex), date below name. Backlog items added: overlay close button for mobile, placeholder experiments, LogoMark `<a>` → `<Link>` upgrade. | Phase B builder |
 | 2026-03-19 | Phase C complete. Self-hosted fonts with preloading. `font-display: block` (Roboto Flex) / `swap` (DM Sans). WCAG AA verified (Dun/Gunmetal 9.11:1, INDEX trigger bumped to 60%). `dvh` units for iOS Safari. Close button added to overlay. Focus trap, focus-visible, tabIndex gating. Vestigial CSS cleaned up (B.6, B.7, B.8 resolved). README updated. Deployment pending push to main. | Scrummaster (from Phase C builder notes) |
+| 2026-03-19 | **Phase F complete and deployed.** DrawerNav replaces IndexOverlay. Shared `<BottomSheet>` component for mobile controls drawer. Nav drawer uses inline CSS media query for its own bottom-sheet (too complex for generic wrapper). Carousel uses refs for DOM updates (no re-renders). Hydration-safe thumbnails via client-side useEffect. Deviations: focus return not implemented, drag-to-dismiss visual-only. New backlog items: B.11–B.15. | Scrummaster (from Phase F builder notes) |
 | 2026-03-19 | **Phase F spec written.** Drawer navigation replaces IndexOverlay. NAV.2/NAV.4 superseded (zoom-out rejected). Mobile bottom-sheet pattern standardized — both nav drawer and controls drawer slide up from bottom on ≤600px. Phase F items added. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **Phase H spec written.** Mobile interaction: gyroscope for sections B+C (proximity+axes), touch-sweep for section D (hover). `useDeviceOrientation` hook with iOS permission flow, smoothing, normalization. Platform-aware hint text + instructions. Touch fallback if gyro denied. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **Phase G complete and deployed.** 6-row grid, expanding settings panel, floating meta labels, per-section controls/instructions, 40×40px pagination+gear strip. BottomSheet deleted. `replayKey` added to ExperimentControlsContext for Section E Replay. `sectionConfigs` array in `data/experiments.ts`. No significant deviations from spec/prototype. Known issue: DrawerNav mobile trigger overlaps tile A at narrow viewports (Phase F issue, not G regression). New backlog: B.17–B.19. | Scrummaster (from Phase G builder notes) |
+| 2026-03-19 | **Phase G spec written.** Settings panel redesign: 6-row grid with expanding panel, floating meta labels, per-section controls/instructions, inline hint actions, 40×40px pagination+gear strip. Old mobile controls drawer to be removed. Section transition loader explicitly preserved. Prototype: `prototypes/settings-panel-v3.html`. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase D/E complete and deployed.** ExperimentFrame with 7-row grid, pagination tiles (A–F), 3-phase section loader (fade+spinner+fade), 6 type variations, interactive controls (Speed/Easing/Shuffle), mobile drawer behind gear icon, bottom meta bar mirroring top. 12 prototype effects pruned to 6 per JC direction. Scroll replaced with pagination. Mobile: centered layout, 16vw type, 28px tiles. EXP.1–5 all resolved. V2.3 and V2.6 implemented as sections within Exp 01. | Builder (from Phase E session) |

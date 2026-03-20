@@ -4,7 +4,7 @@
 
 Redesign the experiment frame's bottom chrome and controls. Replace the inline bottom-bar controls with a unified pagination + gear strip, an expanding settings panel that grows up from below the keyline, per-section instructions and control configs, and floating centered meta labels inside the viewport. The gear icon and pagination tiles are now the same visual treatment on all breakpoints — no separate mobile drawer needed.
 
-## Status: `READY`
+## Status: `COMPLETE` ✅ (deployed 2026-03-19)
 
 ## Depends On: Phase D/E (complete ✅), Phase F (complete ✅)
 

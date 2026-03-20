@@ -3,8 +3,14 @@ export interface SectionConfig {
   name: string;
   hint: string;
   hintAction?: string;
+  hintMobile?: string;
+  hintActionMobile?: string;
   description: string;
   instructions: {
+    icon: string;
+    text: string;
+  }[];
+  instructionsMobile?: {
     icon: string;
     text: string;
   }[];
@@ -40,11 +46,18 @@ export const sectionConfigs: SectionConfig[] = [
     letter: 'B',
     name: 'Proximity + Drift',
     hint: 'Move your cursor near the letters',
+    hintMobile: 'Tilt your phone near the letters',
+    hintActionMobile: 'Enable Motion',
     description:
       'Ambient drift runs in the background, but letters near your cursor get pulled toward bold and extended. Move away and they relax back. The interaction radius is 250px.',
     instructions: [
       { icon: 'cursor', text: '<strong>Hover near</strong> \u2014 letters get bolder and wider as your cursor approaches.' },
       { icon: 'move', text: '<strong>Pull away</strong> \u2014 letters relax back into the ambient drift.' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt your phone</strong> \u2014 letters near the tilt point get bolder and wider.' },
+      { icon: 'refresh', text: '<strong>Level the phone</strong> \u2014 letters relax back into the ambient drift.' },
+      { icon: 'cursor', text: 'Or <strong>drag your finger</strong> near the letters for direct control.' },
     ],
     controls: ['speed', 'easing'],
   },
@@ -52,11 +65,18 @@ export const sectionConfigs: SectionConfig[] = [
     letter: 'C',
     name: 'Mouse-Responsive Axes',
     hint: 'Move your cursor across the viewport',
+    hintMobile: 'Tilt to reshape the letters',
+    hintActionMobile: 'Enable Motion',
     description:
       "Cursor position maps directly to the font's variable axes. Horizontal = width, vertical = weight. The entire wordmark follows your hand.",
     instructions: [
       { icon: 'move', text: '<strong>Move horizontally</strong> \u2014 controls letter width. Left = condensed, right = extended.' },
       { icon: 'move-v', text: '<strong>Move vertically</strong> \u2014 controls letter weight. Top = light, bottom = bold.' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt left/right</strong> \u2014 controls letter width. Left = condensed, right = extended.' },
+      { icon: 'move-v', text: '<strong>Tilt forward/back</strong> \u2014 controls letter weight. Forward = light, back = bold.' },
+      { icon: 'cursor', text: 'Or <strong>drag your finger</strong> to control directly.' },
     ],
     controls: [],
   },
@@ -64,11 +84,17 @@ export const sectionConfigs: SectionConfig[] = [
     letter: 'D',
     name: 'Per-Character Hover',
     hint: 'Hover over individual letters',
+    hintMobile: 'Drag across the letters',
     description:
       'Pure CSS \u2014 no JavaScript animation. Hovering a letter collapses its axes to minimum values and lifts it up. Sweep across the word to create a wave.',
     instructions: [
       { icon: 'cursor', text: '<strong>Hover a letter</strong> \u2014 it collapses to its narrowest, lightest form and lifts.' },
       { icon: 'move', text: '<strong>Sweep across</strong> \u2014 move quickly across the word for a wave effect.' },
+    ],
+    instructionsMobile: [
+      { icon: 'cursor', text: '<strong>Drag across</strong> the word \u2014 letters collapse and lift as your finger passes.' },
+      { icon: 'move', text: '<strong>Lift your finger</strong> \u2014 letters spring back to their natural form.' },
+      { icon: 'play', text: '<strong>Drag faster</strong> for a sharper wave, slower for a gentle ripple.' },
     ],
     controls: [],
   },

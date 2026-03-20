@@ -8,8 +8,15 @@ import {
   type EasingType,
   type ExperimentControls,
 } from '../lib/ExperimentControlsContext';
+import { useDeviceOrientation } from '../lib/useDeviceOrientation';
 import type { SectionConfig } from '../data/experiments';
 import styles from './ExperimentFrame.module.css';
+
+const MOBILE_BREAKPOINT = 600;
+
+function isMobileViewport(): boolean {
+  return typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT;
+}
 
 /* ----------------------------------------------------------
    Icon SVG paths — Lucide-style icons for panel instructions
@@ -70,6 +77,7 @@ export default function ExperimentFrame({
   children,
 }: ExperimentFrameProps) {
   const { openDrawer, closeDrawer, isDrawerOpen } = useNavigation();
+  const gyro = useDeviceOrientation();
 
   // Control state
   const [speed, setSpeed] = useState(2000);
@@ -78,6 +86,12 @@ export default function ExperimentFrame({
   const [replayKey, setReplayKey] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
+
+  // Mobile detection — determined once on mount
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(isMobileViewport());
+  }, []);
 
   // Transition loader phase
   const [phase, setPhase] = useState<'idle' | 'fadeOut' | 'loader' | 'fadeIn'>('idle');
@@ -153,10 +167,15 @@ export default function ExperimentFrame({
   );
 
   const handleHintAction = useCallback(() => {
-    if (currentConfig?.hintAction === 'Replay') {
+    const action = isMobile
+      ? (currentConfig?.hintActionMobile ?? currentConfig?.hintAction)
+      : currentConfig?.hintAction;
+    if (action === 'Replay') {
       handleReplay();
+    } else if (action === 'Enable Motion') {
+      gyro.requestPermission();
     }
-  }, [currentConfig, handleReplay]);
+  }, [currentConfig, handleReplay, isMobile, gyro]);
 
   /* --------------------------------------------------------
      Context value
@@ -249,27 +268,62 @@ export default function ExperimentFrame({
           )}
 
           {/* Floating meta: section label + hint, 60px from bottom keyline */}
-          {totalSections > 1 && currentConfig && (
-            <div className={styles.metaBottom}>
-              <span className={styles.sectionLetter}>
-                {currentConfig.letter}
-              </span>
-              <span className={styles.sectionName}>{currentConfig.name}</span>
-              <span className={styles.hintSep}>&middot;</span>
-              <span className={styles.hintText}>{currentConfig.hint}</span>
-              {currentConfig.hintAction && (
-                <>
-                  <span className={styles.hintSep}>&middot;</span>
-                  <button
-                    className={styles.hintAction}
-                    onClick={handleHintAction}
-                  >
-                    {currentConfig.hintAction}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
+          {totalSections > 1 && currentConfig && (() => {
+            // Resolve hint text and action based on platform
+            const hintText = isMobile
+              ? (currentConfig.hintMobile ?? currentConfig.hint)
+              : currentConfig.hint;
+
+            // On mobile, determine the action:
+            // - If gyro section (B/C) and gyro is granted/not-required, no action needed
+            // - If gyro section and permission pending, show "Enable Motion"
+            // - If gyro section and denied, no action (touch fallback is automatic)
+            // - Otherwise use desktop hintAction
+            let hintAction: string | undefined;
+            if (isMobile) {
+              const isGyroSection = currentConfig.letter === 'B' || currentConfig.letter === 'C';
+              if (isGyroSection) {
+                if (gyro.permissionState === 'prompt' && gyro.isAvailable) {
+                  hintAction = 'Enable Motion';
+                }
+                // granted/not-required/denied: no action
+              } else {
+                hintAction = currentConfig.hintActionMobile ?? currentConfig.hintAction;
+              }
+            } else {
+              hintAction = currentConfig.hintAction;
+            }
+
+            // On mobile, if gyro denied for B/C, show touch hint
+            let resolvedHint = hintText;
+            if (isMobile && (currentConfig.letter === 'B' || currentConfig.letter === 'C')) {
+              if (gyro.permissionState === 'denied' || !gyro.isAvailable) {
+                resolvedHint = 'Drag across the letters';
+              }
+            }
+
+            return (
+              <div className={styles.metaBottom}>
+                <span className={styles.sectionLetter}>
+                  {currentConfig.letter}
+                </span>
+                <span className={styles.sectionName}>{currentConfig.name}</span>
+                <span className={styles.hintSep}>&middot;</span>
+                <span className={styles.hintText}>{resolvedHint}</span>
+                {hintAction && (
+                  <>
+                    <span className={styles.hintSep}>&middot;</span>
+                    <button
+                      className={styles.hintAction}
+                      onClick={handleHintAction}
+                    >
+                      {hintAction}
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ROW 4: EXPANDING SETTINGS PANEL */}
@@ -292,9 +346,17 @@ export default function ExperimentFrame({
                 <div className={styles.panelDescription}>
                   {currentConfig?.description ?? description}
                 </div>
-                {currentConfig && currentConfig.instructions.length > 0 && (
+                {currentConfig && (() => {
+                  const instructions = isMobile
+                    ? (currentConfig.instructionsMobile ?? currentConfig.instructions)
+                    : currentConfig.instructions;
+                  return instructions.length > 0;
+                })() && (
                   <div className={styles.panelInstructions}>
-                    {currentConfig.instructions.map((instr, i) => (
+                    {(isMobile
+                      ? (currentConfig.instructionsMobile ?? currentConfig.instructions)
+                      : currentConfig.instructions
+                    ).map((instr, i) => (
                       <div key={i} className={styles.instructionItem}>
                         <div className={styles.instructionIcon}>
                           <svg

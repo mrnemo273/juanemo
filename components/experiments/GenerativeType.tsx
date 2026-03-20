@@ -5,12 +5,14 @@ import {
   axisString,
   randomAxes,
   randomAxesForWord,
+  AXIS_RANGES_MOBILE,
   type AxisValues,
 } from '../../lib/generativeAxes';
 import {
   ExperimentControlsContext,
   EASINGS,
 } from '../../lib/ExperimentControlsContext';
+import { useDeviceOrientation } from '../../lib/useDeviceOrientation';
 import styles from './GenerativeType.module.css';
 
 const LETTERS = 'JUANEMO'.split('');
@@ -20,6 +22,14 @@ const MOBILE_BREAKPOINT = 600;
 function isMobileViewport(): boolean {
   return typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT;
 }
+
+/** Detect touch capability */
+function isTouchDevice(): boolean {
+  return typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+}
+
+/** Interaction mode — determined once on mount, doesn't change mid-session */
+type InteractionMode = 'mouse' | 'touch' | 'gyro';
 
 /* ==================================================================
    SECTION A — Generative Drift
@@ -165,12 +175,30 @@ function SectionProximity() {
   const controls = useContext(ExperimentControlsContext);
   const controlsRef = useRef(controls);
   controlsRef.current = controls;
+  const gyro = useDeviceOrientation();
+  const gyroRef = useRef(gyro);
+  gyroRef.current = gyro;
 
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const sectionRef = useRef<HTMLElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const targetAxesRef = useRef<AxisValues[]>([]);
+  const modeRef = useRef<InteractionMode>('mouse');
+
+  useEffect(() => {
+    const mobile = isMobileViewport() && isTouchDevice();
+    modeRef.current = mobile ? 'touch' : 'mouse';
+  }, []);
+
+  // Upgrade to gyro mode when permission is granted
+  useEffect(() => {
+    if (gyro.permissionState === 'granted' || gyro.permissionState === 'not-required') {
+      if (isMobileViewport() && isTouchDevice() && gyro.isAvailable) {
+        modeRef.current = 'gyro';
+      }
+    }
+  }, [gyro.permissionState, gyro.isAvailable]);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia(
@@ -185,6 +213,7 @@ function SectionProximity() {
       if (el) el.style.fontVariationSettings = axisString(initialAxes[i]);
     });
 
+    // Desktop: mouse events
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
@@ -194,6 +223,21 @@ function SectionProximity() {
     section.addEventListener('mousemove', handleMouseMove);
     section.addEventListener('mouseleave', handleMouseLeave);
 
+    // Mobile touch fallback
+    const handleTouchMove = (e: TouchEvent) => {
+      if (modeRef.current === 'mouse') return;
+      if (modeRef.current === 'gyro') return; // gyro handles it
+      const touch = e.touches[0];
+      if (touch) mouseRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+    const handleTouchEnd = () => {
+      if (modeRef.current === 'mouse') return;
+      mouseRef.current = { x: -1000, y: -1000 };
+    };
+    section.addEventListener('touchmove', handleTouchMove, { passive: true });
+    section.addEventListener('touchend', handleTouchEnd);
+
+    // Drift loop
     LETTERS.forEach((_, i) => {
       (function tick() {
         targetAxesRef.current[i] = randomAxes();
@@ -207,8 +251,23 @@ function SectionProximity() {
 
     let animFrame: number;
     const loop = () => {
-      const { x: mx, y: my } = mouseRef.current;
       const easingCss = EASINGS[controlsRef.current.easing];
+
+      // Determine position source
+      let mx: number, my: number;
+      if (modeRef.current === 'gyro') {
+        const g = gyroRef.current;
+        mx = g.gammaNorm * window.innerWidth;
+        my = g.betaNorm * window.innerHeight;
+      } else {
+        mx = mouseRef.current.x;
+        my = mouseRef.current.y;
+      }
+
+      const mobile = isMobileViewport();
+      const attWdth = mobile ? AXIS_RANGES_MOBILE.wdth.max : 151;
+      const attWght = mobile ? AXIS_RANGES_MOBILE.wght.max : 900;
+      const attOpsz = mobile ? AXIS_RANGES_MOBILE.opsz.max : 144;
 
       charsRef.current.forEach((el, i) => {
         if (!el) return;
@@ -220,11 +279,10 @@ function SectionProximity() {
         const target = targetAxesRef.current[i];
         if (!target) return;
 
-        const att = { wdth: 151, wght: 900, opsz: 144 };
         const blended: AxisValues = {
-          wdth: Math.round(target.wdth + (att.wdth - target.wdth) * inf),
-          wght: Math.round(target.wght + (att.wght - target.wght) * inf),
-          opsz: Math.round(target.opsz + (att.opsz - target.opsz) * inf),
+          wdth: Math.round(target.wdth + (attWdth - target.wdth) * inf),
+          wght: Math.round(target.wght + (attWght - target.wght) * inf),
+          opsz: Math.round(target.opsz + (attOpsz - target.opsz) * inf),
         };
 
         if (!prefersReduced) {
@@ -244,6 +302,8 @@ function SectionProximity() {
       timersRef.current = [];
       section.removeEventListener('mousemove', handleMouseMove);
       section.removeEventListener('mouseleave', handleMouseLeave);
+      section.removeEventListener('touchmove', handleTouchMove);
+      section.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
@@ -284,34 +344,101 @@ function SectionProximity() {
 function SectionMouseAxes() {
   const textRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const gyro = useDeviceOrientation();
+  const gyroRef = useRef(gyro);
+  gyroRef.current = gyro;
+  const modeRef = useRef<InteractionMode>('mouse');
+
+  useEffect(() => {
+    const mobile = isMobileViewport() && isTouchDevice();
+    modeRef.current = mobile ? 'touch' : 'mouse';
+  }, []);
+
+  // Upgrade to gyro mode when permission is granted
+  useEffect(() => {
+    if (gyro.permissionState === 'granted' || gyro.permissionState === 'not-required') {
+      if (isMobileViewport() && isTouchDevice() && gyro.isAvailable) {
+        modeRef.current = 'gyro';
+      }
+    }
+  }, [gyro.permissionState, gyro.isAvailable]);
 
   useEffect(() => {
     const section = sectionRef.current;
     const text = textRef.current;
     if (!section || !text) return;
 
+    const mobile = isMobileViewport();
+
+    // Axis ranges
+    const wdthMin = 25;
+    const wdthMax = mobile ? AXIS_RANGES_MOBILE.wdth.max : 151;
+    const wghtMin = 100;
+    const wghtMax = mobile ? AXIS_RANGES_MOBILE.wght.max : 900;
+    const opszMin = 8;
+    const opszMax = mobile ? AXIS_RANGES_MOBILE.opsz.max : 144;
+
+    const applyAxes = (xProgress: number, yProgress: number) => {
+      const wdth = Math.round(wdthMin + xProgress * (wdthMax - wdthMin));
+      const wght = Math.round(wghtMin + (1 - yProgress) * (wghtMax - wghtMin));
+      const opsz = Math.round(opszMin + xProgress * (opszMax - opszMin));
+      text.style.fontVariationSettings = `'wdth' ${wdth}, 'wght' ${wght}, 'opsz' ${opsz}`;
+    };
+
+    const resetAxes = () => {
+      text.style.fontVariationSettings = `'wdth' ${wdthMax}, 'wght' ${wghtMax}, 'opsz' ${opszMax}`;
+    };
+
+    // Desktop: mouse events
     const handleMouseMove = (e: MouseEvent) => {
       const rect = section.getBoundingClientRect();
       const xProgress = (e.clientX - rect.left) / rect.width;
       const yProgress = (e.clientY - rect.top) / rect.height;
-
-      const wdth = Math.round(25 + xProgress * (151 - 25));
-      const wght = Math.round(100 + (1 - yProgress) * (900 - 100));
-      const opsz = Math.round(8 + xProgress * (144 - 8));
-
-      text.style.fontVariationSettings = `'wdth' ${wdth}, 'wght' ${wght}, 'opsz' ${opsz}`;
+      applyAxes(xProgress, yProgress);
     };
-
-    const handleMouseLeave = () => {
-      text.style.fontVariationSettings = "'wdth' 151, 'wght' 900, 'opsz' 144";
-    };
+    const handleMouseLeave = () => resetAxes();
 
     section.addEventListener('mousemove', handleMouseMove);
     section.addEventListener('mouseleave', handleMouseLeave);
 
+    // Mobile touch fallback
+    const handleTouchMove = (e: TouchEvent) => {
+      if (modeRef.current === 'mouse') return;
+      if (modeRef.current === 'gyro') return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = section.getBoundingClientRect();
+      const xProgress = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+      const yProgress = Math.max(0, Math.min(1, (touch.clientY - rect.top) / rect.height));
+      applyAxes(xProgress, yProgress);
+    };
+    const handleTouchEnd = () => {
+      if (modeRef.current === 'mouse') return;
+      resetAxes();
+    };
+
+    section.addEventListener('touchmove', handleTouchMove, { passive: true });
+    section.addEventListener('touchend', handleTouchEnd);
+
+    // Gyro RAF loop (only active on mobile with gyro)
+    let animFrame: number;
+    const gyroLoop = () => {
+      if (modeRef.current === 'gyro') {
+        const g = gyroRef.current;
+        applyAxes(g.gammaNorm, g.betaNorm);
+      }
+      animFrame = requestAnimationFrame(gyroLoop);
+    };
+    if (mobile) {
+      animFrame = requestAnimationFrame(gyroLoop);
+    }
+
     return () => {
+      cancelAnimationFrame(animFrame);
       section.removeEventListener('mousemove', handleMouseMove);
       section.removeEventListener('mouseleave', handleMouseLeave);
+      section.removeEventListener('touchmove', handleTouchMove);
+      section.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
@@ -323,16 +450,79 @@ function SectionMouseAxes() {
 }
 
 /* ==================================================================
-   SECTION D — Per-Character Hover
+   SECTION D — Per-Character Hover (Touch Sweep on Mobile)
    ================================================================== */
 
 function SectionPerCharHover() {
+  const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const isMobile = useRef(false);
+
+  useEffect(() => {
+    isMobile.current = isMobileViewport() && isTouchDevice();
+    if (!isMobile.current) return;
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const TOUCH_RADIUS = 40;
+
+    const applyTouchSweep = (touchX: number) => {
+      charsRef.current.forEach((el) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const charCenterX = rect.left + rect.width / 2;
+        const dist = Math.abs(touchX - charCenterX);
+
+        if (dist < TOUCH_RADIUS) {
+          el.style.fontVariationSettings = "'wdth' 25, 'wght' 100, 'opsz' 8";
+          el.style.transform = 'translateY(-20px)';
+          el.style.color = 'var(--color-bittersweet)';
+        } else {
+          el.style.fontVariationSettings = "'wdth' 151, 'wght' 900, 'opsz' 144";
+          el.style.transform = '';
+          el.style.color = '';
+        }
+      });
+    };
+
+    const resetAll = () => {
+      charsRef.current.forEach((el) => {
+        if (!el) return;
+        el.style.fontVariationSettings = "'wdth' 151, 'wght' 900, 'opsz' 144";
+        el.style.transform = '';
+        el.style.color = '';
+      });
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) applyTouchSweep(touch.clientX);
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) applyTouchSweep(touch.clientX);
+    };
+    const handleTouchEnd = () => resetAll();
+
+    section.addEventListener('touchstart', handleTouchStart, { passive: true });
+    section.addEventListener('touchmove', handleTouchMove, { passive: true });
+    section.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      section.removeEventListener('touchstart', handleTouchStart);
+      section.removeEventListener('touchmove', handleTouchMove);
+      section.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   return (
-    <section className={styles.section} data-section="D">
+    <section ref={sectionRef} className={styles.section} data-section="D">
       <div className={styles.hoverWord}>
         {LETTERS.map((letter, i) => (
           <span
             key={i}
+            ref={(el) => { charsRef.current[i] = el; }}
             className={styles.hoverChar}
             style={{ transitionDelay: `${i * 30}ms` }}
           >
