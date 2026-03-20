@@ -17,6 +17,10 @@ let metronomeTS: 3 | 4 = 3;
 export async function initAudio(): Promise<void> {
   if (initialized) return;
   await Tone.start();
+  // Verify audio context actually started (some browsers silently fail without user activation)
+  if (Tone.getContext().state !== 'running') {
+    throw new Error('AudioContext not running');
+  }
   initialized = true;
 
   synth = new Tone.PolySynth(Tone.FMSynth, {

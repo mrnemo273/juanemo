@@ -49,16 +49,16 @@ export default function CollisionChanges() {
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const initialChordIdx = useRef(Math.floor(Math.random() * PROGRESSION.length));
-  const [selectedChord, setSelectedChord] = useState(initialChordIdx.current);
+  const initialChordIdx = useRef(-1);
+  const [selectedChord, setSelectedChord] = useState(0);
 
   const physics = useParticlePhysics();
   const progression = useChordProgression();
 
   // Chord change visual state
   const chordFlashRef = useRef(0);
-  const chordNameRef = useRef(PROGRESSION[initialChordIdx.current].name);
-  const chordSymbolRef = useRef(PROGRESSION[initialChordIdx.current].symbol);
+  const chordNameRef = useRef(PROGRESSION[0].name);
+  const chordSymbolRef = useRef(PROGRESSION[0].symbol);
   const lerpStartTimeRef = useRef(0);
   const isLerpingRef = useRef(false);
 
@@ -79,6 +79,15 @@ export default function CollisionChanges() {
     prefersReducedRef.current = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
+
+    // Randomize initial chord on client only (avoids hydration mismatch)
+    if (initialChordIdx.current === -1) {
+      const idx = Math.floor(Math.random() * PROGRESSION.length);
+      initialChordIdx.current = idx;
+      setSelectedChord(idx);
+      chordNameRef.current = PROGRESSION[idx].name;
+      chordSymbolRef.current = PROGRESSION[idx].symbol;
+    }
 
     let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
@@ -105,20 +114,19 @@ export default function CollisionChanges() {
       progression.setBpmTiming(controlsRef.current.tempo, controlsRef.current.timeSignature);
       setAudioStarted(true);
     } catch {
-      // Audio failed silently
+      // Reset so next user gesture can retry
+      audioStartingRef.current = false;
     }
   }, [audioStarted, progression]);
 
-  // Auto-start audio on any user gesture (mouse move, click, touch, key)
+  // Auto-start audio on user gesture (click, touch, key — NOT mousemove, which isn't a user activation event)
   useEffect(() => {
     if (audioStarted) return;
     const trigger = () => handleAudioStart();
-    document.addEventListener('mousemove', trigger, { once: true });
     document.addEventListener('click', trigger, { once: true });
     document.addEventListener('touchstart', trigger, { once: true });
     document.addEventListener('keydown', trigger, { once: true });
     return () => {
-      document.removeEventListener('mousemove', trigger);
       document.removeEventListener('click', trigger);
       document.removeEventListener('touchstart', trigger);
       document.removeEventListener('keydown', trigger);
@@ -156,6 +164,8 @@ export default function CollisionChanges() {
   const initializedRef = useRef(false);
   useEffect(() => {
     if (initializedRef.current) return;
+    // Wait for client-side random chord to be set
+    if (initialChordIdx.current === -1) return;
     const chord = PROGRESSION[initialChordIdx.current];
     // Musically meaningful voicing:
     // 4 chord tones (root, 3rd, 5th, 7th) + 9th extension
@@ -191,7 +201,7 @@ export default function CollisionChanges() {
     initializedRef.current = true;
     physics.initParticles(freqs, notes, tones, chord.harmonicFunction, w, h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [physics]);
+  }, [physics, selectedChord]);
 
   /* --------------------------------------------------------
      Chord progression: start timer + handle changes
