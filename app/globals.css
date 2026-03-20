@@ -83,6 +83,11 @@
   --duration-mid:  220ms;
   --duration-slow: 400ms;
 
+  /* Drawer */
+  --drawer-width: min(420px, 85vw);
+  --drawer-speed: 0.45s;
+  --drawer-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Hero Axis Defaults */
   --hero-wdth: 100;
   --hero-wght: 900;

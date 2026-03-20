@@ -308,36 +308,17 @@
   border-color: rgba(214, 197, 171, 0.3);
 }
 
-/* Mobile drawer */
-.drawerBackdrop {
-  display: none;
-}
-
-.drawer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--color-bg);
-  border-top: 1px solid rgba(214, 197, 171, 0.12);
-  padding: var(--page-padding);
-  animation: drawerSlideUp 200ms ease-out;
-}
-
+/* Controls drawer (rendered by BottomSheet on mobile) */
 .drawerControls {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-top: 16px;
 }
 
 .drawerControls > .ctrlBtn {
   width: 100%;
   text-align: center;
-}
-
-@keyframes drawerSlideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
 }
 
 /* ----------------------------------------------------------
@@ -365,12 +346,5 @@
   }
   .bottombarRight {
     display: none;
-  }
-  .drawerBackdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 100;
   }
 }

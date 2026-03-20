@@ -125,10 +125,22 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| NAV.1 | Replace INDEX text with icon — grid/zoom-out icon (4 rectangles or similar) | 🔲 TODO | Not a hamburger. Implies "see all" or "zoom out to collection." Consider generative icon. |
-| NAV.2 | Zoom-out navigation transition (Work&Co style) | 🔲 TODO | Reference: https://work.co/grid — current experiment shrinks down, all experiments visible as tiles. Click to zoom into one. |
-| NAV.3 | Navigation in light mode (Bone background) | 🔲 TODO | Experiments are dark (Gunmetal). Zooming out to nav flips to light. Creates perceptual shift — you're leaving the experiment space. |
-| NAV.4 | Navigation as a grid of experiment tiles (not a text list) | 🔲 TODO | Replaces the current text overlay. Each tile could show a live or frozen preview of the experiment. |
+| NAV.1 | ~~Replace INDEX text with icon~~ | ✅ Phase D/E | Grid icon (2×2 squares) already in ExperimentFrame top bar |
+| NAV.2 | ~~Zoom-out navigation transition~~ | ⏸ SUPERSEDED | Zoom interaction rejected during prototyping — felt buggy. Replaced by drawer nav (Phase F). |
+| NAV.3 | Navigation in light mode (Bone background) | ✅ Phase F | Drawer uses Bone background, creating the Gunmetal→Bone perceptual shift. |
+| NAV.4 | ~~Navigation as experiment tile grid~~ | ⏸ SUPERSEDED | Replaced by chronological list with thumbnails in drawer (Phase F). Better for growing experiment count. |
+
+### Phase F — Drawer Navigation 🔵
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| F.1 | Remove IndexOverlay, rewire NavigationContext | 🔲 TODO | Delete IndexOverlay, replace `openIndex()` with `openDrawer()` in context |
+| F.2 | DrawerNav component — slide-in drawer with scrim | 🔲 TODO | `position: fixed`, right-side on desktop, bottom sheet on mobile |
+| F.3 | Experiment list grouped by month with thumbnails | 🔲 TODO | 56×36 thumbnails with mini randomized wordmarks |
+| F.4 | Special Projects carousel at drawer bottom | 🔲 TODO | Auto-rotates 4s, stops on close, dot navigation |
+| F.5 | Mobile bottom-sheet pattern | 🔲 TODO | Nav drawer + controls drawer both use bottom-sheet on ≤600px. Shared `BottomSheet` component. |
+| F.6 | Keyboard & accessibility — focus trap, reduced motion | 🔲 TODO | `role="dialog"`, `aria-modal`, Escape to close |
+| F.7 | Build + QA | 🔲 TODO | |
 
 ---
 
@@ -143,4 +155,5 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | 2026-03-19 | Phase A complete. Clean refactor — no deviations. GenerativeType uses `<div>` (was `<header>`), class renamed `.container`. Old components preserved. Vestigial `main` max-width rule and `--hero-height` CSS property noted for cleanup. | Scrummaster (from Phase A builder notes) |
 | 2026-03-19 | Phase B complete. LogoMark, IndexOverlay, Navigation wrapper, INDEX trigger all live. Keyboard accessible, responsive. Minor deviations: DM Sans for overlay names (not Roboto Flex), date below name. Backlog items added: overlay close button for mobile, placeholder experiments, LogoMark `<a>` → `<Link>` upgrade. | Phase B builder |
 | 2026-03-19 | Phase C complete. Self-hosted fonts with preloading. `font-display: block` (Roboto Flex) / `swap` (DM Sans). WCAG AA verified (Dun/Gunmetal 9.11:1, INDEX trigger bumped to 60%). `dvh` units for iOS Safari. Close button added to overlay. Focus trap, focus-visible, tabIndex gating. Vestigial CSS cleaned up (B.6, B.7, B.8 resolved). README updated. Deployment pending push to main. | Scrummaster (from Phase C builder notes) |
+| 2026-03-19 | **Phase F spec written.** Drawer navigation replaces IndexOverlay. NAV.2/NAV.4 superseded (zoom-out rejected). Mobile bottom-sheet pattern standardized — both nav drawer and controls drawer slide up from bottom on ≤600px. Phase F items added. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase D/E complete and deployed.** ExperimentFrame with 7-row grid, pagination tiles (A–F), 3-phase section loader (fade+spinner+fade), 6 type variations, interactive controls (Speed/Easing/Shuffle), mobile drawer behind gear icon, bottom meta bar mirroring top. 12 prototype effects pruned to 6 per JC direction. Scroll replaced with pagination. Mobile: centered layout, 16vw type, 28px tiles. EXP.1–5 all resolved. V2.3 and V2.6 implemented as sections within Exp 01. | Builder (from Phase E session) |

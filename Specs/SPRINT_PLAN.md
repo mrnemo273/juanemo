@@ -139,6 +139,28 @@ The generative typography system, design tokens, and font infrastructure carry f
 
 ---
 
+## V2.0 Phase F: Drawer Navigation
+
+**Goal:** Replace the IndexOverlay with a right-side drawer (desktop) / bottom sheet (mobile) for experiment navigation. Add a Special Projects carousel.
+
+### What Needs to Be Built
+
+1. **DrawerNav component** — slides in from the right on desktop, slides up from bottom on mobile (≤600px)
+2. **Experiment list** grouped by month with 56×36 live thumbnails
+3. **Special Projects carousel** pinned to drawer bottom, auto-rotates every 4s
+4. **NavigationContext refactor** — replace `openIndex()`/`closeIndex()` with `openDrawer()`/`closeDrawer()`
+5. **Shared BottomSheet pattern** on mobile — both the nav drawer and the existing controls drawer use the same bottom-sheet component
+6. **Delete IndexOverlay** — fully replaced by drawer
+
+### Key References
+- Spec: `Specs/PHASE_F_DRAWER_NAV.md`
+- Prototype: `prototypes/drawer-nav-v2.html`
+- Architecture context: `Specs/PHASE_D_EXPERIMENT_FRAME.md` (R.7 builder notes)
+
+### Status: 🔲 TODO
+
+---
+
 ## Future: Adding New Experiments
 
 Each new experiment follows this pattern:

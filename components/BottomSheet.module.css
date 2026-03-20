@@ -1,0 +1,68 @@
+/* ==========================================================================
+   BottomSheet — shared mobile bottom-sheet wrapper
+   Only visible on mobile (≤600px). Hidden on desktop.
+   ========================================================================== */
+
+.backdrop {
+  display: none;
+}
+
+.sheet {
+  display: none;
+}
+
+.dragHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--color-gunmetal);
+  opacity: 0.15;
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--drawer-speed) var(--drawer-ease);
+  }
+
+  .backdropOpen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-bg);
+    border-top: 1px solid rgba(214, 197, 171, 0.12);
+    border-radius: 16px 16px 0 0;
+    padding: 0 var(--page-padding) var(--page-padding);
+    transform: translateY(100%);
+    transition: transform var(--drawer-speed) var(--drawer-ease);
+  }
+
+  .sheetOpen {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    transition: opacity 0.2s ease;
+  }
+
+  .backdrop {
+    transition: opacity 0.2s ease;
+  }
+}

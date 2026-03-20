@@ -3,11 +3,15 @@
 import { createContext, useContext } from 'react';
 
 interface NavigationContextValue {
-  openIndex: () => void;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  isDrawerOpen: boolean;
 }
 
 export const NavigationContext = createContext<NavigationContextValue>({
-  openIndex: () => {},
+  openDrawer: () => {},
+  closeDrawer: () => {},
+  isDrawerOpen: false,
 });
 
 export function useNavigation() {

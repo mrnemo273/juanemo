@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import LogoMark from './LogoMark';
+import BottomSheet from './BottomSheet';
 import { useNavigation } from '../lib/NavigationContext';
 import {
   ExperimentControlsContext,
@@ -31,7 +32,7 @@ export default function ExperimentFrame({
   sections,
   children,
 }: ExperimentFrameProps) {
-  const { openIndex } = useNavigation();
+  const { openDrawer, closeDrawer, isDrawerOpen } = useNavigation();
 
   // Control state
   const [speed, setSpeed] = useState(2000);
@@ -79,10 +80,10 @@ export default function ExperimentFrame({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        openIndex();
+        isDrawerOpen ? closeDrawer() : openDrawer();
       }
     },
-    [openIndex],
+    [isDrawerOpen, closeDrawer, openDrawer],
   );
 
   const controls: ExperimentControls = { speed, easing, shuffleKey, activeSection };
@@ -99,7 +100,7 @@ export default function ExperimentFrame({
             role="button"
             tabIndex={0}
             aria-label="View all experiments"
-            onClick={openIndex}
+            onClick={() => isDrawerOpen ? closeDrawer() : openDrawer()}
             onKeyDown={handleGridKeyDown}
           >
             <span /><span /><span /><span />
@@ -238,42 +239,43 @@ export default function ExperimentFrame({
           </div>
         </div>
 
-        {/* MOBILE SETTINGS DRAWER */}
-        {drawerOpen && (
-          <div className={styles.drawerBackdrop} onClick={() => setDrawerOpen(false)}>
-            <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.drawerControls}>
-                <div className={styles.ctrl}>
-                  <span className={styles.ctrlLabel}>Speed</span>
-                  {[2000, 4000, 8000].map((s) => (
-                    <button
-                      key={s}
-                      className={`${styles.ctrlBtn}${speed === s ? ` ${styles.ctrlBtnActive}` : ''}`}
-                      onClick={() => setSpeed(s)}
-                    >
-                      {s / 1000}s
-                    </button>
-                  ))}
-                </div>
-                <div className={styles.ctrl}>
-                  <span className={styles.ctrlLabel}>Easing</span>
-                  {(['spring', 'smooth'] as EasingType[]).map((e) => (
-                    <button
-                      key={e}
-                      className={`${styles.ctrlBtn}${easing === e ? ` ${styles.ctrlBtnActive}` : ''}`}
-                      onClick={() => setEasing(e)}
-                    >
-                      {e.charAt(0).toUpperCase() + e.slice(1)}
-                    </button>
-                  ))}
-                </div>
-                <button className={styles.ctrlBtn} onClick={handleShuffle}>
-                  Shuffle
+        {/* MOBILE SETTINGS BOTTOM SHEET */}
+        <BottomSheet
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          zIndex={80}
+          ariaLabel="Experiment controls"
+        >
+          <div className={styles.drawerControls}>
+            <div className={styles.ctrl}>
+              <span className={styles.ctrlLabel}>Speed</span>
+              {[2000, 4000, 8000].map((s) => (
+                <button
+                  key={s}
+                  className={`${styles.ctrlBtn}${speed === s ? ` ${styles.ctrlBtnActive}` : ''}`}
+                  onClick={() => setSpeed(s)}
+                >
+                  {s / 1000}s
                 </button>
-              </div>
+              ))}
             </div>
+            <div className={styles.ctrl}>
+              <span className={styles.ctrlLabel}>Easing</span>
+              {(['spring', 'smooth'] as EasingType[]).map((e) => (
+                <button
+                  key={e}
+                  className={`${styles.ctrlBtn}${easing === e ? ` ${styles.ctrlBtnActive}` : ''}`}
+                  onClick={() => setEasing(e)}
+                >
+                  {e.charAt(0).toUpperCase() + e.slice(1)}
+                </button>
+              ))}
+            </div>
+            <button className={styles.ctrlBtn} onClick={handleShuffle}>
+              Shuffle
+            </button>
           </div>
-        )}
+        </BottomSheet>
       </div>
     </ExperimentControlsContext.Provider>
   );

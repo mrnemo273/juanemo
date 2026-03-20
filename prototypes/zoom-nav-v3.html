@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUANEMO — Zoom Nav V3</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,528..760&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gunmetal: #1F2627;
+    --outer-space: #364245;
+    --bittersweet: #F25C54;
+    --dun: #D6C5AB;
+    --bone: #EBE2D6;
+    --pad: clamp(16px, 2.5vw, 32px);
+    --keyline-dark: rgba(214, 197, 171, 0.12);
+    --keyline-light: rgba(31, 38, 39, 0.1);
+    --zoom-duration: 0.7s;
+    --zoom-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bone);
+  }
+
+  /* ==========================================================
+     SCENE — persistent frame, always visible
+     ========================================================== */
+  .scene {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1px 1fr 1px auto;
+    position: relative;
+  }
+
+  /* ==========================================================
+     PERSISTENT NAV — top bar + bottom bar
+     Color shifts between dark (experiment) and light (nav) modes
+     ========================================================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+    z-index: 30;
+    background: var(--gunmetal);
+    transition: background var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .topbar { background: var(--bone); }
+
+  .topbar-date {
+    position: absolute;
+    left: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+    transition: color var(--zoom-duration) var(--zoom-ease),
+                opacity var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .topbar-date { color: var(--gunmetal); opacity: 0.3; }
+
+  .logo {
+    display: inline-flex;
+    align-items: baseline;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .logo-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    font-size: 15px;
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--dun);
+    transition: color var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .logo-char { color: var(--gunmetal); opacity: 0.6; }
+
+  .grid-trigger {
+    position: absolute;
+    right: var(--pad);
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+    z-index: 30;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+  }
+  .grid-trigger:hover { opacity: 0.9; }
+  .grid-trigger span {
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    background: var(--dun);
+    transition: background var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .grid-trigger span { background: var(--gunmetal); }
+
+  .keyline {
+    width: 100%;
+    background: var(--keyline-dark);
+    z-index: 25;
+    transition: background var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .keyline { background: var(--keyline-light); }
+
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--pad);
+    z-index: 30;
+    background: var(--gunmetal);
+    transition: background var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .bottombar { background: var(--bone); }
+
+  .bottombar-text {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.35;
+    transition: color var(--zoom-duration) var(--zoom-ease),
+                opacity var(--zoom-duration) var(--zoom-ease);
+  }
+  .zoomed-out .bottombar-text { color: var(--gunmetal); opacity: 0.3; }
+
+  /* ==========================================================
+     CONTENT AREA — the viewport between the keylines
+     ========================================================== */
+  .content-area {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ==========================================================
+     NAV LIST — vertical scroll of experiment cards
+     Always rendered, sits behind the active experiment
+     ========================================================== */
+  .nav-list {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--bone);
+    padding: clamp(32px, 5vw, 64px) var(--pad);
+    z-index: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(31, 38, 39, 0.12) transparent;
+  }
+  .nav-list::-webkit-scrollbar { width: 3px; }
+  .nav-list::-webkit-scrollbar-track { background: transparent; }
+  .nav-list::-webkit-scrollbar-thumb {
+    background: rgba(31, 38, 39, 0.12);
+    border-radius: 2px;
+  }
+
+  .nav-item {
+    margin-bottom: clamp(40px, 5vh, 72px);
+    cursor: pointer;
+    position: relative;
+  }
+  .nav-item:last-child { margin-bottom: 0; }
+
+  .nav-card {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--gunmetal);
+    position: relative;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  .nav-item:hover .nav-card {
+    box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+    transform: translateY(-3px);
+  }
+  .nav-item.is-active .nav-card {
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1), 0 0 0 2px var(--bittersweet);
+  }
+
+  .nav-card-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 4vw, 48px);
+    position: relative;
+  }
+
+  /* Card meta below each card */
+  .nav-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-top: 14px;
+  }
+  .nav-meta-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--bittersweet);
+  }
+  .nav-meta-name {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gunmetal);
+    opacity: 0.4;
+  }
+  .nav-meta-desc {
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--gunmetal);
+    opacity: 0.25;
+    margin-top: 6px;
+    max-width: 520px;
+  }
+
+  /* ==========================================================
+     ACTIVE EXPERIMENT — the zoomed-in view
+     Fills the entire content area, floats above the nav list
+     ========================================================== */
+  .active-experiment {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: var(--gunmetal);
+    transform-origin: center center;
+    transition: transform var(--zoom-duration) var(--zoom-ease),
+                border-radius var(--zoom-duration) var(--zoom-ease),
+                opacity var(--zoom-duration) var(--zoom-ease);
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  /* When zoomed out, the active experiment shrinks to reveal the nav list behind it */
+  .zoomed-out .active-experiment {
+    transform: scale(0.55) translateY(-8%);
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .active-experiment-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--pad);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Experiment label inside active view */
+  .active-label {
+    position: absolute;
+    top: var(--pad);
+    left: var(--pad);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    z-index: 2;
+  }
+  .active-label-num {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--bittersweet);
+    opacity: 0.7;
+  }
+  .active-label-name {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dun);
+    opacity: 0.25;
+  }
+
+  /* ==========================================================
+     GENERATIVE TEXT — shared
+     ========================================================== */
+  .gen-word {
+    display: flex;
+    align-items: baseline;
+    transform-origin: top left;
+  }
+  .gen-char {
+    font-family: 'Roboto Flex', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: var(--dun);
+    will-change: font-variation-settings;
+    display: inline-block;
+  }
+
+  /* Active experiment: large, scaled to fill */
+  .active-experiment .gen-char {
+    font-size: clamp(60px, 17vw, 280px);
+  }
+
+  /* Nav cards: small, centered, breathing room — NOT filling the card */
+  .nav-card .gen-word {
+    transform: none !important;
+    transform-origin: center center;
+  }
+  .nav-card .gen-char {
+    font-size: clamp(14px, 2vw, 28px);
+    letter-spacing: -0.02em;
+  }
+
+  /* Experiment #2: breathing */
+  .exp-breathing .gen-char {
+    animation: breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%   { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+    50%  { font-variation-settings: 'wdth' 60, 'wght' 300, 'opsz' 40; letter-spacing: 0.02em; }
+    100% { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+  }
+
+  /* Experiment #3: outline */
+  .exp-outline .gen-char {
+    -webkit-text-stroke: 1.5px var(--dun);
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Experiment #4: gradient fill */
+  .exp-gradient .gen-char {
+    background: linear-gradient(135deg, var(--bittersweet), var(--dun), var(--bone), var(--dun), var(--bittersweet));
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradShift 6s ease infinite;
+  }
+  @keyframes gradShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Experiment #5: echo */
+  .exp-echo .echo-rows { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .exp-echo .row-2 .gen-char { color: var(--outer-space); }
+  .exp-echo .row-3 .gen-char { color: rgba(214, 197, 171, 0.1); }
+  .nav-card .exp-echo .gen-char { font-size: clamp(10px, 1.4vw, 18px); }
+
+  /* Pause all CSS animations when zoomed out */
+  .zoomed-out .nav-card .gen-char {
+    animation-play-state: paused !important;
+  }
+
+  /* ==========================================================
+     MOBILE
+     ========================================================== */
+  @media (max-width: 600px) {
+    .bottombar { display: none; }
+    .scene { grid-template-rows: auto 1px 1fr 1px 0; }
+    .nav-meta-desc { display: none; }
+    .zoomed-out .active-experiment {
+      transform: scale(0.4) translateY(-15%);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-date">March 2025</span>
+    <a class="logo" id="logo"></a>
+    <button class="grid-trigger" id="gridTrigger" aria-label="View all experiments">
+      <span></span><span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- KEYLINE TOP -->
+  <div class="keyline"></div>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area" id="contentArea">
+
+    <!-- NAV LIST — always rendered, sits behind active experiment -->
+    <div class="nav-list" id="navList"></div>
+
+    <!-- ACTIVE EXPERIMENT — zooms in/out above the list -->
+    <div class="active-experiment" id="activeExperiment">
+      <div class="active-label">
+        <span class="active-label-num" id="activeLabelNum">01</span>
+        <span class="active-label-name" id="activeLabelName">Generative Typography</span>
+      </div>
+      <div class="active-experiment-content" id="activeContent"></div>
+    </div>
+
+  </div>
+
+  <!-- KEYLINE BOTTOM -->
+  <div class="keyline"></div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottombar">
+    <span class="bottombar-text">Juan-Carlos Morales</span>
+    <span class="bottombar-text">Creative Technologist</span>
+  </div>
+
+</div>
+
+<script>
+const LETTERS = 'JUANEMO'.split('');
+const AXIS = { wdth: { min: 25, max: 151 }, wght: { min: 300, max: 900 }, opsz: { min: 8, max: 144 } };
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+function rand(a, b) { return Math.round(a + Math.random() * (b - a)); }
+function rAxes() { return { wdth: rand(AXIS.wdth.min, AXIS.wdth.max), wght: rand(AXIS.wght.min, AXIS.wght.max), opsz: rand(AXIS.opsz.min, AXIS.opsz.max) }; }
+function aStr(a) { return `'wdth' ${a.wdth}, 'wght' ${a.wght}, 'opsz' ${a.opsz}`; }
+
+function createGenWord(container) {
+  const word = document.createElement('div');
+  word.className = 'gen-word';
+  LETTERS.forEach(l => {
+    const s = document.createElement('span');
+    s.className = 'gen-char';
+    s.style.fontVariationSettings = aStr(rAxes());
+    s.textContent = l;
+    word.appendChild(s);
+  });
+  container.appendChild(word);
+  return word;
+}
+
+// Logo
+const logo = document.getElementById('logo');
+LETTERS.forEach(l => {
+  const s = document.createElement('span');
+  s.className = 'logo-char';
+  s.textContent = l;
+  s.style.fontVariationSettings = aStr(rAxes());
+  logo.appendChild(s);
+});
+
+// --- EXPERIMENTS DATA ---
+const experiments = [
+  { id: 'generative-type', number: '01', name: 'Generative Typography', type: 'drift',
+    desc: 'Per-character variable font drift — the wordmark is never the same twice.' },
+  { id: 'breathing', number: '02', name: 'Axis Breathing', type: 'breathing',
+    desc: 'All axes animate in unison on a slow inhale/exhale cycle.' },
+  { id: 'outline', number: '03', name: 'Hollow Forms', type: 'outline',
+    desc: 'Stroked letterforms with transparent fill — structure without weight.' },
+  { id: 'gradient', number: '04', name: 'Gradient Fill', type: 'gradient',
+    desc: 'Shifting color gradient mapped across the wordmark surface.' },
+  { id: 'echo', number: '05', name: 'Layered Echo', type: 'echo',
+    desc: 'Stacked instances at staggered delay — typographic afterimage.' },
+];
+
+let activeIndex = 0;
+let isZoomed = false;
+const scene = document.getElementById('scene');
+const navList = document.getElementById('navList');
+const activeExperiment = document.getElementById('activeExperiment');
+const activeContent = document.getElementById('activeContent');
+const activeLabelNum = document.getElementById('activeLabelNum');
+const activeLabelName = document.getElementById('activeLabelName');
+
+// --- BUILD NAV LIST (always present) ---
+const navItems = experiments.map((exp, i) => {
+  const item = document.createElement('div');
+  item.className = 'nav-item' + (i === 0 ? ' is-active' : '');
+  item.dataset.index = i;
+
+  const card = document.createElement('div');
+  card.className = 'nav-card';
+
+  const content = document.createElement('div');
+  content.className = `nav-card-content exp-${exp.type}`;
+
+  // Build experiment visual for the card
+  if (exp.type === 'echo') {
+    const rows = document.createElement('div');
+    rows.className = 'echo-rows';
+    for (let r = 0; r < 3; r++) {
+      const word = createGenWord(rows);
+      if (r > 0) word.className += ` row-${r + 1}`;
+    }
+    content.appendChild(rows);
+  } else {
+    createGenWord(content);
+  }
+
+  card.appendChild(content);
+  item.appendChild(card);
+
+  // Meta
+  const meta = document.createElement('div');
+  meta.className = 'nav-meta';
+  meta.innerHTML = `<span class="nav-meta-number">${exp.number}</span><span class="nav-meta-name">${exp.name}</span>`;
+  item.appendChild(meta);
+
+  const desc = document.createElement('div');
+  desc.className = 'nav-meta-desc';
+  desc.textContent = exp.desc;
+  item.appendChild(desc);
+
+  // Click to zoom into this experiment
+  item.addEventListener('click', () => {
+    if (!isZoomed) return;
+    activeIndex = i;
+    loadActiveExperiment(i);
+    zoomIn();
+  });
+
+  navList.appendChild(item);
+  return item;
+});
+
+// --- BUILD ACTIVE EXPERIMENT ---
+function loadActiveExperiment(index) {
+  const exp = experiments[index];
+  activeLabelNum.textContent = exp.number;
+  activeLabelName.textContent = exp.name;
+
+  // Update active marker on nav items
+  navItems.forEach((item, i) => item.classList.toggle('is-active', i === index));
+
+  // Clear and rebuild content
+  activeContent.innerHTML = '';
+  activeContent.className = `active-experiment-content exp-${exp.type}`;
+
+  if (exp.type === 'echo') {
+    const rows = document.createElement('div');
+    rows.className = 'echo-rows';
+    for (let r = 0; r < 3; r++) {
+      const word = createGenWord(rows);
+      if (r > 0) word.className += ` row-${r + 1}`;
+    }
+    activeContent.appendChild(rows);
+  } else {
+    activeWord = createGenWord(activeContent);
+  }
+
+  // Restart drift if it's the drift experiment
+  if (exp.type === 'drift') {
+    startDrift();
+  } else {
+    stopDrift();
+  }
+
+  // No scaleXY fill — word sits at natural size, centered
+}
+
+// --- (scaleXY removed — word stays natural size) ---
+let activeWord = null;
+
+function fitActiveWord() {
+  // no-op — word stays at natural clamp() size, centered by flexbox
+}
+
+// --- DRIFT ANIMATION ---
+let driftTimers = [];
+
+function startDrift() {
+  stopDrift();
+  const chars = activeContent.querySelectorAll('.gen-char');
+  if (!chars.length) return;
+
+  function cycle() {
+    if (isZoomed) return;
+    chars.forEach((el, i) => {
+      const t = setTimeout(() => {
+        el.style.transition = `font-variation-settings ${1500 + rand(-200, 200)}ms ${SPRING}`;
+        el.style.fontVariationSettings = aStr(rAxes());
+      }, i * 80);
+      driftTimers.push(t);
+    });
+    const next = setTimeout(cycle, 8000 + 1500 + LETTERS.length * 80);
+    driftTimers.push(next);
+  }
+  cycle();
+}
+
+function stopDrift() {
+  driftTimers.forEach(clearTimeout);
+  driftTimers = [];
+}
+
+// --- ZOOM ---
+
+function zoomOut() {
+  isZoomed = true;
+  scene.classList.add('zoomed-out');
+  stopDrift();
+
+  // Scroll the nav list so the active card is visible
+  const activeItem = navItems[activeIndex];
+  if (activeItem) {
+    setTimeout(() => {
+      activeItem.scrollIntoView({ behavior: 'instant', block: 'center' });
+    }, 50);
+  }
+}
+
+function zoomIn() {
+  isZoomed = false;
+  scene.classList.remove('zoomed-out');
+
+  // Restart the active experiment after transition
+  setTimeout(() => {
+    if (!isZoomed) {
+      const exp = experiments[activeIndex];
+      if (exp.type === 'drift') startDrift();
+      fitActiveWord();
+    }
+  }, 750);
+}
+
+// --- INIT ---
+loadActiveExperiment(0);
+window.addEventListener('resize', () => {
+  if (!isZoomed) fitActiveWord();
+});
+
+// Grid trigger
+document.getElementById('gridTrigger').addEventListener('click', () => {
+  if (isZoomed) zoomIn();
+  else zoomOut();
+});
+
+// Logo click = zoom in to active
+logo.addEventListener('click', () => {
+  if (isZoomed) zoomIn();
+});
+
+// Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isZoomed) zoomIn();
+});
+</script>
+
+</body>
+</html>
