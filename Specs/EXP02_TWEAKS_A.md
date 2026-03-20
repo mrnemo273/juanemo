@@ -1,6 +1,6 @@
 # EXP-02A Tweaks — Code Chords Section A Refinements
 
-> **Status:** 🔵 SPEC WRITTEN
+> **Status:** ✅ DONE
 > **Spec date:** 2026-03-20
 > **Depends on:** EXP-02 Collision Changes (✅ DONE)
 > **Must complete before:** EXP-02 Sections B–F build
@@ -393,12 +393,21 @@ Used `Tone.NoiseSynth` with white noise + bandpass filter at 4kHz (Q: 1.2) for a
 Chord changes use `bpmInterval = (timeSignature × 60000 / bpm) × barsPerChord` where `barsPerChord = 2`. The progression hook stores BPM/TS refs and derives interval from them when set. `Tone.Transport` drives the metronome loop; chord changes use `setTimeout` synced to the same BPM math (not Transport scheduling) for simplicity — both derive from the same formula so they stay aligned.
 
 ### Orb Size Tuning
-Linear interpolation from viewport 320px–2560px:
-- `ORB_RADIUS_MIN`: 16–50px
-- `ORB_RADIUS_MAX`: 35–110px
+Linear interpolation from viewport 320px–3840px:
+- `ORB_RADIUS_MIN`: 20–100px
+- `ORB_RADIUS_MAX`: 40–250px
 Resize is debounced at 150ms. Only new spawns/reinits use updated sizes.
 
 ### Deviations from Spec
 - Metronome uses `Tone.Transport.swing = 0.66` with `swingSubdivision = '8n'` as specified.
 - Chord timer still uses setTimeout (not `Tone.Transport.scheduleRepeat`) — simpler, avoids tight coupling. BPM math ensures sync.
 - `Tone.Gain` constructor typed as `Gain<'decibels'>` to satisfy Tone.js v15 generics.
+- **Chord selection is user-driven only** — auto-progression was removed. Dropdown starts on "Select chord" placeholder; user must pick a chord to activate audio. Orbs float silently until then.
+- **Audio starts on chord selection**, not on mousemove (mousemove is not a valid user activation event for Web Audio). Click/touch/keydown triggers are used.
+- **Custom dropdown** replaces native `<select>` — bone/cream overlay with rounded corners, box-shadow, matching the navigation drawer design language. Positioned next to section name on desktop, centered below on mobile.
+- **Edge bounce audio** — orbs play a single note when bouncing off canvas edges, not just on particle-particle collisions.
+- **Chord strum on selection** — picking a chord from the dropdown plays an arpeggiated strum of all chord tones before orbs begin bouncing.
+- **Metronome volume** tuned significantly quieter than spec (-28dB ghost, -34dB accent) using plain `Tone.Gain` with `Tone.dbToGain()` conversion to avoid double-conversion bugs.
+- **Orb sizing extended** to scale up to 3840px viewports (ultrawide/4K support): min 20–100px, max 40–250px. Original spec capped at 2560px.
+- **Hydration fix** — random initial chord caused React hydration mismatch (server vs client `Math.random()`). Fixed by deferring to client-side `useEffect`, then replaced entirely with "Select chord" placeholder approach.
+- **AudioContext state verification** — `initAudio()` now checks `Tone.getContext().state === 'running'` after `Tone.start()` and throws if not, allowing retry on next user gesture.
