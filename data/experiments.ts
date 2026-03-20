@@ -131,7 +131,7 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     name: 'Collision Changes',
     hint: '',
     hintMobile: '',
-    hintActionMobile: 'Enable Motion',
+    hintActionMobile: '',
     description:
       'Glowing orbs float in space — each one a note in a jazz chord. When they collide, both notes ring out. Choose a chord from the dropdown and watch the orbs retune.',
     instructions: [],
