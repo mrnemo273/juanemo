@@ -437,7 +437,8 @@ export default function CollisionChanges() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = colorWithAlpha(noteColor, (0.6 + p.brightness * 0.3) * alpha);
-        ctx.fillText(p.note, p.x, p.y);
+        const displayNote = p.note.replace(/[0-9]/g, '').replace('#', '♯').replace(/(?<=^[A-G])b/, '♭');
+        ctx.fillText(displayNote, p.x, p.y);
       }
 
       // Chord indicator (top-right)

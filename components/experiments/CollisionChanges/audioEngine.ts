@@ -11,13 +11,22 @@ export async function initAudio(): Promise<void> {
   await Tone.start();
   initialized = true;
 
-  synth = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: 'triangle' },
+  synth = new Tone.PolySynth(Tone.FMSynth, {
+    harmonicity: 4,
+    modulationIndex: 0.8,
+    oscillator: { type: 'sine' },
     envelope: {
-      attack: 0.02,
-      decay: 0.3,
-      sustain: 0.1,
-      release: 0.8,
+      attack: 0.001,
+      decay: 1.5,
+      sustain: 0.0,
+      release: 2.0,
+    },
+    modulation: { type: 'sine' },
+    modulationEnvelope: {
+      attack: 0.001,
+      decay: 0.4,
+      sustain: 0,
+      release: 0.3,
     },
     volume: -12,
   });
