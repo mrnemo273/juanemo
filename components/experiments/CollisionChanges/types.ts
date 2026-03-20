@@ -19,6 +19,11 @@ export interface Particle {
   trail: { x: number; y: number }[];
   spawnTime: number;
   fadeOut: boolean;
+  // Orbital fields (Gravity Well section)
+  orbitRadius?: number;
+  angularVelocity?: number;
+  angle?: number;
+  targetOrbitRadius?: number;
 }
 
 export interface Chord {

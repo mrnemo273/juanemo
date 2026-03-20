@@ -157,6 +157,26 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'C',
+    name: 'Gravity Well',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Orbs orbit a central mass — inner orbits carry chord tones, outer orbits carry extensions. Inner orbits are faster, so crossing points create rhythmic collisions. Drag an orb to slingshot it to a new orbit.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Drag an orb</strong> to slingshot it to a new orbit radius' },
+      { icon: 'eye', text: '<strong>Inner orbits</strong> are faster — chord tones orbit close to the center' },
+      { icon: 'refresh', text: '<strong>Pick a chord</strong> — orbs retune and spiral to new orbits' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt</strong> to offset the orbit center (creates elliptical paths)' },
+      { icon: 'cursor', text: '<strong>Touch</strong> to gently attract nearby orbs' },
+      { icon: 'eye', text: 'Chord tones orbit close, extensions orbit far' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -168,7 +188,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes', 'Piano Split'],
+    sections: ['Collision Changes', 'Piano Split', 'Gravity Well'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
