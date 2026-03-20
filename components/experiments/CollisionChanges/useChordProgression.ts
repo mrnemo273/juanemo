@@ -19,6 +19,10 @@ export interface ChordProgressionAPI {
   stop: () => void;
   /** Update speed without resetting position */
   setSpeed: (speed: number) => void;
+  /** Jump to a specific chord by index */
+  jumpToChord: (index: number) => void;
+  /** Set BPM and time signature for Transport-synced timing */
+  setBpmTiming: (bpm: number, timeSignature: 3 | 4) => void;
   /** Register callback for chord changes. Returns the voice-lead assignment. */
   onChordChange: (
     cb: (
@@ -29,10 +33,18 @@ export interface ChordProgressionAPI {
   ) => void;
 }
 
+const BARS_PER_CHORD = 2;
+
+function bpmInterval(bpm: number, timeSignature: 3 | 4): number {
+  return (timeSignature * 60000 / bpm) * BARS_PER_CHORD;
+}
+
 export function useChordProgression(): ChordProgressionAPI {
   const indexRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const speedRef = useRef(2000);
+  const bpmRef = useRef<number | null>(null);
+  const tsRef = useRef<3 | 4>(3);
   const callbackRef = useRef<
     ((chord: Chord, idx: number, assignment: number[]) => void) | null
   >(null);
@@ -41,11 +53,17 @@ export function useChordProgression(): ChordProgressionAPI {
   const currentChord = useCallback(() => PROGRESSION[indexRef.current], []);
   const chordIndex = useCallback(() => indexRef.current, []);
 
+  const getInterval = useCallback(() => {
+    if (bpmRef.current !== null) {
+      return bpmInterval(bpmRef.current, tsRef.current);
+    }
+    return speedToInterval(speedRef.current);
+  }, []);
+
   const advance = useCallback(() => {
     indexRef.current = (indexRef.current + 1) % PROGRESSION.length;
     const newChord = PROGRESSION[indexRef.current];
 
-    // Voice-lead assignment
     const assignment = voiceLeadAssignment(
       particleFreqsRef.current,
       newChord,
@@ -53,19 +71,16 @@ export function useChordProgression(): ChordProgressionAPI {
 
     callbackRef.current?.(newChord, indexRef.current, assignment);
 
-    // Schedule next
-    const interval = speedToInterval(speedRef.current);
-    timerRef.current = setTimeout(advance, interval);
-  }, []);
+    timerRef.current = setTimeout(advance, getInterval());
+  }, [getInterval]);
 
   const start = useCallback(
     (speed: number) => {
       speedRef.current = speed;
       if (timerRef.current) clearTimeout(timerRef.current);
-      const interval = speedToInterval(speed);
-      timerRef.current = setTimeout(advance, interval);
+      timerRef.current = setTimeout(advance, getInterval());
     },
-    [advance],
+    [advance, getInterval],
   );
 
   const stop = useCallback(() => {
@@ -79,6 +94,22 @@ export function useChordProgression(): ChordProgressionAPI {
     speedRef.current = speed;
   }, []);
 
+  const jumpToChord = useCallback((index: number) => {
+    indexRef.current = index;
+    const chord = PROGRESSION[index];
+    const assignment = voiceLeadAssignment(
+      particleFreqsRef.current,
+      chord,
+    );
+    callbackRef.current?.(chord, index, assignment);
+    // No auto-advance — user controls chord changes via dropdown
+  }, []);
+
+  const setBpmTiming = useCallback((bpm: number, timeSignature: 3 | 4) => {
+    bpmRef.current = bpm;
+    tsRef.current = timeSignature;
+  }, []);
+
   const onChordChange = useCallback(
     (
       cb: (chord: Chord, idx: number, assignment: number[]) => void,
@@ -89,9 +120,7 @@ export function useChordProgression(): ChordProgressionAPI {
   );
 
   // Expose a way to update current particle frequencies for voice-leading
-  // This is called from the main component's RAF loop
   useEffect(() => {
-    // Attach a helper to update freqs
     (onChordChange as any).__updateFreqs = (freqs: number[]) => {
       particleFreqsRef.current = freqs;
     };
@@ -110,8 +139,10 @@ export function useChordProgression(): ChordProgressionAPI {
     start,
     stop,
     setSpeed,
+    jumpToChord,
+    setBpmTiming,
     onChordChange,
-  }), [currentChord, chordIndex, start, stop, setSpeed, onChordChange]);
+  }), [currentChord, chordIndex, start, stop, setSpeed, jumpToChord, setBpmTiming, onChordChange]);
 }
 
 export { PROGRESSION, getChordTone };

@@ -86,6 +86,10 @@ export default function ExperimentFrame({
   const [replayKey, setReplayKey] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [tempo, setTempo] = useState(120);
+  const [timeSignature, setTimeSignature] = useState<3 | 4>(3);
+  const [decay, setDecay] = useState(1.5);
+  const [reverbMix, setReverbMix] = useState(0.3);
 
   // Mobile detection — determined once on mount
   const [isMobile, setIsMobile] = useState(false);
@@ -188,6 +192,10 @@ export default function ExperimentFrame({
     shuffleKey,
     activeSection,
     replayKey,
+    tempo,
+    timeSignature,
+    decay,
+    reverbMix,
   };
 
   /* --------------------------------------------------------
@@ -225,7 +233,7 @@ export default function ExperimentFrame({
         <div className={styles.keyline} />
 
         {/* ROW 3: VIEWPORT */}
-        <div className={styles.viewportWrap}>
+        <div className={`${styles.viewportWrap}${panelOpen && isMobile ? ` ${styles.viewportWrapPushed}` : ''}`}>
           {/* Floating meta: experiment title, 60px from top keyline */}
           <div className={styles.metaTop}>
             <span className={styles.metaNumber}>{number}</span>
@@ -430,6 +438,90 @@ export default function ExperimentFrame({
                   >
                     Shuffle
                   </button>
+                )}
+
+                {hasControl('tempo') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Tempo</span>
+                    <div className={styles.controlOptions}>
+                      {([80, 120, 160] as const).map((bpm) => (
+                        <button
+                          key={bpm}
+                          className={`${styles.ctrlBtn}${
+                            tempo === bpm ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setTempo(bpm)}
+                        >
+                          {bpm === 80 ? 'Ballad' : bpm === 120 ? 'Medium' : 'Up'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('timeSignature') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Time</span>
+                    <div className={styles.controlOptions}>
+                      {([3, 4] as const).map((ts) => (
+                        <button
+                          key={ts}
+                          className={`${styles.ctrlBtn}${
+                            timeSignature === ts ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setTimeSignature(ts)}
+                        >
+                          {ts}/4
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('decay') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Decay</span>
+                    <div className={styles.controlOptions}>
+                      {([
+                        ['Short', 0.3],
+                        ['Medium', 1.5],
+                        ['Long', 3.0],
+                      ] as const).map(([label, val]) => (
+                        <button
+                          key={label}
+                          className={`${styles.ctrlBtn}${
+                            decay === val ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setDecay(val)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('reverb') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Reverb</span>
+                    <div className={styles.controlOptions}>
+                      {([
+                        ['Dry', 0.0],
+                        ['Medium', 0.3],
+                        ['Wet', 0.6],
+                      ] as const).map(([label, val]) => (
+                        <button
+                          key={label}
+                          className={`${styles.ctrlBtn}${
+                            reverbMix === val ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setReverbMix(val)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {!hasAnyControl && (

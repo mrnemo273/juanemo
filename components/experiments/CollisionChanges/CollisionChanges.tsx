@@ -5,7 +5,7 @@ import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContex
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
 import { useParticlePhysics, setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
-import { initAudio, playDyad, isAudioReady, dispose } from './audioEngine';
+import { initAudio, playDyad, playNote, playChordStrum, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeTimeSignature, stopMetronome } from './audioEngine';
 import { HARMONIC_COLORS, voiceLeadAssignment } from './chordData';
 import type { CollisionEvent } from './types';
 import styles from './CollisionChanges.module.css';
@@ -47,16 +47,18 @@ export default function CollisionChanges() {
   const sizeRef = useRef({ w: 0, h: 0 });
 
   const [audioStarted, setAudioStarted] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  const initialChordIdx = useRef(Math.floor(Math.random() * PROGRESSION.length));
+  const [selectedChord, setSelectedChord] = useState(initialChordIdx.current);
 
   const physics = useParticlePhysics();
   const progression = useChordProgression();
 
   // Chord change visual state
   const chordFlashRef = useRef(0);
-  const chordNameRef = useRef(PROGRESSION[0].name);
-  const chordSymbolRef = useRef(PROGRESSION[0].symbol);
+  const chordNameRef = useRef(PROGRESSION[initialChordIdx.current].name);
+  const chordSymbolRef = useRef(PROGRESSION[initialChordIdx.current].symbol);
   const lerpStartTimeRef = useRef(0);
   const isLerpingRef = useRef(false);
 
@@ -72,28 +74,56 @@ export default function CollisionChanges() {
      Mobile detection
      -------------------------------------------------------- */
   useEffect(() => {
-    const mobile = isMobileViewport();
-    setIsMobile(mobile);
-    setOrbSizes(mobile);
+    setIsMobile(isMobileViewport());
+    setOrbSizes(window.innerWidth);
     prefersReducedRef.current = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
+
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => setOrbSizes(window.innerWidth), 150);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
   }, []);
 
   /* --------------------------------------------------------
-     Audio init on first interaction
+     Audio init on first interaction (mouse move, click, or touch)
      -------------------------------------------------------- */
+  const audioStartingRef = useRef(false);
   const handleAudioStart = useCallback(async () => {
-    if (audioStarted) return;
+    if (audioStarted || audioStartingRef.current) return;
+    audioStartingRef.current = true;
     try {
       await initAudio();
+      startMetronome(controlsRef.current.tempo, controlsRef.current.timeSignature);
+      progression.setBpmTiming(controlsRef.current.tempo, controlsRef.current.timeSignature);
       setAudioStarted(true);
-      setShowOverlay(false);
     } catch {
-      // Audio failed — hide overlay anyway
-      setShowOverlay(false);
+      // Audio failed silently
     }
-  }, [audioStarted]);
+  }, [audioStarted, progression]);
+
+  // Auto-start audio on any user gesture (mouse move, click, touch, key)
+  useEffect(() => {
+    if (audioStarted) return;
+    const trigger = () => handleAudioStart();
+    document.addEventListener('mousemove', trigger, { once: true });
+    document.addEventListener('click', trigger, { once: true });
+    document.addEventListener('touchstart', trigger, { once: true });
+    document.addEventListener('keydown', trigger, { once: true });
+    return () => {
+      document.removeEventListener('mousemove', trigger);
+      document.removeEventListener('click', trigger);
+      document.removeEventListener('touchstart', trigger);
+      document.removeEventListener('keydown', trigger);
+    };
+  }, [audioStarted, handleAudioStart]);
 
   /* --------------------------------------------------------
      Canvas sizing via ResizeObserver
@@ -126,7 +156,7 @@ export default function CollisionChanges() {
   const initializedRef = useRef(false);
   useEffect(() => {
     if (initializedRef.current) return;
-    const chord = PROGRESSION[0];
+    const chord = PROGRESSION[initialChordIdx.current];
     // Musically meaningful voicing:
     // 4 chord tones (root, 3rd, 5th, 7th) + 9th extension
     // + octave doublings of root and 5th for fullness
@@ -167,10 +197,11 @@ export default function CollisionChanges() {
      Chord progression: start timer + handle changes
      -------------------------------------------------------- */
   useEffect(() => {
-    progression.onChordChange((newChord, _idx, assignment) => {
+    progression.onChordChange((newChord, idx, assignment) => {
       chordFlashRef.current = performance.now();
       chordNameRef.current = newChord.name;
       chordSymbolRef.current = newChord.symbol;
+      setSelectedChord(idx);
 
       // Build retune arrays based on assignment
       const particles = physics.stateRef.current.particles;
@@ -202,14 +233,25 @@ export default function CollisionChanges() {
       isLerpingRef.current = true;
     });
 
-    progression.start(controlsRef.current.speed);
-    return () => progression.stop();
+    // No auto-advance — chords only change via the dropdown
   }, [progression, physics]);
 
-  // Update tempo when speed control changes
+  // Decay & reverb controls
+  useEffect(() => { setDecay(controls.decay); }, [controls.decay]);
+  useEffect(() => { setReverbMix(controls.reverbMix); }, [controls.reverbMix]);
+
+  // Tempo & time signature controls
   useEffect(() => {
-    progression.setSpeed(controls.speed);
-  }, [controls.speed, progression]);
+    if (!audioStarted) return;
+    setMetronomeTempo(controls.tempo);
+    progression.setBpmTiming(controls.tempo, controls.timeSignature);
+  }, [controls.tempo, audioStarted, controls.timeSignature, progression]);
+
+  useEffect(() => {
+    if (!audioStarted) return;
+    setMetronomeTimeSignature(controls.timeSignature);
+    progression.setBpmTiming(controls.tempo, controls.timeSignature);
+  }, [controls.timeSignature, audioStarted, controls.tempo, progression]);
 
   /* --------------------------------------------------------
      Interaction: mouse + touch + gyro
@@ -230,12 +272,6 @@ export default function CollisionChanges() {
       physics.gravitySourceRef.current = null;
     };
 
-    const handleClick = (e: MouseEvent) => {
-      handleAudioStart();
-      const rect = canvas.getBoundingClientRect();
-      spawnOrb(e.clientX - rect.left, e.clientY - rect.top);
-    };
-
     const handleTouchStart = (e: TouchEvent) => {
       handleAudioStart();
       const touch = e.touches[0];
@@ -244,7 +280,6 @@ export default function CollisionChanges() {
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
 
-      // If gyro not available, use touch as gravity well
       const g = gyroRef.current;
       if (g.permissionState === 'denied' || !g.isAvailable) {
         physics.gravitySourceRef.current = { x, y };
@@ -264,13 +299,7 @@ export default function CollisionChanges() {
       }
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
-      // Spawn on tap (touchend with no significant movement)
-      if (e.changedTouches.length > 0) {
-        const touch = e.changedTouches[0];
-        const rect = canvas.getBoundingClientRect();
-        spawnOrb(touch.clientX - rect.left, touch.clientY - rect.top);
-      }
+    const handleTouchEnd = () => {
       const g = gyroRef.current;
       if (g.permissionState === 'denied' || !g.isAvailable) {
         physics.gravitySourceRef.current = null;
@@ -279,7 +308,6 @@ export default function CollisionChanges() {
 
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
-    canvas.addEventListener('click', handleClick);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
     canvas.addEventListener('touchend', handleTouchEnd);
@@ -287,29 +315,11 @@ export default function CollisionChanges() {
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
-      canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
   }, [physics, handleAudioStart]);
-
-  /** Spawn a new orb at position */
-  const spawnOrb = useCallback(
-    (x: number, y: number) => {
-      const chord = progression.currentChord();
-      const idx = Math.floor(Math.random() * chord.frequencies.length);
-      physics.addParticle(
-        x,
-        y,
-        chord.frequencies[idx],
-        chord.notes[idx],
-        getChordTone(idx),
-        chord.harmonicFunction,
-      );
-    },
-    [physics, progression],
-  );
 
   /* --------------------------------------------------------
      Gyro → gravity
@@ -375,8 +385,11 @@ export default function CollisionChanges() {
       // Physics step
       const collisions = physics.step(dt, w, h);
 
-      // Play audio for collisions
+      // Play audio for collisions and edge bounces
       if (isAudioReady()) {
+        for (const eb of physics.edgeBouncesRef.current) {
+          playNote(eb.frequency, eb.velocity);
+        }
         for (const col of collisions) {
           playDyad(col.freqA, col.freqB, col.velocity);
           collisionLinesRef.current.push({
@@ -441,15 +454,17 @@ export default function CollisionChanges() {
         ctx.fillText(displayNote, p.x, p.y);
       }
 
-      // Chord indicator (top-right)
-      ctx.font = '11px "DM Sans", sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillStyle = 'rgba(214, 197, 171, 0.25)'; // --dun at 25%
-      ctx.fillText(
-        `${chordNameRef.current} — ${chordSymbolRef.current}`,
-        w - 20,
-        30,
-      );
+      // Centered chord name — large Georgia italic, very light
+      const flashElapsed = time - chordFlashRef.current;
+      const flashAlpha = flashElapsed < 500
+        ? 0.06 + 0.1 * (1 - flashElapsed / 500)
+        : 0.06;
+      const chordFontSize = isMobile ? 48 : 72;
+      ctx.font = `italic ${chordFontSize}px Georgia, "Times New Roman", serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(214, 197, 171, ${flashAlpha})`;
+      ctx.fillText(chordNameRef.current, w / 2, h / 2);
 
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -462,17 +477,65 @@ export default function CollisionChanges() {
      Cleanup audio on unmount
      -------------------------------------------------------- */
   useEffect(() => {
-    return () => dispose();
+    return () => {
+      stopMetronome();
+      dispose();
+    };
   }, []);
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleChordPick = useCallback((idx: number) => {
+    setSelectedChord(idx);
+    setDropdownOpen(false);
+    progression.jumpToChord(idx);
+    const chord = PROGRESSION[idx];
+    const freqs = [...chord.frequencies];
+    if (chord.ninth) freqs.push(chord.ninth.frequency);
+    playChordStrum(freqs);
+  }, [progression]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
-      {showOverlay && (
-        <div className={styles.overlay} onClick={handleAudioStart}>
-          <span className={styles.overlayText}>Tap anywhere to enable sound</span>
-        </div>
-      )}
+      <div ref={dropdownRef} className={styles.chordDropdown}>
+        <button
+          className={styles.chordToggle}
+          onClick={() => setDropdownOpen((o) => !o)}
+        >
+          <span>{PROGRESSION[selectedChord].name}</span>
+          <svg className={`${styles.chevron}${dropdownOpen ? ` ${styles.chevronOpen}` : ''}`} width="8" height="5" viewBox="0 0 8 5">
+            <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        {dropdownOpen && (
+          <div className={styles.chordMenu}>
+            {PROGRESSION.map((chord, i) => (
+              <button
+                key={chord.name}
+                className={`${styles.chordOption}${selectedChord === i ? ` ${styles.chordOptionActive}` : ''}`}
+                onClick={() => handleChordPick(i)}
+              >
+                <span className={styles.chordOptionName}>{chord.name}</span>
+                <span className={styles.chordOptionSymbol}>{chord.symbol}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

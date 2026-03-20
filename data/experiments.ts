@@ -127,24 +127,16 @@ export const sectionConfigs: SectionConfig[] = [
 
 export const codeChordsSectionConfigs: SectionConfig[] = [
   {
-    letter: '1',
+    letter: 'A',
     name: 'Collision Changes',
-    hint: 'Click to add new notes',
-    hintMobile: 'Tilt to move · tap to add notes',
+    hint: '',
+    hintMobile: '',
     hintActionMobile: 'Enable Motion',
     description:
-      'Glowing orbs float in space — each one a note in a jazz chord. Collisions sound both notes. The harmony cycles through a ii-V-I-IV progression every 8 bars.',
-    instructions: [
-      { icon: 'cursor', text: 'Move cursor to attract orbs' },
-      { icon: 'click', text: 'Click to add new notes' },
-      { icon: 'eye', text: 'Watch for chord changes — orbs retune automatically' },
-    ],
-    instructionsMobile: [
-      { icon: 'move', text: 'Tilt your phone to make notes collide' },
-      { icon: 'click', text: 'Tap to add new notes' },
-      { icon: 'eye', text: 'Chord changes cycle automatically' },
-    ],
-    controls: ['speed'],
+      'Glowing orbs float in space — each one a note in a jazz chord. When they collide, both notes ring out. Choose a chord from the dropdown and watch the orbs retune.',
+    instructions: [],
+    instructionsMobile: [],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
 ];
 

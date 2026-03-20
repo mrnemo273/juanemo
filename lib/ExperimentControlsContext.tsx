@@ -10,6 +10,10 @@ export interface ExperimentControls {
   shuffleKey: number;   // increments on shuffle — experiments react to changes
   activeSection: number; // index of currently visible section
   replayKey: number;    // increments on replay — section E reacts to changes
+  tempo: number;        // BPM (80, 120, 160)
+  timeSignature: 3 | 4; // jazz waltz or swing
+  decay: number;        // envelope decay seconds
+  reverbMix: number;    // reverb wet 0–1
 }
 
 const defaultControls: ExperimentControls = {
@@ -18,6 +22,10 @@ const defaultControls: ExperimentControls = {
   shuffleKey: 0,
   activeSection: 0,
   replayKey: 0,
+  tempo: 120,
+  timeSignature: 3,
+  decay: 1.5,
+  reverbMix: 0.3,
 };
 
 export const ExperimentControlsContext =

@@ -18,14 +18,11 @@ const MAX_SPEED = 2.5;
 let ORB_RADIUS_MIN = 30;
 let ORB_RADIUS_MAX = 65;
 
-export function setOrbSizes(mobile: boolean) {
-  if (mobile) {
-    ORB_RADIUS_MIN = 20;
-    ORB_RADIUS_MAX = 42;
-  } else {
-    ORB_RADIUS_MIN = 30;
-    ORB_RADIUS_MAX = 65;
-  }
+export function setOrbSizes(viewportWidth: number) {
+  const clampedW = Math.max(320, Math.min(2560, viewportWidth));
+  const t = (clampedW - 320) / (2560 - 320);
+  ORB_RADIUS_MIN = Math.round(20 + t * (60 - 20));
+  ORB_RADIUS_MAX = Math.round(40 + t * (130 - 40));
 }
 
 let nextId = 0;
@@ -39,10 +36,16 @@ export interface ParticlePhysicsState {
   collisionEvents: CollisionEvent[];
 }
 
+export interface EdgeBounce {
+  frequency: number;
+  velocity: number;
+}
+
 export interface ParticlePhysicsAPI {
   stateRef: React.MutableRefObject<ParticlePhysicsState>;
   gravitySourceRef: React.MutableRefObject<{ x: number; y: number } | null>;
   gyroGravityRef: React.MutableRefObject<{ gx: number; gy: number }>;
+  edgeBouncesRef: React.MutableRefObject<EdgeBounce[]>;
   initParticles: (
     frequencies: number[],
     notes: string[],
@@ -77,6 +80,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
 
   const gravitySourceRef = useRef<{ x: number; y: number } | null>(null);
   const gyroGravityRef = useRef<{ gx: number; gy: number }>({ gx: 0, gy: 0 });
+  const edgeBouncesRef = useRef<EdgeBounce[]>([]);
   const cooldownMap = useRef<Map<string, number>>(new Map());
   const lerpStartFreqs = useRef<Map<string, number>>(new Map());
   const lerpTargetFreqs = useRef<Map<string, number>>(new Map());
@@ -210,6 +214,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
       const { particles } = stateRef.current;
       const now = performance.now();
       const events: CollisionEvent[] = [];
+      const edgeBounces: EdgeBounce[] = [];
 
       // Cap delta time to prevent physics explosion
       const cappedDt = Math.min(dt, 3);
@@ -306,19 +311,30 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
         p.y += p.vy * cappedDt;
 
         // Edge bounce
+        const speedBefore = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        let edgeBounced = false;
         if (p.x - p.radius < 0) {
           p.x = p.radius;
           p.vx = Math.abs(p.vx) * BOUNCE_RESTITUTION;
+          edgeBounced = true;
         } else if (p.x + p.radius > width) {
           p.x = width - p.radius;
           p.vx = -Math.abs(p.vx) * BOUNCE_RESTITUTION;
+          edgeBounced = true;
         }
         if (p.y - p.radius < 0) {
           p.y = p.radius;
           p.vy = Math.abs(p.vy) * BOUNCE_RESTITUTION;
+          edgeBounced = true;
         } else if (p.y + p.radius > height) {
           p.y = height - p.radius;
           p.vy = -Math.abs(p.vy) * BOUNCE_RESTITUTION;
+          edgeBounced = true;
+        }
+        if (edgeBounced) {
+          const vel = Math.min(1, Math.max(0.1, speedBefore / 4));
+          edgeBounces.push({ frequency: p.frequency, velocity: vel });
+          p.brightness = Math.max(p.brightness, 0.5);
         }
       }
 
@@ -399,6 +415,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
       }
 
       stateRef.current.collisionEvents = events;
+      edgeBouncesRef.current = edgeBounces;
       return events;
     },
     [],
@@ -408,6 +425,7 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
     stateRef,
     gravitySourceRef,
     gyroGravityRef,
+    edgeBouncesRef,
     initParticles,
     addParticle,
     step,
