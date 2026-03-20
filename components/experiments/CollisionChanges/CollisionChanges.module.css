@@ -11,12 +11,12 @@
   height: 100%;
 }
 
-/* Custom chord dropdown — aligned with metaBottom (bottom: 60px) */
+/* Custom chord dropdown — vertically centered with metaBottom */
 .chordDropdown {
   position: absolute;
-  bottom: 57px;
+  bottom: 50px;
   left: 50%;
-  transform: translateX(75px);
+  transform: translateX(90px);
   z-index: 6;
 }
 
@@ -114,7 +114,7 @@
 
 @media (max-width: 600px) {
   .chordDropdown {
-    bottom: 16px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
   }

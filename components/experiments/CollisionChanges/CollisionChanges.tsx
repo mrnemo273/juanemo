@@ -344,6 +344,12 @@ export default function CollisionChanges() {
         return;
       }
 
+      // Pause when settings panel is open
+      if (controlsRef.current.paused) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
       // Update gyro gravity
       const g = gyroRef.current;
       if (

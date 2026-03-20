@@ -14,6 +14,7 @@ export interface ExperimentControls {
   timeSignature: 3 | 4; // jazz waltz or swing
   decay: number;        // envelope decay seconds
   reverbMix: number;    // reverb wet 0–1
+  paused: boolean;      // true when settings panel is open
 }
 
 const defaultControls: ExperimentControls = {
@@ -26,6 +27,7 @@ const defaultControls: ExperimentControls = {
   timeSignature: 3,
   decay: 1.5,
   reverbMix: 0.3,
+  paused: false,
 };
 
 export const ExperimentControlsContext =

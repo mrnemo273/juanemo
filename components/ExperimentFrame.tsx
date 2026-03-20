@@ -196,6 +196,7 @@ export default function ExperimentFrame({
     timeSignature,
     decay,
     reverbMix,
+    paused: panelOpen,
   };
 
   /* --------------------------------------------------------
@@ -229,11 +230,14 @@ export default function ExperimentFrame({
           </div>
         </div>
 
-        {/* ROW 2: TOP KEYLINE */}
-        <div className={styles.keyline} />
+        {/* VIEWPORT — fills frame, between fixed bars */}
+        <div className={styles.viewportWrap}>
+          {/* Dark scrim when settings panel is open */}
+          <div
+            className={`${styles.scrim}${panelOpen ? ` ${styles.scrimVisible}` : ''}`}
+            onClick={() => panelOpen && setPanelOpen(false)}
+          />
 
-        {/* ROW 3: VIEWPORT */}
-        <div className={`${styles.viewportWrap}${panelOpen && isMobile ? ` ${styles.viewportWrapPushed}` : ''}`}>
           {/* Floating meta: experiment title, 60px from top keyline */}
           <div className={styles.metaTop}>
             <span className={styles.metaNumber}>{number}</span>
@@ -338,6 +342,7 @@ export default function ExperimentFrame({
 
         {/* ROW 4: EXPANDING SETTINGS PANEL */}
         <div className={styles.panelZone}>
+          <div className={styles.keyline} />
           <div
             className={`${styles.panelContent}${
               panelOpen ? ` ${styles.panelContentOpen}` : ''
@@ -532,12 +537,10 @@ export default function ExperimentFrame({
               </div>
             </div>
           </div>
+          <div className={styles.keyline} />
         </div>
 
-        {/* ROW 5: BOTTOM KEYLINE */}
-        <div className={styles.keyline} />
-
-        {/* ROW 6: BOTTOM BAR — pagination tiles + gear */}
+        {/* BOTTOM BAR — fixed, pagination tiles + gear */}
         <div className={styles.bottombar}>
           {totalSections >= 1 &&
             sectionLetters.map((letter, i) => (

@@ -4,30 +4,33 @@
    ========================================================== */
 
 .frame {
-  display: grid;
-  grid-template-rows: auto 1px 1fr 0px 1px auto;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
   background: var(--color-bg);
-  transition: grid-template-rows var(--panel-speed) var(--panel-ease);
+  position: relative;
 }
 
 .frameOpen {
-  grid-template-rows: auto 1px 1fr var(--panel-height) 1px auto;
+  /* no layout change — panel overlays */
 }
 
 /* ----------------------------------------------------------
    TOP BAR: date (left) · LogoMark (center) · grid icon (right)
    ---------------------------------------------------------- */
 .topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--page-padding);
-  position: relative;
-  z-index: 10;
+  z-index: 30;
+  background: var(--color-bg);
+  border-bottom: 1px solid rgba(214, 197, 171, 0.12);
 }
 
 .date {
@@ -85,25 +88,38 @@
    ---------------------------------------------------------- */
 .keyline {
   width: 100%;
+  height: 1px;
   background: rgba(214, 197, 171, 0.12);
+  flex-shrink: 0;
 }
 
 /* ----------------------------------------------------------
    VIEWPORT — contains experiment + floating meta labels
    ---------------------------------------------------------- */
 .viewportWrap {
-  position: relative;
+  position: absolute;
+  top: calc(15px + 2 * var(--page-padding) + 1px);  /* logo + padding×2 + border */
+  left: 0;
+  right: 0;
+  bottom: calc(40px + 10px + 12px + 1px);            /* tile + pad-top + pad-bot + border */
   overflow: hidden;
 }
 
-@media (max-width: 600px) {
-  .viewportWrap {
-    transition: transform var(--panel-speed) var(--panel-ease);
-  }
-  .viewportWrapPushed {
-    transform: translateY(calc(var(--panel-height) * -0.45));
-  }
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 38, 39, 0.55);
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--panel-speed) var(--panel-ease);
 }
+
+.scrimVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 
 .viewport {
   width: 100%;
@@ -156,10 +172,10 @@
    FLOATING META LABELS — inside viewport, position: absolute
    ---------------------------------------------------------- */
 
-/* Experiment title — 60px from top keyline, centered */
+/* Experiment title — below top bar keyline */
 .metaTop {
   position: absolute;
-  top: 60px;
+  top: 55px;
   left: 0;
   right: 0;
   display: flex;
@@ -191,10 +207,10 @@
   white-space: nowrap;
 }
 
-/* Section label + hint — 60px from bottom keyline, centered */
+/* Section label + hint — above bottom bar keyline */
 .metaBottom {
   position: absolute;
-  bottom: 60px;
+  bottom: 55px;
   left: 0;
   right: 0;
   display: flex;
@@ -263,14 +279,26 @@
    EXPANDING SETTINGS PANEL — grid row 4
    ---------------------------------------------------------- */
 .panelZone {
+  position: fixed;
+  bottom: calc(40px + 10px + 12px + 1px);
+  left: 0;
+  right: 0;
+  max-height: calc(60vh - 63px);
+  z-index: 25;
   overflow: hidden;
-  background: var(--color-bg);
-  position: relative;
-  z-index: 20;
+  transform: translateY(100%);
+  transition: transform var(--panel-speed) var(--panel-ease);
+  display: flex;
+  flex-direction: column;
+}
+
+.frameOpen .panelZone {
+  transform: translateY(0);
 }
 
 .panelContent {
   height: 100%;
+  background: var(--color-bg);
   opacity: 0;
   padding: 0 var(--page-padding);
   transition: opacity 0.25s ease;
@@ -449,11 +477,18 @@
    40×40px tiles with faint borders
    ---------------------------------------------------------- */
 .bottombar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px var(--page-padding) 12px;
   gap: 4px;
+  z-index: 30;
+  background: var(--color-bg);
+  border-top: 1px solid rgba(214, 197, 171, 0.12);
 }
 
 .pageTile {
@@ -543,8 +578,13 @@
 
   .date { display: none; }
 
-  .metaTop { top: 32px; }
-  .metaBottom { bottom: 32px; }
+  .viewportWrap {
+    top: calc(15px + 2 * var(--page-padding) + 1px);
+    bottom: calc(40px + 8px + 10px + 1px);
+  }
+
+  .metaTop { top: 28px; }
+  .metaBottom { bottom: 40px; }
 
   /* Hint visible on mobile — wraps to second centered line */
   .metaBottom {
@@ -565,6 +605,11 @@
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+  }
+
+  .panelZone {
+    bottom: calc(40px + 8px + 10px + 1px);
+    max-height: calc(60vh - 59px);
   }
 
   .panelInner {
