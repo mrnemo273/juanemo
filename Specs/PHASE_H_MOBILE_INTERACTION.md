@@ -4,7 +4,7 @@
 
 Make sections B, C, and D of Experiment 01 (Generative Typography) fully interactive on mobile. Replace mouse-dependent interactions with device orientation (gyroscope/accelerometer) for sections B and C, and touch-move events for section D. Update hint text and instructions per-platform. The desktop experience is unchanged.
 
-## Status: `READY`
+## Status: `COMPLETE` ✅ (deployed 2026-03-19)
 
 ## Depends On: Phase G (complete ✅)
 

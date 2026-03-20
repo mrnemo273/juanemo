@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-19 — **Phase H spec written.** Mobile interaction for sections B, C, D. Gyroscope for proximity/axes, touch-sweep for hover. Platform-aware instructions.
+2026-03-19 — **Stock Collage pipeline added.** 4 experiments approved (EXP-10 through EXP-13). Exquisite Search, Slice & Stack, Color Bleed, Depth Sandwich. All 🔲 TODO. Jazz pipeline (EXP-02–09) also in backlog.
 
 ---
 
@@ -119,6 +119,135 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 ---
 
+## Experiment Pipeline — Visual Jazz Series 🎷
+
+Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
+
+### EXP-02: Collision Changes (Jazz Harmony via Particle Collision)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.1 | Floating circles with chord tones — collisions trigger ii-V-I progressions | 🔵 SPEC WRITTEN | Tone.js synth. Collision = chord change. Spec: `Specs/EXP02_COLLISION_CHANGES.md` |
+| J.2 | Color-coded harmonic function (tonic/subdominant/dominant) | 🔵 SPEC WRITTEN | Each circle's color reflects its chord function. |
+| J.3 | Mobile: tilt to shift gravity, tap to spawn new tones | 🔵 SPEC WRITTEN | Gyro gravity + touch spawn. |
+| J.4 | Save/export 30-second loop as audio + GIF | 🔲 TODO | Deferred to polish pass — not in initial spec. |
+
+### EXP-03: Walking Line (Generative Bass Line)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.5 | Continuous walking bass line drawn by cursor/finger path | 🔲 TODO | Tone.js bass synth. Path = pitch contour following chord changes. |
+| J.6 | Line thickness = velocity, color = chord tone vs chromatic passing tone | 🔲 TODO | Visual distinction between chord tones and approach notes. |
+| J.7 | Auto-accompaniment: comping chords + ride cymbal triggered by line | 🔲 TODO | |
+| J.8 | Mobile: draw with finger, tilt for tempo rubato | 🔲 TODO | |
+
+### EXP-04: Swing Pendulums (Rhythm & Swing Feel)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.9 | Array of pendulums with adjustable swing ratio | 🔲 TODO | Slider from straight 8ths (50/50) to hard swing (75/25). Visual: pendulums sync to ratio. |
+| J.10 | Pendulum collisions trigger percussion hits (ride, snare, kick, hi-hat) | 🔲 TODO | Tone.js drum sampler. |
+| J.11 | Drag to adjust individual pendulum length (polyrhythm) | 🔲 TODO | Different lengths = different periods = layered rhythms. |
+| J.12 | Mobile: tilt to shift gravity angle, tap to add/remove pendulums | 🔲 TODO | |
+
+### EXP-05: Call & Response (Interactive Improvisation)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.13 | AI plays a phrase (the "call"), user responds by drawing/gesturing | 🔲 TODO | Claude generates melodic phrases from a scale. User's gesture interpreted as pitch+rhythm. |
+| J.14 | Visual: call appears as a wave/ribbon, response overlaid in contrasting color | 🔲 TODO | |
+| J.15 | AI adapts next call based on user's response pattern | 🔲 TODO | Simple Markov or rule-based adaptation. |
+| J.16 | Mobile: swipe gestures for pitch, tap rhythm for timing | 🔲 TODO | |
+
+### EXP-06: Blue Notes (Microtonal Pitch Bending)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.17 | Grid of notes from blues scale — drag between to bend pitch continuously | 🔲 TODO | Tone.js with pitch bend. Visual: note circles stretch/distort during bend. |
+| J.18 | Ripple interference patterns where bent notes overlap | 🔲 TODO | Overlapping ripples create visual moiré. |
+| J.19 | Background chord changes on a timer, grid highlights available blue notes | 🔲 TODO | |
+| J.20 | Mobile: pressure-sensitive bend (if available) or drag distance | 🔲 TODO | |
+
+### EXP-07: The Rhythm Section (Collaborative Groove Builder)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.21 | Four lanes (piano, bass, drums, horn) — tap to place/remove hits on a looping grid | 🔲 TODO | Step sequencer with jazz voicings. Tone.js multi-instrument. |
+| J.22 | Swing knob affects all lanes simultaneously | 🔲 TODO | Global swing ratio 50–75%. |
+| J.23 | AI auto-fills complementary parts when user edits one lane | 🔲 TODO | Rule-based jazz comping patterns. |
+| J.24 | Mobile: swipe lanes to randomize, pinch to zoom timeline | 🔲 TODO | |
+
+### EXP-08: Chord Pool (Harmonic Ripple Pond)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.25 | Tap anywhere to drop a chord into a "pond" — ripples emanate outward | 🔲 TODO | Tone.js chord voicing. Ripple radius = sustain. Color = chord quality (maj/min/dom/dim). |
+| J.26 | Overlapping ripples create harmonic interference (consonance/dissonance) | 🔲 TODO | Visual + audio: blending where ripples cross. |
+| J.27 | Chord palette cycles through a jazz standard progression | 🔲 TODO | User chooses when to drop each chord. |
+| J.28 | Mobile: tap to drop, tilt to shift voicing (close vs open) | 🔲 TODO | |
+
+### EXP-09: Solo Painter (Gestural Improvisation Canvas)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| J.29 | Freeform painting where stroke = melodic line over backing track | 🔲 TODO | X = time, Y = pitch, speed = dynamics. Tone.js solo instrument (trumpet/sax). |
+| J.30 | Brush style changes with scale mode (pentatonic, bebop, blues) | 🔲 TODO | Visual: different stroke textures per scale. |
+| J.31 | Backing track auto-generated: walking bass + comping + drums | 🔲 TODO | Tone.js Transport for sync. |
+| J.32 | Mobile: finger painting with gyro for vibrato | 🔲 TODO | |
+
+---
+
+## Experiment Pipeline — Stock Collage Series ✂️
+
+Approved by JC on 2026-03-19. Four interactive experiments using free stock photography (Unsplash API) as raw material for collage. Each experiment explores a different collage technique — surrealist juxtaposition, strip recombination, color-based blending, and depth-based layering. Claude assists with curation, alignment, and composition suggestions.
+
+### EXP-10: Exquisite Search (Surrealist Exquisite Corpse)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.1 | Three horizontal bands — search Unsplash for each, pick from results | 🔲 TODO | Top/mid/bottom. Each band independently pannable. |
+| C.2 | Fold mechanic — active band visible, others clipped to 20px alignment sliver | 🔲 TODO | CSS mask with 8px Gaussian blur feather at seams. |
+| C.3 | Reveal animation — 3D unfold (rotateX -90° → 0°, 400ms stagger) | 🔲 TODO | Top-to-bottom sequence. Shadow underneath during unfold. |
+| C.4 | Claude picks middle band search term to bridge top + bottom | 🔲 TODO | Analyzes color palette + dominant shapes. Option for "surrealist clash" mode. |
+| C.5 | Shake mode — randomly reassign which image fills which band | 🔲 TODO | Instant variations from same 3 images. |
+| C.6 | Export composite as single image (canvas compositing with feathered seams) | 🔲 TODO | |
+
+### EXP-11: Slice & Stack (Hockney-Style Strip Collage)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.7 | Search 2+ images, slice each into vertical strips (8/12/16/24) | 🔲 TODO | drawImage with source cropping. Each strip is independent draggable element. |
+| C.8 | Drag strips to recompose — snap to grid with half-width offset option | 🔲 TODO | 1px drop shadows between strips for layered paper feel. |
+| C.9 | Auto-shuffle button — randomly interleave strips from all images | 🔲 TODO | |
+| C.10 | Sort by hue — rearrange all strips by dominant color (HSL H component) | 🔲 TODO | Creates unexpected gradient left-to-right. |
+| C.11 | Vertical offset per strip for stepped/staircase collage | 🔲 TODO | |
+| C.12 | Claude identifies "continuation opportunities" — lines/horizons that align across strips | 🔲 TODO | Suggests specific pairings. Auto-compose "best alignment" mode. |
+| C.13 | Export strip collage | 🔲 TODO | |
+
+### EXP-12: Color Bleed (Chromatic Merge)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.14 | Place 2+ stock photos side by side on canvas | 🔲 TODO | Drag to reposition, rotate, flip. |
+| C.15 | Real-time bleed effect — colors merge where edges match (CIE Lab distance) | 🔲 TODO | WebGL fragment shader. Hermite interpolation weighted by color similarity. |
+| C.16 | Bleed radius control (how far the merge extends from edge) | 🔲 TODO | Distance field from image edges. |
+| C.17 | Color tolerance control (how close colors must be to trigger bleed) | 🔲 TODO | Min = surgical precision, max = impressionist haze. |
+| C.18 | Claude ranks photos by "bleed potential" and suggests positioning/rotation | 🔲 TODO | Preview heatmap of predicted bleed zones. |
+| C.19 | Export blended collage | 🔲 TODO | |
+
+### EXP-13: Depth Sandwich (Parallax Diorama)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.20 | Pick 3–5 stock photos, generate depth maps (MiDaS via TensorFlow.js/ONNX) | 🔲 TODO | Client-side depth estimation. Quantized to 3–5 discrete layers. |
+| C.21 | Peel each photo into depth layers (foreground/midground/background) | 🔲 TODO | Depth map as alpha mask with edge feathering. |
+| C.22 | Interleave layers from different images by depth plane | 🔲 TODO | All foregrounds compete for front plane. CSS translateZ in perspective container. |
+| C.23 | Parallax via gyro (mobile) or mouse (desktop) — foreground fast, background slow | 🔲 TODO | rotateX/rotateY driven by input. |
+| C.24 | Claude suggests "figure-ground swap" combinations + lighting consistency check | 🔲 TODO | Specific combo suggestions. |
+| C.25 | Export as parallax video or still composite | 🔲 TODO | |
+
+---
+
 ## V3.0 — Experiment Frame & Navigation Redesign (JC Feedback)
 
 ### EXP — Experiment Frame (Points 1, 2, 6)
@@ -140,19 +269,19 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | NAV.3 | Navigation in light mode (Bone background) | ✅ Phase F | Drawer uses Bone background, creating the Gunmetal→Bone perceptual shift. |
 | NAV.4 | ~~Navigation as experiment tile grid~~ | ⏸ SUPERSEDED | Replaced by chronological list with thumbnails in drawer (Phase F). Better for growing experiment count. |
 
-### Phase H — Mobile Interaction: Gyroscope + Touch 🔵
+### Phase H — Mobile Interaction: Gyroscope + Touch ✅
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| H.1 | `useDeviceOrientation` hook — gyro API with iOS permission, smoothing, normalization | 🔲 TODO | Reusable hook in `lib/useDeviceOrientation.ts`. Returns beta/gamma normalized 0–1. |
-| H.2 | Permission UI — "Enable Motion" inline hint action | 🔲 TODO | Uses existing `hintAction` pattern. Appears on B+C mobile before gyro granted. |
-| H.3 | Section B mobile — gyro proximity | 🔲 TODO | Tilt maps to virtual cursor position, feeds existing proximity calc. Touch fallback. |
-| H.4 | Section C mobile — gyro axis mapping | 🔲 TODO | Gamma→wdth, beta→wght. Same mapping as mouse but from tilt. Touch fallback. |
-| H.5 | Section D mobile — touch sweep | 🔲 TODO | `touchmove` triggers collapse+lift on characters near touch point. Wave effect. |
-| H.6 | Mobile detection helper — `getInteractionMode()` | 🔲 TODO | Returns `'mouse' \| 'touch' \| 'gyro'` based on viewport + device caps + permission. |
-| H.7 | Platform-aware hint text + instructions | 🔲 TODO | `hintMobile`, `instructionsMobile` fields in SectionConfig. Tilt/drag copy on mobile. |
-| H.8 | Gyro fallback after permission denied | 🔲 TODO | Seamless fallback to touch-drag. No broken state. |
-| H.9 | Build + QA | 🔲 TODO | Desktop unchanged, iOS Safari gyro, Android Chrome, touch fallback, no jitter. |
+| H.1 | `useDeviceOrientation` hook — gyro API with iOS permission, smoothing, normalization | ✅ DONE | `lib/useDeviceOrientation.ts`. Lerp 0.15, beta [-45,45], gamma [-30,30], normalized 0–1. Own RAF loop. |
+| H.2 | Permission UI — "Enable Motion" inline hint action | ✅ DONE | Appears when `permissionState === 'prompt'` && `isAvailable`. Disappears after grant/deny. |
+| H.3 | Section B mobile — gyro proximity | ✅ DONE | Tilt → virtual cursor, feeds existing proximity calc. Mobile attractor uses `AXIS_RANGES_MOBILE` caps. Touch fallback. |
+| H.4 | Section C mobile — gyro axis mapping | ✅ DONE | Gamma→wdth/opsz, beta→wght. Touch fallback on denial. |
+| H.5 | Section D mobile — touch sweep | ✅ DONE | 40px radius, `touchstart`/`touchmove`/`touchend`. CSS `:hover` scoped to `(hover: hover) and (pointer: fine)`. |
+| H.6 | Mobile detection — interaction mode refs | ✅ DONE | `modeRef` per section (not standalone helper). Set on mount, upgraded to `'gyro'` reactively on permission grant. |
+| H.7 | Platform-aware hint text + instructions + B.20 visibility | ✅ DONE | `hintMobile`, `instructionsMobile` in SectionConfig. Hint visible on mobile via `flex-wrap`. 44px tap targets. |
+| H.8 | Gyro fallback after permission denied | ✅ DONE | Hint swaps to "Drag across the letters", touch fallback activates automatically. |
+| H.9 | Build + QA | ✅ DONE | Zero errors. Desktop unchanged. |
 
 ### Phase G — Settings Panel & Frame Redesign ✅
 
@@ -198,7 +327,11 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | 2026-03-19 | Phase C complete. Self-hosted fonts with preloading. `font-display: block` (Roboto Flex) / `swap` (DM Sans). WCAG AA verified (Dun/Gunmetal 9.11:1, INDEX trigger bumped to 60%). `dvh` units for iOS Safari. Close button added to overlay. Focus trap, focus-visible, tabIndex gating. Vestigial CSS cleaned up (B.6, B.7, B.8 resolved). README updated. Deployment pending push to main. | Scrummaster (from Phase C builder notes) |
 | 2026-03-19 | **Phase F complete and deployed.** DrawerNav replaces IndexOverlay. Shared `<BottomSheet>` component for mobile controls drawer. Nav drawer uses inline CSS media query for its own bottom-sheet (too complex for generic wrapper). Carousel uses refs for DOM updates (no re-renders). Hydration-safe thumbnails via client-side useEffect. Deviations: focus return not implemented, drag-to-dismiss visual-only. New backlog items: B.11–B.15. | Scrummaster (from Phase F builder notes) |
 | 2026-03-19 | **Phase F spec written.** Drawer navigation replaces IndexOverlay. NAV.2/NAV.4 superseded (zoom-out rejected). Mobile bottom-sheet pattern standardized — both nav drawer and controls drawer slide up from bottom on ≤600px. Phase F items added. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **Phase H complete and deployed.** `useDeviceOrientation` hook with iOS permission, lerp smoothing, normalized output. Sections B+C: gyro tilt → virtual cursor / axis mapping, touch fallback on denial. Section D: touch-sweep with 40px radius, CSS `:hover` scoped to `(hover: hover) and (pointer: fine)`. Platform-aware hint/instructions via `hintMobile`/`instructionsMobile` on SectionConfig. Hint visible on mobile (B.20 resolved) via `flex-wrap`, 44px tap targets. Deviation: `getInteractionMode()` not standalone — each section uses `modeRef` pattern instead. No new backlog items. | Scrummaster (from Phase H builder notes) |
 | 2026-03-19 | **Phase H spec written.** Mobile interaction: gyroscope for sections B+C (proximity+axes), touch-sweep for section D (hover). `useDeviceOrientation` hook with iOS permission flow, smoothing, normalization. Platform-aware hint text + instructions. Touch fallback if gyro denied. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase G complete and deployed.** 6-row grid, expanding settings panel, floating meta labels, per-section controls/instructions, 40×40px pagination+gear strip. BottomSheet deleted. `replayKey` added to ExperimentControlsContext for Section E Replay. `sectionConfigs` array in `data/experiments.ts`. No significant deviations from spec/prototype. Known issue: DrawerNav mobile trigger overlaps tile A at narrow viewports (Phase F issue, not G regression). New backlog: B.17–B.19. | Scrummaster (from Phase G builder notes) |
+| 2026-03-19 | **EXP-02 Collision Changes spec + builder prompt written.** Full spec with physics simulation, Tone.js audio engine, ii-V-I-IV progression, voice-leading, gyro interaction, canvas rendering. 12 task items (EXP02.1–EXP02.12), 16 acceptance criteria. Builder prompt with physics tuning guide. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **Stock Collage pipeline added.** 4 experiments approved by JC from R5 brainstorm. EXP-10 through EXP-13 added to backlog (C.1–C.25). Unsplash API for stock photos. Techniques: exquisite corpse, strip collage, color-based bleed (WebGL), depth diorama (MiDaS ML). Source: `prototypes/experiment-ideas-r5.html`. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **Visual Jazz pipeline added.** 8 experiments approved by JC from R3 brainstorm. EXP-02 through EXP-09 added to backlog (J.1–J.32). All use Tone.js for Web Audio, mobile-first interaction (gyro+touch). Jazz theory concepts: ii-V-I, walking bass, swing feel, call & response, blue notes, chord voicings, gestural improvisation. Source: `prototypes/experiment-ideas-r3.html`. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase G spec written.** Settings panel redesign: 6-row grid with expanding panel, floating meta labels, per-section controls/instructions, inline hint actions, 40×40px pagination+gear strip. Old mobile controls drawer to be removed. Section transition loader explicitly preserved. Prototype: `prototypes/settings-panel-v3.html`. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase D/E complete and deployed.** ExperimentFrame with 7-row grid, pagination tiles (A–F), 3-phase section loader (fade+spinner+fade), 6 type variations, interactive controls (Speed/Easing/Shuffle), mobile drawer behind gear icon, bottom meta bar mirroring top. 12 prototype effects pruned to 6 per JC direction. Scroll replaced with pagination. Mobile: centered layout, 16vw type, 28px tiles. EXP.1–5 all resolved. V2.3 and V2.6 implemented as sections within Exp 01. | Builder (from Phase E session) |

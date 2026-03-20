@@ -136,13 +136,13 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
       'Glowing orbs float in space — each one a note in a jazz chord. Collisions sound both notes. The harmony cycles through a ii-V-I-IV progression every 8 bars.',
     instructions: [
       { icon: 'cursor', text: 'Move cursor to attract orbs' },
-      { icon: 'click', text: 'Click to spawn a new orb' },
-      { icon: 'eye', text: 'Watch for chord changes — orbs retune every 8 bars' },
+      { icon: 'click', text: 'Click to add new notes' },
+      { icon: 'eye', text: 'Watch for chord changes — orbs retune automatically' },
     ],
     instructionsMobile: [
-      { icon: 'move', text: 'Tilt phone to shift gravity' },
-      { icon: 'click', text: 'Tap to spawn a new orb' },
-      { icon: 'eye', text: 'Chord changes every 8 bars' },
+      { icon: 'move', text: 'Tilt your phone to make notes collide' },
+      { icon: 'click', text: 'Tap to add new notes' },
+      { icon: 'eye', text: 'Chord changes cycle automatically' },
     ],
     controls: ['speed'],
   },

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
-import { useParticlePhysics } from './useParticlePhysics';
+import { useParticlePhysics, setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import { initAudio, playDyad, isAudioReady, dispose } from './audioEngine';
 import { HARMONIC_COLORS, voiceLeadAssignment } from './chordData';
@@ -72,7 +72,9 @@ export default function CollisionChanges() {
      Mobile detection
      -------------------------------------------------------- */
   useEffect(() => {
-    setIsMobile(isMobileViewport());
+    const mobile = isMobileViewport();
+    setIsMobile(mobile);
+    setOrbSizes(mobile);
     prefersReducedRef.current = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
@@ -125,16 +127,26 @@ export default function CollisionChanges() {
   useEffect(() => {
     if (initializedRef.current) return;
     const chord = PROGRESSION[0];
-    // Start with 8 orbs — double up the chord tones + add ninth
-    const freqs = [
-      ...chord.frequencies,
-      ...chord.frequencies,
-    ];
-    const notes = [
-      ...chord.notes,
-      ...chord.notes,
-    ];
-    const tones = freqs.map((_, i) => getChordTone(i % chord.frequencies.length));
+    // Musically meaningful voicing:
+    // 4 chord tones (root, 3rd, 5th, 7th) + 9th extension
+    // + octave doublings of root and 5th for fullness
+    const freqs = [...chord.frequencies];
+    const notes = [...chord.notes];
+    const tones = chord.notes.map((_, i) => getChordTone(i));
+    // Add 9th
+    if (chord.ninth) {
+      freqs.push(chord.ninth.frequency);
+      notes.push(chord.ninth.note);
+      tones.push('9th');
+    }
+    // Octave doubling of root (lower) for bass weight
+    freqs.push(chord.frequencies[0] / 2);
+    notes.push(chord.notes[0]); // same note name, lower octave
+    tones.push('root');
+    // Octave doubling of 5th (higher) for shimmer
+    freqs.push(chord.frequencies[2] * 2);
+    notes.push(chord.notes[2]);
+    tones.push('5th');
     const { w, h } = sizeRef.current;
     if (w === 0 || h === 0) {
       const t = setTimeout(() => {

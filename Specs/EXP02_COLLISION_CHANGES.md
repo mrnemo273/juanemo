@@ -625,19 +625,36 @@ The existing `generateStaticParams()` reads from the experiments array, so no ch
 - **Tone.js v15.1.x** (latest via npm). No API surprises — `PolySynth`, `FeedbackDelay`, `Reverb`, and `.chain()` all work as documented.
 - `Tone.Frequency(freq).toNote()` correctly converts Hz to note names for `triggerAttackRelease`.
 
-### Physics tuning values
+### Physics tuning values (final)
 | Parameter | Value |
 |-----------|-------|
-| Inter-particle G | 0.5 |
-| Cursor G | 0.5 |
-| Attraction radius | 200px |
-| Damping | 0.998 per frame |
-| Bounce restitution | 0.8 |
-| Collision cooldown | 300ms |
-| Initial velocity | ±0.5 |
+| Inter-particle G | 0.02 |
+| Cursor G | 0.06 |
+| Attraction radius | 300px |
+| Damping | 0.9998 per frame |
+| Bounce restitution | 0.7 |
+| Collision cooldown | 600ms |
+| Initial velocity | ±1.2 |
+| Max speed | 2.5 |
+| Speed floor | 0.3 (nudge to 0.4) |
 | Max orbs | 12 |
-| Orb radius | 22–34px |
+| Orb radius (desktop) | 30–65px |
+| Orb radius (mobile) | 20–42px |
+| Collision energy kick | 0.3 |
 | Delta-time cap | 3 frames (prevents physics explosion on tab-switch) |
+| Crowd threshold | 8 orbs (extras fade after 15s) |
+
+### Visual style (final)
+- **No gradients** — flat fill at low opacity (alpha 0.1–0.25) with vibrant stroke (alpha 0.6–1.0)
+- **Note labels** centered inside each orb (white text, font size = radius × 0.45)
+- **Per-note colors** (not per-harmonic-function): warm coral (C), sky blue (D), spring green (E), golden (F), lavender (G), rose (A), mint (B)
+- **Brightness flash** on collision, decays at 0.02 per frame
+
+### Musical voicing (final)
+- **7 orbs** per chord: root, 3rd, 5th, 7th, 9th, octave-doubled root (lower), octave-doubled 5th (higher)
+- **ii-V-I-IV progression**: Dm7 → G7 → Cmaj7 → Fmaj7 with ninth extensions
+- **Voice-leading**: greedy closest-frequency assignment for smooth pitch transitions
+- **Frequency lerp**: 500ms ease-in-out on chord change
 
 ### Audio: synth type, envelope values, effects chain
 - **Synth**: `PolySynth(Synth)` with triangle oscillator
@@ -646,11 +663,21 @@ The existing `generateStaticParams()` reads from the experiments array, so no ch
 - **Chain**: synth → FeedbackDelay (8n, feedback 0.15, wet 0.12) → Reverb (decay 2.5s, wet 0.3) → destination
 - **Velocity mapping**: collision relative velocity / 5, clamped to [0.15, 1.0]
 
+### Responsive design
+- **Desktop**: orb radius 30–65px, cursor/mouse acts as gravity well
+- **Mobile**: orb radius 20–42px, gyroscope tilts gravity, touch spawns new orbs
+- `setOrbSizes(mobile)` called on mount to switch radius ranges
+
+### Auto-removal
+- When >8 active orbs, extras older than 15s are marked for fade-out
+- Fade-out animation runs 500ms before removal from array
+- MAX_PARTICLES hard cap at 12 — oldest active orb fades when adding beyond cap
+
 ### Performance notes
 - Canvas renders at 60fps on desktop Chrome/Safari. DPR-aware canvas sizing.
-- Trail length capped at 5 positions. Glow uses canvas `shadowBlur` (GPU-accelerated on most browsers).
-- `prefers-reduced-motion`: disables trails and glow, renders plain gradient circles only.
+- Trail length capped at 5 positions.
 - Delta-time stepping ensures consistent physics at any frame rate.
+- Hook stability: `useParticlePhysics` and `useChordProgression` return values wrapped in `useMemo` to prevent useEffect re-firing on re-render.
 
 ### Known issues
 - Touch interaction: `touchend` spawns orbs, but rapid taps can spawn multiple. The max-12 cap prevents overflow.

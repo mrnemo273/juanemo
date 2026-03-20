@@ -14,8 +14,19 @@ const COLLISION_COOLDOWN = 600;
 const MAX_PARTICLES = 12;
 const INITIAL_VELOCITY_RANGE = 1.2;
 const MAX_SPEED = 2.5;
-const ORB_RADIUS_MIN = 30;
-const ORB_RADIUS_MAX = 65;
+// Desktop vs mobile orb sizes — set at init time
+let ORB_RADIUS_MIN = 30;
+let ORB_RADIUS_MAX = 65;
+
+export function setOrbSizes(mobile: boolean) {
+  if (mobile) {
+    ORB_RADIUS_MIN = 20;
+    ORB_RADIUS_MAX = 42;
+  } else {
+    ORB_RADIUS_MIN = 30;
+    ORB_RADIUS_MAX = 65;
+  }
+}
 
 let nextId = 0;
 
@@ -202,6 +213,28 @@ export function useParticlePhysics(): ParticlePhysicsAPI {
 
       // Cap delta time to prevent physics explosion
       const cappedDt = Math.min(dt, 3);
+
+      // Auto-remove: if crowded (>8 orbs), fade out the oldest extras
+      const CROWD_THRESHOLD = 8;
+      const LIFESPAN = 15000; // 15s before user-spawned extras start fading
+      const active = particles.filter((p) => !p.fadeOut);
+      if (active.length > CROWD_THRESHOLD) {
+        // Sort by spawn time, skip the initial set (first CROWD_THRESHOLD)
+        const extras = active
+          .slice()
+          .sort((a, b) => a.spawnTime - b.spawnTime)
+          .slice(CROWD_THRESHOLD);
+        for (const extra of extras) {
+          if (now - extra.spawnTime > LIFESPAN) {
+            extra.fadeOut = true;
+            setTimeout(() => {
+              stateRef.current.particles = stateRef.current.particles.filter(
+                (p) => p.id !== extra.id,
+              );
+            }, 500);
+          }
+        }
+      }
 
       for (const p of particles) {
         if (p.fadeOut) continue;

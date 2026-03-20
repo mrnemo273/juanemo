@@ -205,7 +205,64 @@ The generative typography system, design tokens, and font infrastructure carry f
 
 ### Spec: `Specs/PHASE_H_MOBILE_INTERACTION.md`
 
-### Status: 🔲 Ready
+### What Was Built
+
+1. **`useDeviceOrientation` hook** (`lib/useDeviceOrientation.ts`) — self-contained gyro lifecycle: iOS permission, event listening, lerp smoothing (0.15), clamping (beta [-45,45], gamma [-30,30]), normalization (0–1). Own RAF loop for stable output.
+2. **Section B — Gyro Proximity** — tilt maps to virtual cursor position feeding existing 250px radius proximity calc. Mobile attractor uses `AXIS_RANGES_MOBILE` caps. Touch fallback on denial.
+3. **Section C — Gyro Axis Mapping** — gamma→wdth/opsz, beta→wght. Touch fallback mirrors mouse mapping.
+4. **Section D — Touch Sweep** — `touchstart`/`touchmove`/`touchend` with 40px radius. CSS `:hover` scoped to `@media (hover: hover) and (pointer: fine)` to avoid sticky hover on iOS.
+5. **iOS permission via "Enable Motion"** — inline hint action, appears when `permissionState === 'prompt'`, disappears after grant/deny. On denial, hint swaps to touch copy and fallback activates.
+6. **Interaction mode refs** — `modeRef` per section (not standalone helper), set on mount, upgraded to `'gyro'` reactively when permission changes. Avoids re-renders.
+7. **Platform-aware copy** — `hintMobile`, `hintActionMobile`, `instructionsMobile` on SectionConfig. ExperimentFrame selects variant by viewport.
+8. **Hint visible on mobile (B.20)** — `display: none` replaced with `flex-wrap: wrap`. Hint wraps to second centered line. Inline actions get 44px min-height tap targets.
+
+### Status: ✅ Complete (deployed 2026-03-19)
+
+---
+
+## Visual Jazz Experiment Pipeline (EXP-02 → EXP-09)
+
+**Goal:** Build 8 interactive experiments that explore jazz harmony, rhythm, and improvisation through visual interaction and Web Audio synthesis (Tone.js). Each experiment maps a jazz theory concept to a physics/gestural interaction pattern. Mobile-first (gyro + touch), mouse on desktop.
+
+**Tech stack addition:** Tone.js for Web Audio synthesis — synths, samplers, Transport scheduling, effects.
+
+**Source material:** `prototypes/experiment-ideas-r3.html` (approved ideas with sketches)
+
+| # | Experiment | Jazz Concept | Interaction Pattern |
+|---|---|---|---|
+| EXP-02 | Collision Changes | ii-V-I harmonic progressions | Particle collision triggers chord changes |
+| EXP-03 | Walking Line | Walking bass lines | Cursor/finger path = pitch contour |
+| EXP-04 | Swing Pendulums | Swing feel & polyrhythm | Pendulum physics, adjustable swing ratio |
+| EXP-05 | Call & Response | Improvisation dialogue | AI plays phrase, user responds with gesture |
+| EXP-06 | Blue Notes | Microtonal pitch bending | Drag between notes to bend pitch, ripple interference |
+| EXP-07 | The Rhythm Section | Ensemble groove | 4-lane step sequencer with AI auto-fill |
+| EXP-08 | Chord Pool | Harmonic interference | Tap to drop chords in a ripple pond |
+| EXP-09 | Solo Painter | Gestural improvisation | Freeform painting = melodic line over backing track |
+
+**Build order:** TBD — JC to pick first experiment to spec.
+
+### Status: 🔲 TODO (pipeline approved, no experiments started)
+
+---
+
+## Stock Collage Experiment Pipeline (EXP-10 → EXP-13)
+
+**Goal:** Build 4 interactive experiments that use free stock photography (Unsplash API) as raw material for digital collage. Each experiment explores a different collage technique with AI-assisted curation and composition.
+
+**Tech stack additions:** Unsplash API, WebGL shaders (Color Bleed), TensorFlow.js or ONNX Runtime (Depth Sandwich depth estimation via MiDaS).
+
+**Source material:** `prototypes/experiment-ideas-r5.html` (approved ideas with sketches)
+
+| # | Experiment | Collage Technique | Key Interaction |
+|---|---|---|---|
+| EXP-10 | Exquisite Search | Surrealist exquisite corpse | Search 3 bands, fold/reveal, Claude bridges middle |
+| EXP-11 | Slice & Stack | Hockney-style strip recombination | Slice images into strips, drag to recompose, sort by hue |
+| EXP-12 | Color Bleed | Chromatic edge merging (WebGL) | Place photos, colors melt where edges match |
+| EXP-13 | Depth Sandwich | ML depth-map parallax diorama | Peel photos into depth layers, tilt for parallax |
+
+**Build order:** TBD — JC to pick first experiment to spec.
+
+### Status: 🔲 TODO (pipeline approved, no experiments started)
 
 ---
 
@@ -228,7 +285,8 @@ The home page automatically points to the newest experiment. The INDEX overlay a
 - **Read GOALS.md first.** The site is a creative sandbox, not a portfolio. The browser is a stage, not a document.
 - **Every experiment fills the viewport.** No scrolling. `100vw × 100vh`. The frame IS the canvas.
 - **The generative LogoMark is the identity.** Same DNA as the experiments — per-character randomized Roboto Flex — but frozen and small.
-- **Typography is the product.** Every experiment should make a senior creative director want to know how it was made.
+- **Typography was experiment 01. Jazz is the next frontier.** The visual jazz series uses Tone.js for sound + canvas/DOM for visuals. Same design system, same frame, new creative territory.
+- **Typography is the product** (for Exp 01). Every experiment should make a senior creative director want to know how it was made.
 - **Spring easing: `cubic-bezier(0.34, 1.56, 0.64, 1)`.** Non-negotiable for the generative system.
 - **Dun, not Bone** for display type on dark backgrounds.
 - **The prototypes in `/prototypes/` are the creative source material.** Open them in a browser to see the approved behaviors.
