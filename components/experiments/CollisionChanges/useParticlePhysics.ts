@@ -6,8 +6,8 @@ import { HARMONIC_COLORS } from './chordData';
    Physics constants (tuning knobs)
    ---------------------------------------------------------- */
 const INTER_PARTICLE_G = 0.02;
-const CURSOR_G = 0.06;
-const ATTRACTION_RADIUS = 300;
+const CURSOR_G = 0.15;
+const ATTRACTION_RADIUS = 400;
 const DAMPING = 0.9998;
 const BOUNCE_RESTITUTION = 0.7;
 const COLLISION_COOLDOWN = 600;
