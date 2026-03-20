@@ -1,10 +1,12 @@
 import { experiments } from '@/data/experiments';
 import ExperimentFrame from '@/components/ExperimentFrame';
 import GenerativeType from '@/components/experiments/GenerativeType';
+import CollisionChanges from '@/components/experiments/CollisionChanges/CollisionChanges';
 import { notFound } from 'next/navigation';
 
 // Map slugs to experiment components
 const experimentComponents: Record<string, React.ComponentType> = {
+  'code-chords': CollisionChanges,
   'generative-type': GenerativeType,
 };
 

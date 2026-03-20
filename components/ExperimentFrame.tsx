@@ -98,9 +98,11 @@ export default function ExperimentFrame({
   const pendingSection = useRef<number | null>(null);
 
   const totalSections = sections?.length ?? 1;
-  const sectionLetters = sections
-    ? sections.map((_, i) => String.fromCharCode(65 + i))
-    : ['A'];
+  const sectionLetters = configs
+    ? configs.map((c) => c.letter)
+    : sections
+      ? sections.map((_, i) => String.fromCharCode(65 + i))
+      : ['A'];
 
   // Current section config
   const currentConfig = configs?.[activeSection];
@@ -268,7 +270,7 @@ export default function ExperimentFrame({
           )}
 
           {/* Floating meta: section label + hint, 60px from bottom keyline */}
-          {totalSections > 1 && currentConfig && (() => {
+          {totalSections >= 1 && currentConfig && (() => {
             // Resolve hint text and action based on platform
             const hintText = isMobile
               ? (currentConfig.hintMobile ?? currentConfig.hint)
@@ -445,7 +447,7 @@ export default function ExperimentFrame({
 
         {/* ROW 6: BOTTOM BAR — pagination tiles + gear */}
         <div className={styles.bottombar}>
-          {totalSections > 1 &&
+          {totalSections >= 1 &&
             sectionLetters.map((letter, i) => (
               <button
                 key={letter}

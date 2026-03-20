@@ -125,7 +125,41 @@ export const sectionConfigs: SectionConfig[] = [
   },
 ];
 
+export const codeChordsSectionConfigs: SectionConfig[] = [
+  {
+    letter: '1',
+    name: 'Collision Changes',
+    hint: 'Move your cursor to attract the orbs',
+    hintMobile: 'Tilt your phone to shift gravity',
+    hintActionMobile: 'Enable Motion',
+    description:
+      'Glowing orbs float in space — each one a note in a jazz chord. Collisions sound both notes. The harmony cycles through a ii-V-I-IV progression every 8 bars.',
+    instructions: [
+      { icon: 'cursor', text: 'Move cursor to attract orbs' },
+      { icon: 'click', text: 'Click to spawn a new orb' },
+      { icon: 'eye', text: 'Watch for chord changes — orbs retune every 8 bars' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: 'Tilt phone to shift gravity' },
+      { icon: 'click', text: 'Tap to spawn a new orb' },
+      { icon: 'eye', text: 'Chord changes every 8 bars' },
+    ],
+    controls: ['speed'],
+  },
+];
+
 export const experiments: Experiment[] = [
+  {
+    slug: 'code-chords',
+    number: '02',
+    name: 'Code Chords',
+    description: 'Jazz harmony through particle physics',
+    longDescription:
+      'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
+    publishedDate: 'March 2026',
+    sections: ['Collision Changes'],
+    sectionConfigs: codeChordsSectionConfigs,
+  },
   {
     slug: 'generative-type',
     number: '01',
