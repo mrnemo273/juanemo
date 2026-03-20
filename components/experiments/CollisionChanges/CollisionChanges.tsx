@@ -5,6 +5,7 @@ import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContex
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
 import { useParticlePhysics, setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
+import * as Tone from 'tone';
 import { initAudio, playDyad, playNote, playChordStrum, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeTimeSignature, stopMetronome } from './audioEngine';
 import { HARMONIC_COLORS, voiceLeadAssignment } from './chordData';
 import type { CollisionEvent } from './types';
@@ -498,16 +499,24 @@ export default function CollisionChanges() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleChordPick = useCallback(async (idx: number) => {
-    await handleAudioStart();
+  const handleChordPick = useCallback((idx: number) => {
+    // Kick the AudioContext synchronously in the gesture handler
+    // iOS Safari requires resume() in the immediate call stack of a user gesture
+    try { Tone.start(); } catch { /* will retry below */ }
+
     selectedChordRef.current = idx;
     setSelectedChord(idx);
     setDropdownOpen(false);
-    progression.jumpToChord(idx);
-    const chord = PROGRESSION[idx];
-    const freqs = [...chord.frequencies];
-    if (chord.ninth) freqs.push(chord.ninth.frequency);
-    playChordStrum(freqs);
+
+    // Async audio init + play
+    (async () => {
+      await handleAudioStart();
+      progression.jumpToChord(idx);
+      const chord = PROGRESSION[idx];
+      const freqs = [...chord.frequencies];
+      if (chord.ninth) freqs.push(chord.ninth.frequency);
+      playChordStrum(freqs);
+    })();
   }, [progression, handleAudioStart]);
 
   // Close dropdown on outside click
@@ -529,6 +538,7 @@ export default function CollisionChanges() {
         <button
           className={styles.chordToggle}
           onClick={() => setDropdownOpen((o) => !o)}
+          onTouchStart={() => { try { Tone.start(); } catch { /* noop */ } }}
         >
           <span>{selectedChord !== null ? PROGRESSION[selectedChord].name : 'Select chord'}</span>
           <svg className={`${styles.chevron}${dropdownOpen ? ` ${styles.chevronOpen}` : ''}`} width="8" height="5" viewBox="0 0 8 5">
