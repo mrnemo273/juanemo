@@ -289,30 +289,31 @@ export default function ExperimentFrame({
               : currentConfig.hint;
 
             // On mobile, determine the action:
-            // - If gyro section (B/C) and gyro is granted/not-required, no action needed
-            // - If gyro section and permission pending, show "Enable Motion"
-            // - If gyro section and denied, no action (touch fallback is automatic)
-            // - Otherwise use desktop hintAction
+            // - If section requests "Enable Motion" and gyro is granted/not-required, no action needed
+            // - If section requests "Enable Motion" and permission pending, show it
+            // - If section requests "Enable Motion" and denied, no action (touch fallback)
+            // - Otherwise use the configured action
             let hintAction: string | undefined;
             if (isMobile) {
-              const isGyroSection = currentConfig.letter === 'B' || currentConfig.letter === 'C';
-              if (isGyroSection) {
+              const mobileAction = currentConfig.hintActionMobile ?? currentConfig.hintAction;
+              if (mobileAction === 'Enable Motion') {
                 if (gyro.permissionState === 'prompt' && gyro.isAvailable) {
                   hintAction = 'Enable Motion';
                 }
                 // granted/not-required/denied: no action
               } else {
-                hintAction = currentConfig.hintActionMobile ?? currentConfig.hintAction;
+                hintAction = mobileAction;
               }
             } else {
               hintAction = currentConfig.hintAction;
             }
 
-            // On mobile, if gyro denied for B/C, show touch hint
+            // On mobile, if gyro section with denied permission, show touch hint
             let resolvedHint = hintText;
-            if (isMobile && (currentConfig.letter === 'B' || currentConfig.letter === 'C')) {
+            const mobileActionCheck = currentConfig.hintActionMobile ?? currentConfig.hintAction;
+            if (isMobile && mobileActionCheck === 'Enable Motion') {
               if (gyro.permissionState === 'denied' || !gyro.isAvailable) {
-                resolvedHint = 'Drag across the letters';
+                resolvedHint = currentConfig.hintMobile || hintText;
               }
             }
 

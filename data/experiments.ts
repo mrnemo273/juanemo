@@ -142,8 +142,8 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     letter: 'B',
     name: 'Piano Split',
     hint: '',
-    hintMobile: 'Tilt to move both hands',
-    hintActionMobile: 'Enable Motion',
+    hintMobile: '',
+    hintActionMobile: '',
     description:
       'The canvas splits into bass and treble clef — left hand and right hand of a jazz piano. Each side collides independently, but they share the same chord changes and metronome. Bass anchors the harmony with roots and fifths; treble adds color with thirds, sevenths, and ninths.',
     instructions: [
