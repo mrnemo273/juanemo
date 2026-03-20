@@ -401,14 +401,6 @@ export default function CollisionChanges() {
       const reducedMotion = prefersReducedRef.current;
       const { particles } = physics.stateRef.current;
 
-      // Chord change flash
-      const flashElapsed = time - chordFlashRef.current;
-      if (flashElapsed < CHORD_FLASH_DURATION && chordFlashRef.current > 0) {
-        const flashAlpha = 0.05 * (1 - flashElapsed / CHORD_FLASH_DURATION);
-        ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
-        ctx.fillRect(0, 0, w, h);
-      }
-
       // Collision lines
       collisionLinesRef.current = collisionLinesRef.current.filter(
         (l) => time - l.time < COLLISION_LINE_DURATION,
