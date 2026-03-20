@@ -366,4 +366,39 @@ The drawer + scrim sit OUTSIDE the ExperimentFrame grid. They are fixed-position
 
 ## Phase F Refinements — Builder Notes
 
-_This section will be populated after the initial build review, similar to Phase D refinements._
+### Decisions Made
+
+- **Thumbnail hydration fix**: Thumbnail `fontVariationSettings` are generated client-side only via `useState([])` + `useEffect`. Server renders spans with no inline style; client populates them after mount. This avoids hydration mismatches from `Math.random()` producing different values on server vs. client.
+- **BottomSheet extraction**: Created a shared `<BottomSheet>` component (`components/BottomSheet.tsx` + `.module.css`) used by both the mobile nav drawer and the mobile controls drawer (gear icon). The BottomSheet is hidden on desktop (`display: none`) and only renders as a slide-up sheet on ≤600px. This unifies the mobile drawer pattern as the spec requested.
+- **Z-index layering**: Scrim at 60, nav drawer at 70, controls BottomSheet backdrop at 100, controls sheet at 101. The controls sheet sits above the nav drawer so both can coexist on mobile without z-fighting.
+- **Grid icon toggle**: The grid icon now toggles the drawer (open if closed, close if open) rather than only opening — matches the prototype behavior where the same trigger opens and closes.
+- **Carousel uses refs for DOM updates**: `currentSlideRef` + direct DOM manipulation (`carouselInnerRef.style.transform`, `classList.add/remove`) for the carousel to avoid re-renders on every 4s tick. Dot active state managed via classList, not React state.
+- **Navigation.tsx uses `usePathname`**: Derives `activeSlug` from the URL path (`/experiments/[slug]`) so the drawer can highlight the current experiment without prop-drilling from the page component.
+
+### Deviations from Spec
+
+- **Spec z-index 60 for drawer, 50 for scrim** (prototype values): Adjusted to **70 for drawer, 60 for scrim** as specified in the task list (F.2/F.3), which differs slightly from the prototype HTML (which used 60/50). The spec task list values were followed.
+- **Mobile nav drawer**: Spec F.9 describes a bottom sheet for mobile. The DrawerNav CSS handles this directly with a `@media (max-width: 600px)` block that changes the drawer to `translateY` instead of `translateX`, adds `border-radius: 16px 16px 0 0`, `max-height: 85vh`, and a drag handle. This is built into DrawerNav itself rather than wrapping it in the `<BottomSheet>` component — the nav drawer has too much custom layout (header, scrollable list, carousel) to fit cleanly into the generic BottomSheet wrapper. The BottomSheet is used only for the simpler controls drawer.
+- **Drag-to-dismiss**: Not implemented (spec marked it as "nice-to-have"). The drag handle pill is rendered visually but does not respond to swipe gestures.
+- **Focus return on close**: Spec F.10 says "on close: focus returns to the grid icon trigger." Not yet implemented — would require a ref to the grid icon passed through context or a callback.
+
+### Items for Scrummaster
+
+- **Only 1 experiment in data**: The month grouping and active highlighting work correctly but are only testable with a single experiment. When more experiments are added to `data/experiments.ts`, verify the grouping renders multiple month sections and that clicking a different experiment navigates and closes the drawer.
+- **Focus return to trigger**: F.10 specifies focus should return to the grid icon on drawer close. This requires either passing a ref through NavigationContext or using a `returnFocusRef` pattern. Low priority but needed for full a11y compliance.
+- **Drag-to-dismiss on mobile**: The drag handle pill is visual-only. Implementing swipe-down-to-close would require touch event handling (`touchstart`/`touchmove`/`touchend`) on the sheet. Consider for a polish pass.
+- **Carousel links**: Special projects have an optional `url` field but clicking a carousel slide doesn't navigate anywhere yet. Wire up `onClick` → `window.open(proj.url)` or `router.push()` when URLs are populated.
+- **ExperimentShell cleanup**: Old `ExperimentShell.tsx` and `ExperimentShell.module.css` still exist on disk from Phase D, never deleted. Can be safely removed.
+
+---
+
+## Completion Summary
+
+| Field | Value |
+|---|---|
+| Date completed | 2026-03-19 |
+| All tasks done? | Yes — drawer, scrim, carousel, mobile bottom sheet, context refactor, IndexOverlay deleted |
+| Build passing? | Yes — `npm run build` zero errors, zero hydration errors |
+| Deployed? | Yes — pushed to main |
+| Deviations? | Mobile nav uses inline CSS media query instead of BottomSheet wrapper; drag-to-dismiss not implemented; focus return not implemented |
+| New items for backlog? | Focus return to trigger; drag-to-dismiss; carousel link wiring; ExperimentShell cleanup; multi-experiment testing |
