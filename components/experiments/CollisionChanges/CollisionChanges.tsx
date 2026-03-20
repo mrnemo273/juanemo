@@ -49,13 +49,14 @@ export default function CollisionChanges() {
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const initialChordIdx = useRef(-1);
-  const [selectedChord, setSelectedChord] = useState(0);
+  const initialChordIdx = useRef(0); // default chord for initial orb physics
+  const [selectedChord, setSelectedChord] = useState<number | null>(null);
 
   const physics = useParticlePhysics();
   const progression = useChordProgression();
 
   // Chord change visual state
+  const selectedChordRef = useRef<number | null>(null);
   const chordFlashRef = useRef(0);
   const chordNameRef = useRef(PROGRESSION[0].name);
   const chordSymbolRef = useRef(PROGRESSION[0].symbol);
@@ -79,15 +80,6 @@ export default function CollisionChanges() {
     prefersReducedRef.current = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
-
-    // Randomize initial chord on client only (avoids hydration mismatch)
-    if (initialChordIdx.current === -1) {
-      const idx = Math.floor(Math.random() * PROGRESSION.length);
-      initialChordIdx.current = idx;
-      setSelectedChord(idx);
-      chordNameRef.current = PROGRESSION[idx].name;
-      chordSymbolRef.current = PROGRESSION[idx].symbol;
-    }
 
     let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
@@ -119,19 +111,7 @@ export default function CollisionChanges() {
     }
   }, [audioStarted, progression]);
 
-  // Auto-start audio on user gesture (click, touch, key — NOT mousemove, which isn't a user activation event)
-  useEffect(() => {
-    if (audioStarted) return;
-    const trigger = () => handleAudioStart();
-    document.addEventListener('click', trigger, { once: true });
-    document.addEventListener('touchstart', trigger, { once: true });
-    document.addEventListener('keydown', trigger, { once: true });
-    return () => {
-      document.removeEventListener('click', trigger);
-      document.removeEventListener('touchstart', trigger);
-      document.removeEventListener('keydown', trigger);
-    };
-  }, [audioStarted, handleAudioStart]);
+  // Audio starts when user selects a chord from the dropdown (user gesture required)
 
   /* --------------------------------------------------------
      Canvas sizing via ResizeObserver
@@ -164,8 +144,6 @@ export default function CollisionChanges() {
   const initializedRef = useRef(false);
   useEffect(() => {
     if (initializedRef.current) return;
-    // Wait for client-side random chord to be set
-    if (initialChordIdx.current === -1) return;
     const chord = PROGRESSION[initialChordIdx.current];
     // Musically meaningful voicing:
     // 4 chord tones (root, 3rd, 5th, 7th) + 9th extension
@@ -201,7 +179,7 @@ export default function CollisionChanges() {
     initializedRef.current = true;
     physics.initParticles(freqs, notes, tones, chord.harmonicFunction, w, h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [physics, selectedChord]);
+  }, [physics]);
 
   /* --------------------------------------------------------
      Chord progression: start timer + handle changes
@@ -209,6 +187,7 @@ export default function CollisionChanges() {
   useEffect(() => {
     progression.onChordChange((newChord, idx, assignment) => {
       chordFlashRef.current = performance.now();
+      selectedChordRef.current = idx;
       chordNameRef.current = newChord.name;
       chordSymbolRef.current = newChord.symbol;
       setSelectedChord(idx);
@@ -464,17 +443,19 @@ export default function CollisionChanges() {
         ctx.fillText(displayNote, p.x, p.y);
       }
 
-      // Centered chord name — large Georgia italic, very light
-      const flashElapsed = time - chordFlashRef.current;
-      const flashAlpha = flashElapsed < 500
-        ? 0.06 + 0.1 * (1 - flashElapsed / 500)
-        : 0.06;
-      const chordFontSize = isMobile ? 48 : 72;
-      ctx.font = `italic ${chordFontSize}px Georgia, "Times New Roman", serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(214, 197, 171, ${flashAlpha})`;
-      ctx.fillText(chordNameRef.current, w / 2, h / 2);
+      // Centered chord name — large Georgia italic, very light (only after user selects)
+      if (selectedChordRef.current !== null) {
+        const flashElapsed = time - chordFlashRef.current;
+        const flashAlpha = flashElapsed < 500
+          ? 0.06 + 0.1 * (1 - flashElapsed / 500)
+          : 0.06;
+        const chordFontSize = isMobile ? 48 : 72;
+        ctx.font = `italic ${chordFontSize}px Georgia, "Times New Roman", serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = `rgba(214, 197, 171, ${flashAlpha})`;
+        ctx.fillText(chordNameRef.current, w / 2, h / 2);
+      }
 
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -498,6 +479,7 @@ export default function CollisionChanges() {
 
   const handleChordPick = useCallback(async (idx: number) => {
     await handleAudioStart();
+    selectedChordRef.current = idx;
     setSelectedChord(idx);
     setDropdownOpen(false);
     progression.jumpToChord(idx);
@@ -527,7 +509,7 @@ export default function CollisionChanges() {
           className={styles.chordToggle}
           onClick={() => setDropdownOpen((o) => !o)}
         >
-          <span>{PROGRESSION[selectedChord].name}</span>
+          <span>{selectedChord !== null ? PROGRESSION[selectedChord].name : 'Select chord'}</span>
           <svg className={`${styles.chevron}${dropdownOpen ? ` ${styles.chevronOpen}` : ''}`} width="8" height="5" viewBox="0 0 8 5">
             <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -537,7 +519,7 @@ export default function CollisionChanges() {
             {PROGRESSION.map((chord, i) => (
               <button
                 key={chord.name}
-                className={`${styles.chordOption}${selectedChord === i ? ` ${styles.chordOptionActive}` : ''}`}
+                className={`${styles.chordOption}${selectedChord !== null && selectedChord === i ? ` ${styles.chordOptionActive}` : ''}`}
                 onClick={() => handleChordPick(i)}
               >
                 <span className={styles.chordOptionName}>{chord.name}</span>
