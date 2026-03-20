@@ -19,10 +19,10 @@ let ORB_RADIUS_MIN = 30;
 let ORB_RADIUS_MAX = 65;
 
 export function setOrbSizes(viewportWidth: number) {
-  const clampedW = Math.max(320, Math.min(2560, viewportWidth));
-  const t = (clampedW - 320) / (2560 - 320);
-  ORB_RADIUS_MIN = Math.round(20 + t * (60 - 20));
-  ORB_RADIUS_MAX = Math.round(40 + t * (130 - 40));
+  const clampedW = Math.max(320, Math.min(3840, viewportWidth));
+  const t = (clampedW - 320) / (3840 - 320);
+  ORB_RADIUS_MIN = Math.round(20 + t * (100 - 20));
+  ORB_RADIUS_MAX = Math.round(40 + t * (250 - 40));
 }
 
 let nextId = 0;
