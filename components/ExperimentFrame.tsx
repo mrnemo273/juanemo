@@ -322,8 +322,12 @@ export default function ExperimentFrame({
                   {currentConfig.letter}
                 </span>
                 <span className={styles.sectionName}>{currentConfig.name}</span>
-                <span className={styles.hintSep}>&middot;</span>
-                <span className={styles.hintText}>{resolvedHint}</span>
+                {resolvedHint ? (
+                  <>
+                    <span className={styles.hintSep}>&middot;</span>
+                    <span className={styles.hintText}>{resolvedHint}</span>
+                  </>
+                ) : null}
                 {hintAction && (
                   <>
                     <span className={styles.hintSep}>&middot;</span>

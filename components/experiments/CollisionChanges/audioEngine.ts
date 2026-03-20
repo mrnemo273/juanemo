@@ -5,6 +5,13 @@ let delay: Tone.FeedbackDelay | null = null;
 let reverb: Tone.Reverb | null = null;
 let initialized = false;
 
+// Piano Split stereo synths + panners
+let bassSynth: Tone.PolySynth | null = null;
+let trebleSynth: Tone.PolySynth | null = null;
+let bassPanner: Tone.Panner | null = null;
+let treblePanner: Tone.Panner | null = null;
+let stereoInitialized = false;
+
 // Metronome
 let metronomeLoop: Tone.Loop | null = null;
 let brushSynth: Tone.NoiseSynth | null = null;
@@ -207,9 +214,144 @@ export function setMetronomeTimeSignature(ts: 3 | 4): void {
   metronomeBeat = 0;
 }
 
+/* ============================================================
+   Piano Split — Stereo audio
+   ============================================================ */
+
+/** Initialize stereo synths for Piano Split. Must call initAudio() first. */
+export function initStereoSynths(): void {
+  if (stereoInitialized || !initialized || !delay || !reverb) return;
+  stereoInitialized = true;
+
+  bassSynth = new Tone.PolySynth(Tone.FMSynth, {
+    harmonicity: 2,
+    modulationIndex: 0.6,
+    oscillator: { type: 'sine' },
+    envelope: {
+      attack: 0.005,
+      decay: 2.0,
+      sustain: 0.05,
+      release: 2.5,
+    },
+    modulation: { type: 'sine' },
+    modulationEnvelope: {
+      attack: 0.001,
+      decay: 0.4,
+      sustain: 0,
+      release: 0.3,
+    },
+    volume: -10,
+  });
+
+  trebleSynth = new Tone.PolySynth(Tone.FMSynth, {
+    harmonicity: 4,
+    modulationIndex: 0.8,
+    oscillator: { type: 'sine' },
+    envelope: {
+      attack: 0.001,
+      decay: 1.5,
+      sustain: 0.0,
+      release: 2.0,
+    },
+    modulation: { type: 'sine' },
+    modulationEnvelope: {
+      attack: 0.001,
+      decay: 0.4,
+      sustain: 0,
+      release: 0.3,
+    },
+    volume: -14,
+  });
+
+  bassPanner = new Tone.Panner(-0.7);
+  treblePanner = new Tone.Panner(0.7);
+
+  bassSynth.chain(bassPanner, delay, reverb, Tone.getDestination());
+  trebleSynth.chain(treblePanner, delay, reverb, Tone.getDestination());
+}
+
+/** Dispose stereo synths only (when leaving Piano Split) */
+export function disposeStereoSynths(): void {
+  bassSynth?.dispose();
+  trebleSynth?.dispose();
+  bassPanner?.dispose();
+  treblePanner?.dispose();
+  bassSynth = null;
+  trebleSynth = null;
+  bassPanner = null;
+  treblePanner = null;
+  stereoInitialized = false;
+}
+
+/** Play a dyad through the bass or treble panner */
+export function playDyadStereo(
+  freq1: number,
+  freq2: number,
+  velocity: number,
+  side: 'bass' | 'treble',
+): void {
+  const s = side === 'bass' ? bassSynth : trebleSynth;
+  if (!s || !stereoInitialized) return;
+  const vel = Math.max(0.1, Math.min(1, velocity));
+  const now = Tone.now();
+  s.triggerAttackRelease(Tone.Frequency(freq1).toNote(), '8n', now, vel);
+  s.triggerAttackRelease(Tone.Frequency(freq2).toNote(), '8n', now, vel);
+}
+
+/** Play a single note through bass or treble panner (edge bounces) */
+export function playNoteStereo(
+  freq: number,
+  velocity: number,
+  side: 'bass' | 'treble',
+): void {
+  const s = side === 'bass' ? bassSynth : trebleSynth;
+  if (!s || !stereoInitialized) return;
+  const vel = Math.max(0.05, Math.min(0.6, velocity * 0.4));
+  s.triggerAttackRelease(Tone.Frequency(freq).toNote(), '16n', Tone.now(), vel);
+}
+
+/** Stereo chord strum — bass left, treble right */
+export function playChordStrumStereo(
+  bassFreqs: number[],
+  trebleFreqs: number[],
+  velocity = 0.35,
+): void {
+  if (!stereoInitialized || !bassSynth || !trebleSynth) return;
+  const now = Tone.now();
+  const stagger = 0.07;
+
+  const sortedBass = [...bassFreqs].sort((a, b) => a - b);
+  for (let i = 0; i < sortedBass.length; i++) {
+    bassSynth.triggerAttackRelease(
+      Tone.Frequency(sortedBass[i]).toNote(),
+      '4n',
+      now + i * stagger,
+      velocity,
+    );
+  }
+
+  const trebleOffset = sortedBass.length * stagger;
+  const sortedTreble = [...trebleFreqs].sort((a, b) => a - b);
+  for (let i = 0; i < sortedTreble.length; i++) {
+    trebleSynth.triggerAttackRelease(
+      Tone.Frequency(sortedTreble[i]).toNote(),
+      '4n',
+      now + trebleOffset + i * stagger,
+      velocity,
+    );
+  }
+}
+
+/** Set decay on both stereo synths */
+export function setDecayStereo(value: number): void {
+  bassSynth?.set({ envelope: { decay: value } });
+  trebleSynth?.set({ envelope: { decay: value } });
+}
+
 /** Dispose synths and effects — does NOT close AudioContext */
 export function dispose(): void {
   stopMetronome();
+  disposeStereoSynths();
   synth?.dispose();
   delay?.dispose();
   reverb?.dispose();

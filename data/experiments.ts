@@ -138,6 +138,25 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     instructionsMobile: [],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'B',
+    name: 'Piano Split',
+    hint: '',
+    hintMobile: 'Tilt to move both hands',
+    hintActionMobile: 'Enable Motion',
+    description:
+      'The canvas splits into bass and treble clef — left hand and right hand of a jazz piano. Each side collides independently, but they share the same chord changes and metronome. Bass anchors the harmony with roots and fifths; treble adds color with thirds, sevenths, and ninths.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Hover either side</strong> — attract orbs on that half only' },
+      { icon: 'eye', text: '<strong>Listen for stereo</strong> — bass pans left, treble pans right' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt</strong> — shifts gravity for both halves' },
+      { icon: 'cursor', text: '<strong>Touch a side</strong> — attract orbs on that half' },
+      { icon: 'eye', text: 'Bass below, treble above — like piano keys' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -149,7 +168,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes'],
+    sections: ['Collision Changes', 'Piano Split'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
