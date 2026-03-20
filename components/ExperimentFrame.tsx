@@ -126,7 +126,16 @@ export default function ExperimentFrame({
   useEffect(() => {
     if (phase === 'fadeOut') {
       const t = setTimeout(() => {
-        setActiveSection(pendingSection.current ?? 0);
+        const newSection = pendingSection.current ?? 0;
+        setActiveSection(newSection);
+        // Write hash to URL at the moment the section actually changes
+        if (sectionLetters.length > 1) {
+          if (newSection === 0) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } else {
+            window.history.replaceState(null, '', `#${sectionLetters[newSection]}`);
+          }
+        }
         setPhase('loader');
       }, FADE_OUT_MS);
       return () => clearTimeout(t);
@@ -139,7 +148,37 @@ export default function ExperimentFrame({
       const t = setTimeout(() => setPhase('idle'), FADE_IN_MS);
       return () => clearTimeout(t);
     }
-  }, [phase]);
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* --------------------------------------------------------
+     Hash-based deep linking — read hash on mount
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (sectionLetters.length <= 1) return;
+    const hash = window.location.hash.slice(1).toUpperCase();
+    if (!hash) return;
+    const index = sectionLetters.indexOf(hash);
+    if (index > 0) {
+      setActiveSection(index);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* --------------------------------------------------------
+     Hash-based deep linking — handle browser back/forward
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (sectionLetters.length <= 1) return;
+    const onPopState = () => {
+      const hash = window.location.hash.slice(1).toUpperCase();
+      const index = hash ? sectionLetters.indexOf(hash) : 0;
+      const resolved = index >= 0 ? index : 0;
+      if (resolved !== activeSection) {
+        handleSectionChange(resolved);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [activeSection, sectionLetters, handleSectionChange]);
 
   /* --------------------------------------------------------
      Panel toggle + Escape to close
