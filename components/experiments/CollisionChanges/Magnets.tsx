@@ -37,8 +37,8 @@ const COLLISION_COOLDOWN = 600;
 // Consonant pairs rest close together, dissonant pairs rest far apart.
 // Both attract when too far and repel when too close — nothing escapes.
 const SPRING_K = 0.003;         // Spring stiffness
-const REST_DIST_MIN = 130;      // Equilibrium distance for max consonance (unison/octave)
-const REST_DIST_MAX = 320;      // Equilibrium distance for max dissonance (tritone)
+let REST_DIST_MIN = 130;        // Equilibrium distance for max consonance (unison/octave)
+let REST_DIST_MAX = 320;        // Equilibrium distance for max dissonance (tritone)
 const TANGENT_RATIO = 0.5;      // Fraction of spring force diverted to tangential orbit
 const DAMPING = 0.995;          // Moderate damping
 const MAX_SPEED = 3.0;          // Speed cap
@@ -58,8 +58,12 @@ function updateLocalOrbSizes(viewportWidth: number) {
   setOrbSizes(viewportWidth);
   const clampedW = Math.max(320, Math.min(3840, viewportWidth));
   const t = (clampedW - 320) / (3840 - 320);
-  ORB_RADIUS_MIN = Math.round(20 + t * (100 - 20));
-  ORB_RADIUS_MAX = Math.round(40 + t * (250 - 40));
+  // Larger mobile floor (34px min) so orbs collide more on small screens
+  ORB_RADIUS_MIN = Math.round(34 + t * (100 - 34));
+  ORB_RADIUS_MAX = Math.round(52 + t * (250 - 52));
+  // Tighter rest distances on mobile so orbs stay closer and collide more
+  REST_DIST_MIN = Math.round(90 + t * (130 - 90));
+  REST_DIST_MAX = Math.round(200 + t * (320 - 200));
 }
 
 const NOTE_COLORS: Record<string, string> = {
@@ -181,7 +185,7 @@ function createMagnetParticles(
     y: cy + Math.sin(angle) * r,
     vx: (Math.random() - 0.5) * 2,
     vy: (Math.random() - 0.5) * 2,
-    radius: Math.max(isMobileViewport() ? 28 : 20, ORB_RADIUS_MIN + Math.random() * (ORB_RADIUS_MAX - ORB_RADIUS_MIN) * 0.5),
+    radius: Math.max(isMobileViewport() ? 36 : 20, ORB_RADIUS_MIN + Math.random() * (ORB_RADIUS_MAX - ORB_RADIUS_MIN) * 0.5),
     note: notes[i],
     frequency: freq,
     targetFrequency: freq,
@@ -675,6 +679,8 @@ export default function Magnets() {
       canvas.style.cursor = 'default';
     };
 
+    let touchDragged = false;
+
     const handleTouchStart = (e: TouchEvent) => {
       handleAudioStart();
       const touch = e.touches[0];
@@ -683,14 +689,10 @@ export default function Magnets() {
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
 
+      touchDragged = false;
       const hit = hitTest(x, y);
       if (hit) {
-        // Toggle pin on mobile
-        if (pinnedIdRef.current === hit.id) {
-          pinnedIdRef.current = null;
-        } else {
-          pinnedIdRef.current = hit.id;
-        }
+        grabbedIdRef.current = hit.id;
       }
       cursorRef.current = { x, y };
     };
@@ -698,6 +700,7 @@ export default function Magnets() {
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
       if (!touch) return;
+      touchDragged = true;
       const rect = canvas.getBoundingClientRect();
       cursorRef.current = {
         x: touch.clientX - rect.left,
@@ -706,6 +709,16 @@ export default function Magnets() {
     };
 
     const handleTouchEnd = () => {
+      // If it was a tap (no drag) on an orb, toggle pin
+      if (!touchDragged && grabbedIdRef.current) {
+        const id = grabbedIdRef.current;
+        if (pinnedIdRef.current === id) {
+          pinnedIdRef.current = null;
+        } else {
+          pinnedIdRef.current = id;
+        }
+      }
+      grabbedIdRef.current = null;
       cursorRef.current = null;
     };
 
