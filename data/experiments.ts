@@ -226,14 +226,14 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     description:
       'Silence is music too. Freeze all motion — orbs hang in space, no sound. Release and they burst outward. The longer the silence, the bigger the burst.',
     instructions: [
-      { icon: 'click', text: '<strong>Click anywhere</strong> or press <strong>Space</strong> to toggle freeze' },
+      { icon: 'click', text: '<strong>Press & hold</strong> anywhere or <strong>Space</strong> to freeze — release to burst' },
       { icon: 'eye', text: '<strong>Longer freeze</strong> = more dramatic release burst' },
       { icon: 'refresh', text: '<strong>Change chords</strong> while frozen — the harmony shifts under the silence' },
     ],
     instructionsMobile: [
-      { icon: 'click', text: '<strong>Tap anywhere</strong> to freeze and release' },
+      { icon: 'click', text: '<strong>Press & hold</strong> to freeze — lift to release burst' },
       { icon: 'move', text: '<strong>Tilt while frozen</strong> to aim the burst direction' },
-      { icon: 'clock', text: 'Hold the silence — watch the timer build' },
+      { icon: 'clock', text: 'Hold longer for a bigger burst — auto-releases when full' },
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },

@@ -278,6 +278,19 @@ export default function FreezeRelease() {
     return () => ctx.removeEventListener('statechange', check);
   }, [controls.soundEnabled, handleAudioStart]);
 
+  // Mute/unmute metronome when sound toggle changes
+  useEffect(() => {
+    if (!audioStartedRef.current) return;
+    if (controls.soundEnabled) {
+      // Only unmute if not currently frozen
+      if (!frozenRef.current) {
+        unmuteMetronome();
+      }
+    } else {
+      muteMetronome();
+    }
+  }, [controls.soundEnabled]);
+
   /* --------------------------------------------------------
      Canvas sizing
      -------------------------------------------------------- */
@@ -324,92 +337,96 @@ export default function FreezeRelease() {
   }, []);
 
   /* --------------------------------------------------------
-     Freeze / Release toggle
+     Freeze (press) and Release (lift) — separate functions
      -------------------------------------------------------- */
-  const toggleFreeze = useCallback(() => {
-    if (frozenRef.current) {
-      // RELEASE
-      const frozenDuration = Date.now() - freezeStartRef.current;
-      const energyRatio = Math.min(frozenDuration / ENERGY_MAX_TIME, 1.0);
-      // Burst factor: 2× at 0s, up to 4× at full energy
-      const burstFactor = 2.0 + energyRatio * 2.0;
-      const particles = particlesRef.current;
+  const startFreeze = useCallback(() => {
+    if (frozenRef.current) return; // Already frozen
+    frozenRef.current = true;
+    freezeStartRef.current = Date.now();
+    storedTiltRef.current = { x: 0, y: 0 };
+    muteMetronome();
+  }, []);
 
-      for (const p of particles) {
-        // Amplify stored velocities
-        p.vx *= burstFactor;
-        p.vy *= burstFactor;
+  const doRelease = useCallback(() => {
+    if (!frozenRef.current) return; // Not frozen
+    const frozenDuration = Date.now() - freezeStartRef.current;
+    const energyRatio = Math.min(frozenDuration / ENERGY_MAX_TIME, 1.0);
+    const burstFactor = 2.0 + energyRatio * 2.0;
+    const particles = particlesRef.current;
 
-        // Tilt-aimed offset (mobile)
-        p.vx += storedTiltRef.current.x * burstFactor * 0.5;
-        p.vy += storedTiltRef.current.y * burstFactor * 0.5;
-
-        // Random scatter prevents parallel paths — stronger with more energy
-        const scatter = 0.3 + energyRatio * 0.7;
-        p.vx += (Math.random() - 0.5) * burstFactor * scatter;
-        p.vy += (Math.random() - 0.5) * burstFactor * scatter;
-
-        // Initialize burst trail
-        burstTrailsRef.current.set(p.id, {
-          points: [{ x: p.x, y: p.y }],
-          startTime: Date.now(),
-        });
-      }
-
-      // Canvas flash — stronger with more energy
-      canvasFlashRef.current = Date.now();
-      burstTimeRef.current = Date.now();
-      shockwaveRef.current = Date.now();
-      shockwaveHitRef.current.clear();
-      lastEnergyRatioRef.current = energyRatio;
-      burstActiveRef.current = true;
-
-      // Haptic burst (Android)
-      if ('vibrate' in navigator) {
-        navigator.vibrate([30, 20, 50, 20, 80]);
-      }
-
-      // Unmute metronome
-      if (controlsRef.current.soundEnabled) {
-        unmuteMetronome();
-      }
-
-      frozenRef.current = false;
-    } else {
-      // FREEZE
-      frozenRef.current = true;
-      freezeStartRef.current = Date.now();
-      storedTiltRef.current = { x: 0, y: 0 };
-
-      // Mute metronome
-      muteMetronome();
+    for (const p of particles) {
+      p.vx *= burstFactor;
+      p.vy *= burstFactor;
+      p.vx += storedTiltRef.current.x * burstFactor * 0.5;
+      p.vy += storedTiltRef.current.y * burstFactor * 0.5;
+      const scatter = 0.3 + energyRatio * 0.7;
+      p.vx += (Math.random() - 0.5) * burstFactor * scatter;
+      p.vy += (Math.random() - 0.5) * burstFactor * scatter;
+      burstTrailsRef.current.set(p.id, {
+        points: [{ x: p.x, y: p.y }],
+        startTime: Date.now(),
+      });
     }
+
+    canvasFlashRef.current = Date.now();
+    burstTimeRef.current = Date.now();
+    shockwaveRef.current = Date.now();
+    shockwaveHitRef.current.clear();
+    lastEnergyRatioRef.current = energyRatio;
+    burstActiveRef.current = true;
+
+    if ('vibrate' in navigator) {
+      navigator.vibrate([30, 20, 50, 20, 80]);
+    }
+    if (controlsRef.current.soundEnabled) {
+      unmuteMetronome();
+    }
+    frozenRef.current = false;
   }, []);
 
   /* --------------------------------------------------------
-     Input handlers: click, tap, Space
+     Input handlers: press to freeze, lift to release
      -------------------------------------------------------- */
-  const handleCanvasInteraction = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const handlePressStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     if (!audioStartedRef.current) {
       handleAudioStart();
       return;
     }
-    toggleFreeze();
-  }, [handleAudioStart, toggleFreeze]);
+    startFreeze();
+  }, [handleAudioStart, startFreeze]);
 
+  const handlePressEnd = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    if (!audioStartedRef.current) return;
+    doRelease();
+  }, [doRelease]);
+
+  // Space bar: hold to freeze, release to burst
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !e.repeat) {
         e.preventDefault();
         if (audioStartedRef.current) {
-          toggleFreeze();
+          startFreeze();
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (audioStartedRef.current) {
+          doRelease();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleFreeze]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [startFreeze, doRelease]);
 
   /* --------------------------------------------------------
      Mouse/touch gravity (unfrozen only)
@@ -668,7 +685,7 @@ export default function FreezeRelease() {
 
         // Auto-release when energy circle fills completely
         if (freezeElapsed >= ENERGY_MAX_TIME) {
-          toggleFreeze();
+          doRelease();
           rafRef.current = requestAnimationFrame(loop);
           return;
         }
@@ -1166,8 +1183,10 @@ export default function FreezeRelease() {
       <canvas
         ref={canvasRef}
         className={styles.canvas}
-        onMouseDown={handleCanvasInteraction}
-        onTouchStart={handleCanvasInteraction}
+        onMouseDown={handlePressStart}
+        onMouseUp={handlePressEnd}
+        onTouchStart={handlePressStart}
+        onTouchEnd={handlePressEnd}
       />
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
