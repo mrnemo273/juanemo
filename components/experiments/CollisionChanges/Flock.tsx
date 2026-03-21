@@ -722,6 +722,22 @@ export default function Flock() {
     }
   }, [audioStarted, progression]);
 
+  // Auto-init audio when sound is enabled and AudioContext is running
+  useEffect(() => {
+    if (audioStarted) return;
+    if (!controls.soundEnabled) return;
+    const ctx = Tone.getContext().rawContext;
+    if (!ctx) return;
+    const check = () => {
+      if (ctx.state === 'running' && controlsRef.current.soundEnabled) {
+        handleAudioStart();
+      }
+    };
+    check();
+    ctx.addEventListener('statechange', check);
+    return () => ctx.removeEventListener('statechange', check);
+  }, [audioStarted, controls.soundEnabled, handleAudioStart]);
+
   /* --------------------------------------------------------
      Canvas sizing
      -------------------------------------------------------- */

@@ -15,6 +15,7 @@ export interface ExperimentControls {
   decay: number;        // envelope decay seconds
   reverbMix: number;    // reverb wet 0–1
   paused: boolean;      // true when settings panel is open
+  soundEnabled: boolean; // true when sound toggle is on
 }
 
 const defaultControls: ExperimentControls = {
@@ -28,6 +29,7 @@ const defaultControls: ExperimentControls = {
   decay: 1.5,
   reverbMix: 0.3,
   paused: false,
+  soundEnabled: true,
 };
 
 export const ExperimentControlsContext =

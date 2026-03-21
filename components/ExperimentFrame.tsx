@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import * as Tone from 'tone';
 import LogoMark from './LogoMark';
 import { useNavigation } from '../lib/NavigationContext';
 import {
@@ -90,6 +91,24 @@ export default function ExperimentFrame({
   const [timeSignature, setTimeSignature] = useState<3 | 4>(3);
   const [decay, setDecay] = useState(1.5);
   const [reverbMix, setReverbMix] = useState(0.3);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Start AudioContext on first user interaction (required by browsers)
+  useEffect(() => {
+    const startCtx = async () => {
+      if (Tone.getContext().state !== 'running') {
+        try { await Tone.start(); } catch { /* will retry on next gesture */ }
+      }
+    };
+    document.addEventListener('click', startCtx, { once: true });
+    document.addEventListener('touchstart', startCtx, { once: true });
+    document.addEventListener('keydown', startCtx, { once: true });
+    return () => {
+      document.removeEventListener('click', startCtx);
+      document.removeEventListener('touchstart', startCtx);
+      document.removeEventListener('keydown', startCtx);
+    };
+  }, []);
 
   // Mobile detection — determined once on mount
   const [isMobile, setIsMobile] = useState(false);
@@ -236,6 +255,7 @@ export default function ExperimentFrame({
     decay,
     reverbMix,
     paused: panelOpen,
+    soundEnabled,
   };
 
   /* --------------------------------------------------------
@@ -601,6 +621,34 @@ export default function ExperimentFrame({
             ))}
 
           <div className={styles.tileSep} />
+
+          <button
+            className={`${styles.soundTile}${
+              soundEnabled ? ` ${styles.soundTileActive}` : ''
+            }`}
+            onClick={async () => {
+              if (!soundEnabled && Tone.getContext().state !== 'running') {
+                await Tone.start();
+              }
+              setSoundEnabled((s) => !s);
+            }}
+            aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
+          >
+            <svg viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              {soundEnabled ? (
+                <>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </>
+              ) : (
+                <>
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
+                </>
+              )}
+            </svg>
+          </button>
 
           <button
             className={`${styles.gearTile}${

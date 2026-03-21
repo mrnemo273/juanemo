@@ -18,6 +18,11 @@
   flex-shrink: 0;
 }
 
+/* Pinch section: prevent browser zoom fighting with pinch gesture */
+.sectionPinch {
+  touch-action: none;
+}
+
 /* ----------------------------------------------------------
    SECTION A — GENERATIVE DRIFT
    ---------------------------------------------------------- */
@@ -164,13 +169,38 @@
   line-height: 0.9;
   color: var(--color-dun);
   white-space: nowrap;
-  animation: breathe 4s ease-in-out infinite;
+  animation: breathe var(--breathe-duration, 4s) ease-in-out infinite;
 }
 
 @keyframes breathe {
   0%   { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
   50%  { font-variation-settings: 'wdth' 100, 'wght' 300, 'opsz' 80; letter-spacing: 0.02em; }
   100% { font-variation-settings: 'wdth' 151, 'wght' 900, 'opsz' 144; }
+}
+
+/* ----------------------------------------------------------
+   AMBIENT-REACTIVE COLOR SHIFT
+   ---------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .driftChar,
+  .proxChar,
+  .hoverChar,
+  .mouseWord,
+  .entranceWord,
+  .breatheWord {
+    color: var(--color-bone);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .driftChar,
+  .proxChar,
+  .hoverChar,
+  .mouseWord,
+  .entranceWord,
+  .breatheWord {
+    color: var(--color-gunmetal);
+  }
 }
 
 /* ----------------------------------------------------------
@@ -210,4 +240,3 @@
     font-size: clamp(50px, 16vw, 200px);
   }
 }
-

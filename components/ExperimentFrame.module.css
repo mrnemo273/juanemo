@@ -568,6 +568,43 @@
   stroke: var(--color-bittersweet);
 }
 
+/* Sound icon — same 40×40 tile treatment */
+.soundTile {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid rgba(214, 197, 171, 0.12);
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: all 0.2s;
+  padding: 0;
+}
+.soundTile:hover {
+  opacity: 0.6;
+  border-color: rgba(214, 197, 171, 0.25);
+}
+.soundTile svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--color-dun);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.2s;
+}
+.soundTileActive {
+  opacity: 1;
+  border-color: var(--color-bittersweet);
+}
+.soundTileActive svg {
+  stroke: var(--color-bittersweet);
+}
+
 /* ----------------------------------------------------------
    MOBILE (≤600px)
    ---------------------------------------------------------- */
