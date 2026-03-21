@@ -371,3 +371,19 @@ BREATH_DEPTH = 0.25   COLLISION_PUSH = 1.5    COLLISION_COOLDOWN = 600ms
 ### Shared utilities
 
 `noteToMidi()` and `CONSONANCE_TABLE` were added to `chordData.ts` as shared exports rather than local to Magnets, since future sections may need interval-based logic.
+
+### Mobile tuning (post-launch fix)
+
+Initial mobile orbs were too small (~28px radius) and rest distances too large (130–320px) for the smaller viewport, resulting in very few collisions. Fixed by:
+
+- **Orb radius mobile floor**: 28px → 36px (via `updateLocalOrbSizes`)
+- **REST_DIST_MIN on mobile**: 130px → 90px
+- **REST_DIST_MAX on mobile**: 320px → 200px
+- Both scale up to desktop values via viewport-width interpolation
+
+### Mobile touch: drag + pin coexistence
+
+The original spec called for tap-to-pin on mobile, but drag-to-move was missing. Now both work via a `touchDragged` flag:
+- **Touch start** → sets `grabbedIdRef` (orb follows finger)
+- **Touch move** → sets `touchDragged = true`, updates cursor position
+- **Touch end** → if `touchDragged` is false (was a tap), toggles pin; always clears grab
