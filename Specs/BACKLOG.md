@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-21 — **EXP-02D Flock built, tuned, and deployed.** Evolved significantly beyond initial boids spec into orbital leader-follower system with breathing rhythm. EXP-02 now has 4 live sections (A–D).
+2026-03-21 — **EXP-02F Freeze & Release built and shipped.** Energy circle, shockwave strum, ease-out burst, note duration variety (quarter/half/whole). 10 spec deviations — all improvements. Key discovery: varied note durations make collisions sound dramatically more musical. Backlog item J.6 created to backport this to all sections A–E.
 
 ---
 
@@ -129,6 +129,19 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 Approved by JC on 2026-03-19. Nine interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
 
+### EXP-01: Generative Typography — Upgrade (Sound + Mobile Enhancement)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| GT.1 | **Ambient Typography Audio** — per-letter Tone.js voices mapped to axis values (wght→freq, wdth→filter, opsz→reverb) | 🔵 SPEC WRITTEN | Spec: `Specs/EXP01_UPGRADE.md`. 14 audio acceptance criteria. Textural/ambient, NOT rhythmic. |
+| GT.2 | **Haptic Feedback** — subtle vibration pulses on letter shifts (A), proximity enter (B), touch sweep (D) | 🔵 SPEC WRITTEN | Android only. 10–20ms pulses. No haptic in Section C. |
+| GT.3 | **Shake-to-Reset** — shake phone to shuffle (A) or replay (E) | 🔵 SPEC WRITTEN | Acceleration > 15 m/s², 1s cooldown, "Shook!" toast. |
+| GT.4 | **Pinch-to-Optical-Size** — two-finger pinch in Section C maps to opsz axis (8–144) | 🔵 SPEC WRITTEN | Scroll wheel on desktop. Coexists with tilt for wght/wdth. |
+| GT.5 | **Stillness Reward** — hold phone still 3s in Section B → letters settle, audio converges | 🔵 SPEC WRITTEN | < 0.3 m/s² threshold. Desktop: no cursor for 5s. |
+| GT.6 | **Screen Wake Lock** — prevent screen sleep during experiment (global) | 🔵 SPEC WRITTEN | `navigator.wakeLock.request('screen')`. Re-request on visibility change. |
+| GT.7 | **Wire Section F Speed Control** — bind speed context to CSS animation-duration | 🔵 SPEC WRITTEN | Speed 1 = 8s, 5 = 4s, 10 = 1.5s. Sync audio breathing to duration. |
+| GT.8 | **Ambient-Reactive Color Shift** — dark mode/night = warm tones + triangle wave, light/day = cool + sine | 🔵 SPEC WRITTEN | CSS custom properties + audio waveform switch. Subtle, not dramatic. |
+
 ### EXP-02: Collision Changes (Jazz Harmony via Particle Collision)
 
 | # | Item | Status | Notes |
@@ -172,9 +185,11 @@ The Flock section evolved significantly from the original boids spec through ite
 - Mobile tilt steering for the leader not yet tested (gyro forces are wired but need tuning)
 - Orbit radii don't adapt to viewport size (fixed px values)
 
-| J.4c | Section E (was D): Magnets — consonance attracts, dissonance repels, chord change reshuffles relationships | 🔵 SPEC WRITTEN | Needs `noteToMidi()` + `CONSONANCE_TABLE` in chordData.ts. Letters need updating D→E |
-| J.4d | Section F (was E): Freeze & Release — tap to freeze (silence), release with velocity burst, longer freeze = bigger burst | 🔵 SPEC WRITTEN | Letters need updating E→F |
-| J.4e | Section G (was F): Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | 🔵 SPEC WRITTEN | Max 40 particles, 3-bounce lifetime. Letters need updating F→G |
+| J.4c | Section E (was D): Magnets — consonance attracts, dissonance repels, chord change reshuffles relationships | ✅ DONE | Spec: `Specs/EXP02_MAGNETS.md`. Builder deviated significantly: spring equilibrium model replaced pure attract/repel, tangential orbiting prevents dead blobs, beat-synced breathing added despite spec saying no, collision energy bursts cascade. Mobile: drag+pin coexist via `touchDragged` flag. REST_DIST mobile-tuned (90–200px vs 130–320px desktop). |
+| J.4d | Section F: Freeze & Release — tap to freeze (silence), release with velocity burst, longer freeze = bigger burst | ✅ DONE | Spec: `Specs/EXP02_FREEZE_RELEASE.md`. 10 deviations from spec — all improvements. Key additions: energy circle (replaces timer), shockwave ring with strum (plays each orb as it passes), shockwave physics push, ease-out burst, note duration variety (quarter/half/whole), auto-release at max energy. **Discovery: note duration variety is a major musical improvement — should backport to Sections A–E.** |
+| J.4e | Section G: Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | 🔵 SPEC WRITTEN | Spec: `Specs/EXP02_RAIN.md`. Builder prompt: `Specs/EXP02_RAIN_BUILDER_PROMPT.md`. Continuous emitter (not fixed 7 orbs). Max 40 particles, 3-bounce lifetime, splash rings, puddle accumulation, chord-change color wave. 21 builder realities, 27 acceptance criteria. |
+| J.5 | **Pagination tile overflow** — scrollable tiles on mobile when 6+ sections | 🔵 SPEC WRITTEN | Spec: `Specs/PAGINATION_OVERFLOW.md`. Scrollable tile group + pinned sound/gear + gradient fade + arrows. ExperimentFrame only. Bundle with Rain builder or separate task. 13 acceptance criteria. |
+| J.6 | **Note duration variety — backport to Sections A–E** | 🔲 TODO | Discovered in Freeze & Release: using quarter/half/whole notes instead of fixed 8th notes on collision makes audio dramatically more musical. `playDyadDuration` already exists in `audioEngine.ts`. Each section should call it with varied durations. Explore tying duration to collision properties (harder = longer, chord tones = longer than extensions, bigger orbs = longer sustain). Goal: make generative audio feel less like random bleeps and more like an improvising musician. |
 
 ### EXP-03: Giant Steps (Coltrane Changes via Circle of Fifths)
 
@@ -373,6 +388,7 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 
 | Date | Change | By |
 |---|---|---|
+| 2026-03-21 | **EXP-02E Magnets spec + builder prompt written.** Consonance/dissonance interval forces between all orb pairs. Visual: solid DUN lines (consonant), dashed BITTERSWEET lines (dissonant). Drag-to-override on desktop, tap-to-pin on mobile. Chord change flash (3× force line opacity, 300ms). Edge bounce (not wrapping). Adds `noteToMidi()` and `CONSONANCE_TABLE` to `chordData.ts`. 24 acceptance criteria. Spec: `Specs/EXP02_MAGNETS.md`. Builder prompt: `Specs/EXP02_MAGNETS_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
 | 2026-03-21 | **EXP-02D Flock built, tuned, and deployed.** Major evolution from boids spec — see builder notes. Orbital leader-follower physics, breathing rhythm, click-drag-shake instrument, smooth bezier flight trails. Component: `Flock.tsx` (1379 lines). Pushed to main. | Builder (JC creative direction throughout) |
 | 2026-03-20 | **EXP-02D Flock spec + builder prompt written.** Boids algorithm with separation/alignment/cohesion. Cursor leads on desktop, tilt steers on mobile. Edge wrapping (not bouncing). Pass-through collisions from Section C carried forward. 23 acceptance criteria. Spec: `Specs/EXP02_FLOCK.md`. Builder prompt: `Specs/EXP02_FLOCK_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
 | 2026-03-20 | **EXP-02C Gravity Well spec + builder prompt written.** Standalone component following PianoSplit pattern. Orbital physics with Kepler angular velocity, slingshot drag interaction (desktop), tilt-offset orbit center (mobile). 22 acceptance criteria. Spec: `Specs/EXP02_GRAVITY_WELL.md`. Builder prompt: `Specs/EXP02_GRAVITY_WELL_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
