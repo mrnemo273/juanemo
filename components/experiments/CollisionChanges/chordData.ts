@@ -97,3 +97,33 @@ export function getChordTone(index: number): 'root' | '3rd' | '5th' | '7th' | '9
   const labels: ('root' | '3rd' | '5th' | '7th' | '9th')[] = ['root', '3rd', '5th', '7th', '9th'];
   return labels[index % labels.length];
 }
+
+/** Convert note string (e.g. "C4", "Bb3") to MIDI number */
+export function noteToMidi(note: string): number {
+  const NOTES: Record<string, number> = {
+    C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11,
+  };
+  const match = note.match(/^([A-G])(#|b)?(\d)$/);
+  if (!match) return 60;
+  const [, letter, accidental, octaveStr] = match;
+  let midi = NOTES[letter] + (parseInt(octaveStr) + 1) * 12;
+  if (accidental === '#') midi++;
+  if (accidental === 'b') midi--;
+  return midi;
+}
+
+/** Consonance rating per interval (semitones mod 12). 0 = maximally dissonant, 12 = maximally consonant. */
+export const CONSONANCE_TABLE: Record<number, number> = {
+  0: 12,   // Unison / Octave
+  1: 1,    // Minor 2nd
+  2: 3,    // Major 2nd
+  3: 7,    // Minor 3rd
+  4: 8,    // Major 3rd
+  5: 9,    // Perfect 4th
+  6: 0,    // Tritone
+  7: 10,   // Perfect 5th
+  8: 5,    // Minor 6th
+  9: 6,    // Major 6th
+  10: 2,   // Minor 7th
+  11: 1,   // Major 7th
+};

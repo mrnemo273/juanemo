@@ -197,6 +197,26 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'E',
+    name: 'Magnets',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Orbs attract or repel based on the musical interval between their notes. Consonant intervals pull together, dissonant intervals push apart. Change the chord and watch every relationship reshuffle.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Drag an orb</strong> to override magnetic forces — release to let physics resume' },
+      { icon: 'eye', text: '<strong>Solid lines</strong> = consonant attraction, <strong>dashed lines</strong> = dissonant repulsion' },
+      { icon: 'refresh', text: '<strong>Pick a chord</strong> — all intervals change, orbs reorganize' },
+    ],
+    instructionsMobile: [
+      { icon: 'cursor', text: '<strong>Tap an orb</strong> to pin it in place — tap again to unpin' },
+      { icon: 'move', text: '<strong>Tilt</strong> to add gentle directional bias' },
+      { icon: 'eye', text: 'Watch consonant pairs cluster and dissonant pairs drift apart' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -208,7 +228,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock'],
+    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock', 'Magnets'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
