@@ -7,10 +7,12 @@ import PianoSplit from './PianoSplit';
 import GravityWell from './GravityWell';
 import Flock from './Flock';
 import Magnets from './Magnets';
+import FreezeRelease from './FreezeRelease';
 
 export default function CodeChordsSwitch() {
   const { activeSection } = useContext(ExperimentControlsContext);
 
+  if (activeSection === 5) return <FreezeRelease />;
   if (activeSection === 4) return <Magnets />;
   if (activeSection === 3) return <Flock />;
   if (activeSection === 2) return <GravityWell />;

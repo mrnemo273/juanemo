@@ -83,6 +83,25 @@ export function playDyad(freq1: number, freq2: number, velocity: number): void {
   );
 }
 
+/** Play a two-note dyad with a specific Tone.js duration (e.g. '4n', '2n', '1n') */
+export function playDyadDuration(freq1: number, freq2: number, velocity: number, duration: string): void {
+  if (!synth || !initialized) return;
+  const vel = Math.max(0.1, Math.min(1, velocity));
+  const now = Tone.now();
+  synth.triggerAttackRelease(
+    Tone.Frequency(freq1).toNote(),
+    duration,
+    now,
+    vel,
+  );
+  synth.triggerAttackRelease(
+    Tone.Frequency(freq2).toNote(),
+    duration,
+    now,
+    vel,
+  );
+}
+
 /** Arpeggiate a chord — play notes in sequence with stagger */
 export function playChordStrum(frequencies: number[], velocity = 0.35): void {
   if (!synth || !initialized) return;
@@ -205,6 +224,20 @@ export function stopMetronome(): void {
 /** Update metronome BPM */
 export function setMetronomeTempo(bpm: number): void {
   Tone.Transport.bpm.value = bpm;
+}
+
+/** Mute metronome output (Transport keeps running for tempo tracking) */
+export function muteMetronome(): void {
+  if (metronomeGain) {
+    metronomeGain.gain.rampTo(0, 0.05);
+  }
+}
+
+/** Unmute metronome output */
+export function unmuteMetronome(): void {
+  if (metronomeGain) {
+    metronomeGain.gain.rampTo(Tone.dbToGain(-22), 0.05);
+  }
 }
 
 /** Update metronome time signature */

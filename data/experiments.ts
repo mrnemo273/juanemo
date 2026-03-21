@@ -217,6 +217,26 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'F',
+    name: 'Freeze & Release',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Silence is music too. Freeze all motion — orbs hang in space, no sound. Release and they burst outward. The longer the silence, the bigger the burst.',
+    instructions: [
+      { icon: 'click', text: '<strong>Click anywhere</strong> or press <strong>Space</strong> to toggle freeze' },
+      { icon: 'eye', text: '<strong>Longer freeze</strong> = more dramatic release burst' },
+      { icon: 'refresh', text: '<strong>Change chords</strong> while frozen — the harmony shifts under the silence' },
+    ],
+    instructionsMobile: [
+      { icon: 'click', text: '<strong>Tap anywhere</strong> to freeze and release' },
+      { icon: 'move', text: '<strong>Tilt while frozen</strong> to aim the burst direction' },
+      { icon: 'clock', text: 'Hold the silence — watch the timer build' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -228,7 +248,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock', 'Magnets'],
+    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock', 'Magnets', 'Freeze & Release'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
