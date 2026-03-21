@@ -24,6 +24,8 @@ export interface Particle {
   angularVelocity?: number;
   angle?: number;
   targetOrbitRadius?: number;
+  // Flock leader flag
+  isLeader?: boolean;
 }
 
 export interface Chord {

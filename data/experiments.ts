@@ -177,6 +177,26 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'D',
+    name: 'Flock',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Seven orbs follow boids flocking rules — separation, alignment, cohesion. Your cursor leads the swarm. Tight clusters create dense collisions and rich chords; scattered orbs play sparse isolated notes.',
+    instructions: [
+      { icon: 'cursor', text: '<strong>Move your cursor</strong> to lead the flock' },
+      { icon: 'eye', text: '<strong>Watch clustering</strong> — tight flocks collide more, playing dense chords' },
+      { icon: 'refresh', text: '<strong>Pick a chord</strong> — orbs retune in place, flock keeps its shape' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt</strong> to steer the flock direction' },
+      { icon: 'cursor', text: '<strong>Touch</strong> to attract the swarm to your finger' },
+      { icon: 'eye', text: 'Orbs wrap around edges — watch them reappear on the opposite side' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -188,7 +208,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes', 'Piano Split', 'Gravity Well'],
+    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
