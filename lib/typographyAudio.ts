@@ -143,11 +143,11 @@ export function updateLetterVoice(
   v.gain.gain.rampTo(Tone.dbToGain(baseDb + opszGainOffset), rampTime);
 }
 
-/** Boost a voice +6 dB (proximity/hover) or restore to -30 dB */
+/** Boost a voice +12 dB (proximity/hover) or restore to -30 dB */
 export function setVoiceBoost(index: number, boost: boolean): void {
   if (!ready || index < 0 || index >= voices.length) return;
   const v = voices[index];
-  v.gain.gain.rampTo(Tone.dbToGain(boost ? -24 : -30), 0.3);
+  v.gain.gain.rampTo(Tone.dbToGain(boost ? -18 : -30), 0.15);
 }
 
 /** Set master volume in dB. Use -Infinity to mute, -12 for normal. */

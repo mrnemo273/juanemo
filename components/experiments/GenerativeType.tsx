@@ -736,18 +736,20 @@ function SectionPerCharHover() {
             hapticTick(10);
           }
 
-          // Audio: collapsed voice
+          // Audio: collapsed voice + boost
           if (audioState.enabled) {
             updateLetterVoice(i, { wght: 900, wdth: 25, opsz: 8 });
+            setVoiceBoost(i, true);
           }
         } else {
           el.style.fontVariationSettings = "'wdth' 151, 'wght' 900, 'opsz' 144";
           el.style.transform = '';
           el.style.color = '';
 
-          // Audio: restore voice
+          // Audio: restore voice + remove boost
           if (audioState.enabled) {
             updateLetterVoice(i, { wght: 900, wdth: 151, opsz: 144 });
+            setVoiceBoost(i, false);
           }
         }
       });
@@ -801,11 +803,13 @@ function SectionPerCharHover() {
       const onEnter = () => {
         if (audioState.enabled) {
           updateLetterVoice(i, { wght: 100, wdth: 25, opsz: 8 });
+          setVoiceBoost(i, true);
         }
       };
       const onLeave = () => {
         if (audioState.enabled) {
           updateLetterVoice(i, { wght: 900, wdth: 151, opsz: 144 });
+          setVoiceBoost(i, false);
         }
       };
       el.addEventListener('mouseenter', onEnter);
@@ -1059,12 +1063,12 @@ export default function GenerativeType() {
     }
   }, [activeSection]);
 
-  // Dispose audio on unmount
+  // Dispose audio on unmount — immediate to prevent overlap with other experiments
   useEffect(() => {
     return () => {
       if (audioState.initialized) {
         setMasterVolume(-Infinity);
-        setTimeout(() => disposeAudio(), 500);
+        disposeAudio();
       }
       audioState.initialized = false;
       audioState.enabled = false;
