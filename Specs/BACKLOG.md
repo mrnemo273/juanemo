@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-19 — **Stock Collage pipeline added.** 4 experiments approved (EXP-10 through EXP-13). Exquisite Search, Slice & Stack, Color Bleed, Depth Sandwich. All 🔲 TODO. Jazz pipeline (EXP-02–09) also in backlog.
+2026-03-21 — **EXP-02D Flock built, tuned, and deployed.** Evolved significantly beyond initial boids spec into orbital leader-follower system with breathing rhythm. EXP-02 now has 4 live sections (A–D).
 
 ---
 
@@ -74,6 +74,12 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 | E.9 | Data model — sections array | ✅ DONE | `sections?: string[]` on Experiment interface |
 | E.10 | Build + deploy | ✅ DONE | Zero errors, pushed to main |
 
+### Section Deep Linking — Hash-Based URL Persistence
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| DL.1 | Hash-based deep linking for experiment sections (`#B`, `#C`, etc.) | 🔵 SPEC WRITTEN | Spec: `Specs/SECTION_DEEP_LINKING.md`. Touches only `ExperimentFrame.tsx`. replaceState, case-insensitive, single-section guard. |
+
 ### ARC.4 — Theme Toggle (Carried from Phase 4)
 
 | # | Item | Status | Notes |
@@ -121,18 +127,67 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 ## Experiment Pipeline — Visual Jazz Series 🎷
 
-Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
+Approved by JC on 2026-03-19. Nine interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
 
 ### EXP-02: Collision Changes (Jazz Harmony via Particle Collision)
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| J.1 | Floating circles with chord tones — collisions trigger ii-V-I progressions | 🔵 SPEC WRITTEN | Tone.js synth. Collision = chord change. Spec: `Specs/EXP02_COLLISION_CHANGES.md` |
-| J.2 | Color-coded harmonic function (tonic/subdominant/dominant) | 🔵 SPEC WRITTEN | Each circle's color reflects its chord function. |
-| J.3 | Mobile: tilt to shift gravity, tap to spawn new tones | 🔵 SPEC WRITTEN | Gyro gravity + touch spawn. |
+| J.1 | Floating circles with chord tones — collisions trigger ii-V-I progressions | ✅ DONE | Tone.js PolySynth + triangle osc. 7 orbs per chord. Per-note colors (not per-function). Spec: `Specs/EXP02_COLLISION_CHANGES.md` |
+| J.2 | Color-coded per-note (warm coral C, sky blue D, spring green E, golden F, lavender G, rose A, mint B) | ✅ DONE | Deviated from spec: per-note colors instead of per-harmonic-function. Better visual distinction. |
+| J.3 | Mobile: tilt to shift gravity, tap to spawn new tones | ✅ DONE | Gyro gravity + touch spawn. Orb radius smaller on mobile (20–42px vs 30–65px). |
 | J.4 | Save/export 30-second loop as audio + GIF | 🔲 TODO | Deferred to polish pass — not in initial spec. |
+| J.4a0 | **Section A Tweaks:** Mobile settings push, chord dropdown, metronome, decay/reverb, responsive orbs, label fix | ✅ DONE | Spec: `Specs/EXP02_TWEAKS_A.md`. 6 tasks (T.1–T.6). Builder notes populated. |
+| J.4a1 | **Section B: Piano Split** — split-screen bass/treble clef, stereo panning, dual synths, shared metronome | ✅ DONE | Spec: `Specs/EXP02_PIANO_SPLIT.md`. Inserts after A. Existing B–F shift to C–G. |
+| J.4a | Section C (was B): Gravity Well — orbital physics, Kepler velocity, slingshot, tilt warps orbits | ✅ DONE | Spec: `Specs/EXP02_GRAVITY_WELL.md`. Builder notes: pass-through collisions, no edge bounces, no central glow, KEPLER_K=30, dashed orbit rings, mobile-specific radii. |
+| J.4b | Section D: Flock — orbital leader-follower system, breathing rhythm, click-drag-shake, smooth flight trails | ✅ DONE | Deployed 2026-03-21. Evolved significantly from initial boids spec — see builder notes below. Component: `Flock.tsx`. |
 
-### EXP-03: Walking Line (Generative Bass Line)
+**J.4b Builder Notes (EXP-02D Flock):**
+
+The Flock section evolved significantly from the original boids spec through iterative creative direction with JC. Key deviations and architecture decisions:
+
+**1. Physics: Orbital leader-follower replaced pure boids.** The initial boids implementation (separation/alignment/cohesion) caused orbs to either clump into a blob or scatter randomly — neither was musical. Through iteration, the physics was redesigned: one orb is the designated **leader** (always the root note) that wanders autonomously on smooth curves, and the other 6 orbs **orbit** it with elliptical paths at varying radii (70–195px), directions (alternating CW/CCW), and speeds. Boids forces (separation/alignment) are secondary, just preventing overlap. This creates visible swooping in-and-out motion that naturally generates cyclical collisions = rhythm.
+
+**2. Breathing flock synced to tempo.** Cohesion and separation weights oscillate with each beat via cosine curve. Downbeat → cohesion surges (orbs contract, collide, chord burst). Between beats → separation rises (orbs spread, quiet). Creates rhythmic pulse tied to metronome BPM. Only activates after first chord pick. Constants: `COHESION_WEIGHT_MIN=0.0, COHESION_WEIGHT_MAX=0.6, SEPARATION_WEIGHT_MIN=0.8, SEPARATION_WEIGHT_MAX=1.8`.
+
+**3. Leader movement: wander-circle technique.** Instead of "steer to random target" (which caused jerky direction changes), the leader uses a heading angle that slowly rotates via drifting angular velocity. Creates continuous S-curves like bird flight. Turn rate changes every 2–5s. `LEADER_MAX_STEER=0.035` ensures very gentle turning radius. When cursor is on canvas, leader gently steers toward it (followers orbit the leader, not the cursor directly). Soft edge avoidance at 18% margin.
+
+**4. Click-drag-shake interaction.** JC requested the ability to grab and shake the leader like a musical instrument. Implementation: mousedown hit-tests orbs, grabbed orb follows cursor via lerp (0.25), others orbit it. Shake detection tracks cursor velocity — when speed > 8px/frame, triggers `playDyad()` with grabbed orb + random partner, and pushes nearby orbs outward (radial impulse within 200px). 150ms cooldown. Glow ring (6px offset, 25% note color) on grabbed orb.
+
+**5. Smooth bezier flight trails.** JC requested dotted trace lines showing flight paths. Evolved through several iterations: tiny dots → colored dashed lines → DUN-colored dashed lines matching Piano Split style (`rgba(214,197,171)`, 1px, `[6,8]` dash pattern). Trail points stored as absolute canvas coordinates (60→150 max points). Rendered with `quadraticCurveTo()` through midpoints for smooth curves. NaN break markers on edge wraps prevent cross-screen artifacts while preserving trail continuity. Key bug fixed: `NaN > 2` is `false` in JS, so distance checks against NaN break markers silently killed trail recording — added explicit `isNaN()` guard.
+
+**6. Leader always root note.** Voice-leading assignment pins the leader orb to target index 0 (root) before greedy-closest-freq assigns remaining orbs. Leader is visually larger (`ORB_RADIUS_MAX * 0.75`) with a directional arrow indicator (small triangle pointing in velocity direction, 35% DUN, 8px from edge).
+
+**7. Elliptical orbits via oscillating radius.** Each orb's orbit radius oscillates sinusoidally: `baseRadius * (1 - 0.45 * sin(time * 0.0015 * speedMult + phaseOffset))`. Golden angle spacing (2.39996 rad) for phase offsets ensures no two orbs sync. Kepler-like speed factor (`sqrt(orbitRadius / distance)`) makes orbs faster at close approach. `ORBIT_DAMPING=0.993` smooths all curves.
+
+**8. Collision audio: 300ms cooldown + 30ms stagger.** Shorter cooldown than other sections (300ms vs 600ms) because dense orbital passes should create frequent layered sounds. Multiple simultaneous collisions staggered by 30ms each via `setTimeout` so dyads layer into rich chords rather than firing as one event.
+
+**9. `isLeader` field added to Particle type.** Optional boolean on the shared `types.ts` Particle interface. Only used by Flock section. Other sections unaffected.
+
+**10. Patterns carried forward from Section C.** Pass-through collisions (no physical bounce), edge wrapping (not bouncing), mono synth path, custom chord dropdown, Georgia italic chord label, spawn spring animation, viewport-responsive orb sizing, pause when settings open, metronome on first chord pick.
+
+**Known issues / future improvements:**
+- Trail rendering uses `indexOf()` for alpha calculation — O(n) per segment, could precompute indices
+- Shake detection uses raw cursor velocity, not acceleration — very fast smooth movement triggers it (could add direction-change detection)
+- Mobile tilt steering for the leader not yet tested (gyro forces are wired but need tuning)
+- Orbit radii don't adapt to viewport size (fixed px values)
+
+| J.4c | Section E (was D): Magnets — consonance attracts, dissonance repels, chord change reshuffles relationships | 🔵 SPEC WRITTEN | Needs `noteToMidi()` + `CONSONANCE_TABLE` in chordData.ts. Letters need updating D→E |
+| J.4d | Section F (was E): Freeze & Release — tap to freeze (silence), release with velocity burst, longer freeze = bigger burst | 🔵 SPEC WRITTEN | Letters need updating E→F |
+| J.4e | Section G (was F): Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | 🔵 SPEC WRITTEN | Max 40 particles, 3-bounce lifetime. Letters need updating F→G |
+
+### EXP-03: Giant Steps (Coltrane Changes via Circle of Fifths)
+
+Inspired by John Coltrane's *Giant Steps* (1959). The Coltrane substitution divides the octave into three equal parts — key centers B, G, and E♭, each a major third apart — creating the "Coltrane Triangle" on the circle of fifths. Four sections exploring different visual interpretations of this harmonic system. Shares Tone.js + canvas foundation with EXP-02 but uses a fundamentally different progression and visual language.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| GS.1 | **Section A: Coltrane Circle** — 12 keys on a circle, orbs slingshot between key centers, triangle pulses on each change | 🔲 TODO | Circle of fifths geometry. Slingshot physics between B→G→E♭. Triangle glow on resolution. |
+| GS.2 | **Section B: Three-Body Problem** — three gravity wells (one per tonal center), orbs perpetually in flight between them | 🔲 TODO | N-body physics. Tempo control = chaos dial. ~2 beats/chord at Giant Steps speed → constant motion. |
+| GS.3 | **Section C: Chromatic Bridges** — ii-V passing chords visualized as ephemeral force-field arcs between key centers | 🔲 TODO | Bridges appear 2 beats before resolution. Orbs travel along arcs, settle on arrival. Glow + dissolve. |
+| GS.4 | **Section D: Mirror Symmetry** — 3-fold rotational symmetry, each note spawns 3 mirrored orbs at 120° intervals | 🔲 TODO | 12 ÷ 3 symmetry. Mirrors align briefly on resolution (unison chord moment), then split. |
+
+### EXP-04: Walking Line (Generative Bass Line) *(was EXP-03)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -141,7 +196,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.7 | Auto-accompaniment: comping chords + ride cymbal triggered by line | 🔲 TODO | |
 | J.8 | Mobile: draw with finger, tilt for tempo rubato | 🔲 TODO | |
 
-### EXP-04: Swing Pendulums (Rhythm & Swing Feel)
+### EXP-05: Swing Pendulums (Rhythm & Swing Feel) *(was EXP-04)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -150,7 +205,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.11 | Drag to adjust individual pendulum length (polyrhythm) | 🔲 TODO | Different lengths = different periods = layered rhythms. |
 | J.12 | Mobile: tilt to shift gravity angle, tap to add/remove pendulums | 🔲 TODO | |
 
-### EXP-05: Call & Response (Interactive Improvisation)
+### EXP-06: Call & Response (Interactive Improvisation) *(was EXP-05)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -159,7 +214,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.15 | AI adapts next call based on user's response pattern | 🔲 TODO | Simple Markov or rule-based adaptation. |
 | J.16 | Mobile: swipe gestures for pitch, tap rhythm for timing | 🔲 TODO | |
 
-### EXP-06: Blue Notes (Microtonal Pitch Bending)
+### EXP-07: Blue Notes (Microtonal Pitch Bending) *(was EXP-06)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -168,7 +223,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.19 | Background chord changes on a timer, grid highlights available blue notes | 🔲 TODO | |
 | J.20 | Mobile: pressure-sensitive bend (if available) or drag distance | 🔲 TODO | |
 
-### EXP-07: The Rhythm Section (Collaborative Groove Builder)
+### EXP-08: The Rhythm Section (Collaborative Groove Builder) *(was EXP-07)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -177,7 +232,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.23 | AI auto-fills complementary parts when user edits one lane | 🔲 TODO | Rule-based jazz comping patterns. |
 | J.24 | Mobile: swipe lanes to randomize, pinch to zoom timeline | 🔲 TODO | |
 
-### EXP-08: Chord Pool (Harmonic Ripple Pond)
+### EXP-09: Chord Pool (Harmonic Ripple Pond) *(was EXP-08)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -186,7 +241,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 | J.27 | Chord palette cycles through a jazz standard progression | 🔲 TODO | User chooses when to drop each chord. |
 | J.28 | Mobile: tap to drop, tilt to shift voicing (close vs open) | 🔲 TODO | |
 
-### EXP-09: Solo Painter (Gestural Improvisation Canvas)
+### EXP-10: Solo Painter (Gestural Improvisation Canvas) *(was EXP-09)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -201,7 +256,7 @@ Approved by JC on 2026-03-19. Eight interactive experiments exploring jazz harmo
 
 Approved by JC on 2026-03-19. Four interactive experiments using free stock photography (Unsplash API) as raw material for collage. Each experiment explores a different collage technique — surrealist juxtaposition, strip recombination, color-based blending, and depth-based layering. Claude assists with curation, alignment, and composition suggestions.
 
-### EXP-10: Exquisite Search (Surrealist Exquisite Corpse)
+### EXP-11: Exquisite Search (Surrealist Exquisite Corpse) *(was EXP-10)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -212,7 +267,7 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 | C.5 | Shake mode — randomly reassign which image fills which band | 🔲 TODO | Instant variations from same 3 images. |
 | C.6 | Export composite as single image (canvas compositing with feathered seams) | 🔲 TODO | |
 
-### EXP-11: Slice & Stack (Hockney-Style Strip Collage)
+### EXP-12: Slice & Stack (Hockney-Style Strip Collage) *(was EXP-11)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -224,7 +279,7 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 | C.12 | Claude identifies "continuation opportunities" — lines/horizons that align across strips | 🔲 TODO | Suggests specific pairings. Auto-compose "best alignment" mode. |
 | C.13 | Export strip collage | 🔲 TODO | |
 
-### EXP-12: Color Bleed (Chromatic Merge)
+### EXP-13: Color Bleed (Chromatic Merge) *(was EXP-12)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -235,7 +290,7 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 | C.18 | Claude ranks photos by "bleed potential" and suggests positioning/rotation | 🔲 TODO | Preview heatmap of predicted bleed zones. |
 | C.19 | Export blended collage | 🔲 TODO | |
 
-### EXP-13: Depth Sandwich (Parallax Diorama)
+### EXP-14: Depth Sandwich (Parallax Diorama) *(was EXP-13)*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -318,6 +373,12 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 
 | Date | Change | By |
 |---|---|---|
+| 2026-03-21 | **EXP-02D Flock built, tuned, and deployed.** Major evolution from boids spec — see builder notes. Orbital leader-follower physics, breathing rhythm, click-drag-shake instrument, smooth bezier flight trails. Component: `Flock.tsx` (1379 lines). Pushed to main. | Builder (JC creative direction throughout) |
+| 2026-03-20 | **EXP-02D Flock spec + builder prompt written.** Boids algorithm with separation/alignment/cohesion. Cursor leads on desktop, tilt steers on mobile. Edge wrapping (not bouncing). Pass-through collisions from Section C carried forward. 23 acceptance criteria. Spec: `Specs/EXP02_FLOCK.md`. Builder prompt: `Specs/EXP02_FLOCK_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
+| 2026-03-20 | **EXP-02C Gravity Well spec + builder prompt written.** Standalone component following PianoSplit pattern. Orbital physics with Kepler angular velocity, slingshot drag interaction (desktop), tilt-offset orbit center (mobile). 22 acceptance criteria. Spec: `Specs/EXP02_GRAVITY_WELL.md`. Builder prompt: `Specs/EXP02_GRAVITY_WELL_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
+| 2026-03-20 | **EXP-03 Giant Steps added to pipeline.** 4 sections: Coltrane Circle, Three-Body Problem, Chromatic Bridges, Mirror Symmetry. Inspired by Coltrane Changes (B→G→E♭ triangle). New experiment — different harmonic system from EXP-02's ii-V-I. All subsequent experiment numbers bumped +1 (EXP-03–09 → EXP-04–10, collage EXP-10–13 → EXP-11–14). | Scrummaster (JC creative direction) |
+| 2026-03-20 | **Section deep linking spec written.** Hash-based URL persistence for experiment sections. `#B` in URL → loads Section B on mount. replaceState keeps Back button clean. Touches only `ExperimentFrame.tsx`. EXP-02B Piano Split marked ✅ DONE. Spec: `Specs/SECTION_DEEP_LINKING.md`. Builder prompt: `Specs/SECTION_DEEP_LINKING_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
+| 2026-03-20 | **EXP-02B Piano Split spec + builder prompt written.** New Section B: split-screen bass/treble clef piano with stereo panning, dual synths, shared metronome. Inserts after Section A. Existing sections B–F shift to C–G — backlog items updated with new letters. J.4a0 (Section A Tweaks) marked ✅ DONE (builder notes populated). Spec: `Specs/EXP02_PIANO_SPLIT.md`. Builder prompt: `Specs/EXP02_PIANO_SPLIT_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
 | 2026-03-17 | Initial backlog — Phases 1–5 from original sprint plan | Scrummaster |
 | 2026-03-17 | Phases 1–3 complete. Hero V2, V3 complete. | Scrummaster |
 | 2026-03-18 | Hero V2 + V3 complete. Generative per-character drift, scaleXY, mobile caps. | Scrummaster |
@@ -330,6 +391,9 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 | 2026-03-19 | **Phase H complete and deployed.** `useDeviceOrientation` hook with iOS permission, lerp smoothing, normalized output. Sections B+C: gyro tilt → virtual cursor / axis mapping, touch fallback on denial. Section D: touch-sweep with 40px radius, CSS `:hover` scoped to `(hover: hover) and (pointer: fine)`. Platform-aware hint/instructions via `hintMobile`/`instructionsMobile` on SectionConfig. Hint visible on mobile (B.20 resolved) via `flex-wrap`, 44px tap targets. Deviation: `getInteractionMode()` not standalone — each section uses `modeRef` pattern instead. No new backlog items. | Scrummaster (from Phase H builder notes) |
 | 2026-03-19 | **Phase H spec written.** Mobile interaction: gyroscope for sections B+C (proximity+axes), touch-sweep for section D (hover). `useDeviceOrientation` hook with iOS permission flow, smoothing, normalization. Platform-aware hint text + instructions. Touch fallback if gyro denied. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Phase G complete and deployed.** 6-row grid, expanding settings panel, floating meta labels, per-section controls/instructions, 40×40px pagination+gear strip. BottomSheet deleted. `replayKey` added to ExperimentControlsContext for Section E Replay. `sectionConfigs` array in `data/experiments.ts`. No significant deviations from spec/prototype. Known issue: DrawerNav mobile trigger overlaps tile A at narrow viewports (Phase F issue, not G regression). New backlog: B.17–B.19. | Scrummaster (from Phase G builder notes) |
+| 2026-03-20 | **EXP-02A Tweaks spec + builder prompt written.** 6 refinements to Section A: T.1 mobile settings push (ExperimentFrame), T.2 chord selector dropdown (replaces click-to-spawn), T.3 jazz metronome (Tone.Transport, swing, brush synth), T.4 decay/reverb controls, T.5 viewport-responsive orb sizing, T.6 section label fix ('1'→'A'). Spec: `Specs/EXP02_TWEAKS_A.md`. Builder prompt: `Specs/EXP02_TWEAKS_A_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
+| 2026-03-20 | **EXP-02 Sections B–F spec + builder prompt written.** 5 new physics variations: Gravity Well (orbit), Flock (boids), Magnets (consonance/dissonance), Freeze & Release (silence dynamics), Rain (emitter). Extends single-section to 6-section experiment. Spec: `Specs/EXP02_SECTIONS_BF.md`. | Scrummaster (JC creative direction) |
+| 2026-03-19 | **EXP-02 Collision Changes complete and deployed.** First audio experiment. Tone.js v15.1.x with PolySynth+reverb+delay. 7 orbs per chord, per-note colors, flat fill+vibrant stroke style. Physics: G=0.02, damping=0.9998, bounce=0.7, cooldown=600ms. Voice-leading via greedy closest-freq, 500ms lerp. Auto-removal at >8 orbs. Known: single-section experiments don't get hint bar from ExperimentFrame; `click` icon falls back to `eye`. | Scrummaster (from EXP-02 builder notes) |
 | 2026-03-19 | **EXP-02 Collision Changes spec + builder prompt written.** Full spec with physics simulation, Tone.js audio engine, ii-V-I-IV progression, voice-leading, gyro interaction, canvas rendering. 12 task items (EXP02.1–EXP02.12), 16 acceptance criteria. Builder prompt with physics tuning guide. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Stock Collage pipeline added.** 4 experiments approved by JC from R5 brainstorm. EXP-10 through EXP-13 added to backlog (C.1–C.25). Unsplash API for stock photos. Techniques: exquisite corpse, strip collage, color-based bleed (WebGL), depth diorama (MiDaS ML). Source: `prototypes/experiment-ideas-r5.html`. | Scrummaster (JC creative direction) |
 | 2026-03-19 | **Visual Jazz pipeline added.** 8 experiments approved by JC from R3 brainstorm. EXP-02 through EXP-09 added to backlog (J.1–J.32). All use Tone.js for Web Audio, mobile-first interaction (gyro+touch). Jazz theory concepts: ii-V-I, walking bass, swing feel, call & response, blue notes, chord voicings, gestural improvisation. Source: `prototypes/experiment-ideas-r3.html`. | Scrummaster (JC creative direction) |

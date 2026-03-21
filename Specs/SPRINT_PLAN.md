@@ -239,9 +239,19 @@ The generative typography system, design tokens, and font infrastructure carry f
 | EXP-08 | Chord Pool | Harmonic interference | Tap to drop chords in a ripple pond |
 | EXP-09 | Solo Painter | Gestural improvisation | Freeform painting = melodic line over backing track |
 
-**Build order:** TBD — JC to pick first experiment to spec.
+**Build order:** EXP-02 first (establishes Tone.js pattern). Remaining TBD.
 
-### Status: 🔲 TODO (pipeline approved, no experiments started)
+### What Was Built — EXP-02 Code Chords (4 Sections Live) ✅
+
+**Section A — Collision Changes:** Tone.js v15.1.x, PolySynth + FeedbackDelay + Reverb. 7 orbs per chord, per-note colors, G=0.02, damping=0.9998, bounce=0.7. Voice-leading via greedy closest-freq, 500ms lerp.
+
+**Section B — Piano Split:** Split-screen bass/treble clef, stereo panning via dual PolySynths + Panners. Shared metronome. Horizontal divider (desktop) / vertical (mobile).
+
+**Section C — Gravity Well:** Orbital physics with Kepler angular velocity. Pass-through collisions (no bounce — jitter fix). Slingshot drag on desktop, tilt-offset orbits on mobile. Dashed orbit rings.
+
+**Section D — Flock (2026-03-21):** Orbital leader-follower system (evolved from boids spec). Leader = root note, wanders on smooth bezier curves. 6 followers orbit with elliptical paths (varying radius/direction/speed). Breathing rhythm synced to tempo (cohesion pulses on downbeat). Click-drag-shake interaction (shake triggers `playDyad` + radial push). Smooth dashed bezier flight trails (DUN color, `[6,8]` dash, `quadraticCurveTo`). 300ms collision cooldown with 30ms stagger for layered sounds. See `BACKLOG.md` J.4b builder notes for full architecture details.
+
+### Status: EXP-02 Sections A–D ✅ COMPLETE | Sections E–G 🔵 SPEC WRITTEN | EXP-03–09 🔲 TODO
 
 ---
 
