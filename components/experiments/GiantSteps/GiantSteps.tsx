@@ -7,7 +7,8 @@ import { useGiantStepsProgression } from './useGiantStepsProgression';
 import { GIANT_STEPS_PROGRESSION, KEY_CENTER_COLORS, CIRCLE_OF_FIFTHS, KEY_CENTER_ANGLES } from './giantStepsChordData';
 import type { KeyCenter, Shockwave } from './types';
 import * as Tone from 'tone';
-import { initAudio, playNote, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeVolume, stopMetronome } from '../CollisionChanges/audioEngine';
+import { initAudio, isAudioReady, dispose, startMetronome, setMetronomeTempo, setMetronomeVolume, stopMetronome } from '../CollisionChanges/audioEngine';
+import { initSaxEngine, playSaxNote, isSaxReady, setSaxDecay, setSaxReverb, disposeSax } from './saxEngine';
 import styles from './GiantSteps.module.css';
 
 const MOBILE_BREAKPOINT = 600;
@@ -130,6 +131,7 @@ export default function GiantSteps() {
     audioStartingRef.current = true;
     try {
       await initAudio();
+      initSaxEngine();
       startMetronome(bpmRef.current, 4);
       setMetronomeVolume(-30);
       setAudioStarted(true);
@@ -183,7 +185,7 @@ export default function GiantSteps() {
      with vertex pulse at each note
      -------------------------------------------------------- */
   const playTriadSequence = useCallback((chord: typeof GIANT_STEPS_PROGRESSION[0]) => {
-    if (!controlsRef.current.soundEnabled || !isAudioReady()) return;
+    if (!controlsRef.current.soundEnabled || !isSaxReady()) return;
 
     // Clear any pending note timers
     for (const t of noteTimersRef.current) clearTimeout(t);
@@ -198,7 +200,7 @@ export default function GiantSteps() {
     for (let i = 0; i < 3; i++) {
       const timer = setTimeout(() => {
         const freq = chord.frequencies[noteIndices[i]];
-        playNote(freq, 0.9);
+        playSaxNote(freq / 2, 0.6); // drop an octave — tenor sax range
         // Pulse vertex
         vertexScaleRef.current[i] = 2.0;
         // Shockwave at this note's position on the circle
@@ -249,8 +251,8 @@ export default function GiantSteps() {
   }, [progression, playTriadSequence]);
 
   // Decay & reverb controls
-  useEffect(() => { setDecay(controls.decay); }, [controls.decay]);
-  useEffect(() => { setReverbMix(controls.reverbMix); }, [controls.reverbMix]);
+  useEffect(() => { setSaxDecay(controls.decay); }, [controls.decay]);
+  useEffect(() => { setSaxReverb(controls.reverbMix); }, [controls.reverbMix]);
 
   /* --------------------------------------------------------
      Interaction: mouse + touch
@@ -497,6 +499,7 @@ export default function GiantSteps() {
     return () => {
       stopMetronome();
       dispose();
+      disposeSax();
       for (const t of noteTimersRef.current) clearTimeout(t);
     };
   }, []);
