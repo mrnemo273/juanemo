@@ -2,10 +2,12 @@ import { experiments } from '@/data/experiments';
 import ExperimentFrame from '@/components/ExperimentFrame';
 import GenerativeType from '@/components/experiments/GenerativeType';
 import CodeChordsSwitch from '@/components/experiments/CollisionChanges/CodeChordsSwitch';
+import GiantStepsSwitch from '@/components/experiments/GiantSteps/GiantStepsSwitch';
 import { notFound } from 'next/navigation';
 
 // Map slugs to experiment components
 const experimentComponents: Record<string, React.ComponentType> = {
+  'giant-steps': GiantStepsSwitch,
   'code-chords': CodeChordsSwitch,
   'generative-type': GenerativeType,
 };

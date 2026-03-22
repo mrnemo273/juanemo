@@ -259,7 +259,41 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
   },
 ];
 
+export const giantStepsSectionConfigs: SectionConfig[] = [
+  {
+    letter: 'A',
+    name: 'Coltrane Circle',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'The circle of fifths rendered as 12 key points. Seven orbs orbit the active key center. When a Coltrane Change fires, orbs slingshot across the diameter to the new center. An equilateral triangle connecting B, G, and E♭ pulses on each key change.',
+    instructions: [
+      { icon: 'move-v', text: '<strong>Mouse Y</strong> controls tempo (top = 80 BPM, bottom = 320 BPM)' },
+      { icon: 'cursor', text: '<strong>Cursor</strong> gently pulls the nearest orb' },
+      { icon: 'click', text: '<strong>Click/tap</strong> to spawn a burst of 3 extra orbs' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt forward/back</strong> controls tempo (flat = slow, tilted = fast)' },
+      { icon: 'move', text: '<strong>Tilt sideways</strong> adds wind to all orbs' },
+      { icon: 'click', text: '<strong>Tap</strong> to spawn a burst of 3 extra orbs' },
+    ],
+    controls: ['tempo', 'decay', 'reverb'],
+  },
+];
+
 export const experiments: Experiment[] = [
+  {
+    slug: 'giant-steps',
+    number: '03',
+    name: 'Giant Steps',
+    description: 'Coltrane Changes on the circle of fifths',
+    longDescription:
+      'Inspired by John Coltrane\'s Giant Steps (1959). The Coltrane substitution divides the octave into three equal parts — key centers B, G, and E♭. Seven orbs orbit the active key center and slingshot across when the harmony shifts. Mouse Y controls tempo from 80 to 320 BPM.',
+    publishedDate: 'March 2026',
+    sections: ['Coltrane Circle', 'Three-Body Problem', 'Chromatic Bridges', 'Mirror Symmetry'],
+    sectionConfigs: giantStepsSectionConfigs,
+  },
   {
     slug: 'code-chords',
     number: '02',
