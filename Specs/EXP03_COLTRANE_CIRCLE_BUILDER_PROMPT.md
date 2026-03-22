@@ -734,6 +734,8 @@ See `Specs/EXP03_GIANT_STEPS.md` — **18 criteria** (GS.A.1–GS.A.18).
 | 7 | Trail afterimages during slingshot | No trails (no orbs to trail) | N/A — orbs were removed. |
 | 8 | Tap/click spawns burst of 3 orbs | Tap/click starts audio context only | No orbs to spawn. |
 | 9 | Metronome at default volume | Metronome lowered to -30 dB, note velocity raised to 0.9 | On mobile speakers, metronome was drowning out the chord tones. |
+| 10 | Shared FMSynth audio engine | Dedicated sax engine (`saxEngine.ts`) with gritty tenor sax tone | Coltrane was a sax player — the tone should match. Fat detuned sawtooth → distortion (reed buzz) → nasal resonance peak at 900 Hz → dark lowpass → room delay → reverb. Notes dropped an octave into tenor range. |
+| 11 | Sound toggle button (on/off) | Volume slider popup — click speaker icon, vertical slider appears above | On/off was too coarse. Vertical popup saves space on mobile. Global change across all experiments — added `volume` to `ExperimentControls` context, wired to `Tone.getDestination().volume`. |
 
 ### Key Implementation Details
 
@@ -741,6 +743,8 @@ See `Specs/EXP03_GIANT_STEPS.md` — **18 criteria** (GS.A.1–GS.A.18).
 - **Smooth angular lerp:** Triangle vertices lerp at speed 0.18 with shortest-path wrapping (if diff > 180°, go the short way around). Vertices sorted by angle before drawing to prevent line crossings.
 - **Note-to-angle mapping:** `NOTE_TO_ANGLE` lookup table maps pitch classes to circle-of-fifths positions. `normalizePitch()` converts display names (E♭ → Eb, F♯ → F#) for set comparison.
 - **`setMetronomeVolume(db)`** added to shared audioEngine.ts — lets each experiment set its own metronome level without changing the default for Code Chords.
+- **Dedicated sax engine:** `saxEngine.ts` — fat detuned sawtooth → distortion (0.25, 40% wet) for reed buzz → peaking EQ at 900 Hz (Q=3, +8 dB) for nasal honk → lowpass at 1400 Hz (-24 dB/oct) → short room delay (120ms) → medium reverb (2.5s, 28% wet). Notes played at `freq / 2` to drop into tenor sax range.
+- **Volume slider popup:** Click speaker icon → vertical slider popup appears above. `volume` (0–1) added to `ExperimentControls` context, synced to `Tone.getDestination().volume` via `20 * Math.log10(volume)` dB conversion. Slider at 0 auto-mutes, dragging up auto-unmutes. Click outside dismisses.
 
 ### For Future Section Builders
 

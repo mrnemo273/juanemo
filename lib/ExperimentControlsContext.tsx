@@ -16,6 +16,7 @@ export interface ExperimentControls {
   reverbMix: number;    // reverb wet 0–1
   paused: boolean;      // true when settings panel is open
   soundEnabled: boolean; // true when sound toggle is on
+  volume: number;       // master volume 0–1
 }
 
 const defaultControls: ExperimentControls = {
@@ -30,6 +31,7 @@ const defaultControls: ExperimentControls = {
   reverbMix: 0.3,
   paused: false,
   soundEnabled: true,
+  volume: 0.8,
 };
 
 export const ExperimentControlsContext =

@@ -605,6 +605,69 @@
   stroke: var(--color-bittersweet);
 }
 
+/* Volume control — icon with vertical popup slider */
+.volumeControl {
+  position: relative;
+}
+
+.volumePopup {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(31, 38, 39, 0.92);
+  border: 1px solid rgba(214, 197, 171, 0.12);
+  border-radius: 8px;
+  padding: 10px 6px;
+  width: 32px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: volumeFadeIn 0.15s ease;
+}
+
+@keyframes volumeFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 3px;
+  background: rgba(214, 197, 171, 0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transform: rotate(-90deg);
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-dun, #D6C5AB);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-dun, #D6C5AB);
+  border: none;
+  cursor: pointer;
+}
+
 /* ----------------------------------------------------------
    MOBILE (≤600px)
    ---------------------------------------------------------- */

@@ -693,3 +693,4 @@ Each section is a standalone `.tsx` file. They can be built in parallel by diffe
 |------|-------|
 | 2026-03-21 | Initial spec. Full 26-chord progression, 4 sections, builder realities from Code Chords. |
 | 2026-03-22 | Section A (Coltrane Circle) shipped. No orbs — triangle-only visualization with dynamic chord shapes. BPM slider replaces dropdown + mouse-Y. Staggered ascending note sequence. Shockwaves at note positions. |
+| 2026-03-22 | Dedicated sax engine for Giant Steps — gritty tenor tone with reed distortion + nasal resonance. Sound toggle replaced with vertical volume slider popup (global, all experiments). |

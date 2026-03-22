@@ -92,6 +92,9 @@ export default function ExperimentFrame({
   const [decay, setDecay] = useState(1.5);
   const [reverbMix, setReverbMix] = useState(0.3);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [volume, setVolume] = useState(0.8);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumeRef = useRef<HTMLDivElement>(null);
 
   // Start AudioContext on first user interaction (required by browsers)
   useEffect(() => {
@@ -109,6 +112,24 @@ export default function ExperimentFrame({
       document.removeEventListener('keydown', startCtx);
     };
   }, []);
+
+  // Close volume popup on click outside
+  useEffect(() => {
+    if (!volumeOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (volumeRef.current && !volumeRef.current.contains(e.target as Node)) {
+        setVolumeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [volumeOpen]);
+
+  // Sync volume to Tone.js master output
+  useEffect(() => {
+    const db = volume > 0 ? 20 * Math.log10(volume) : -Infinity;
+    Tone.getDestination().volume.rampTo(db, 0.05);
+  }, [volume]);
 
   // Mobile detection — determined once on mount
   const [isMobile, setIsMobile] = useState(false);
@@ -256,6 +277,7 @@ export default function ExperimentFrame({
     reverbMix,
     paused: panelOpen,
     soundEnabled,
+    volume,
   };
 
   /* --------------------------------------------------------
@@ -622,33 +644,53 @@ export default function ExperimentFrame({
 
           <div className={styles.tileSep} />
 
-          <button
-            className={`${styles.soundTile}${
-              soundEnabled ? ` ${styles.soundTileActive}` : ''
-            }`}
-            onClick={async () => {
-              if (!soundEnabled && Tone.getContext().state !== 'running') {
-                await Tone.start();
-              }
-              setSoundEnabled((s) => !s);
-            }}
-            aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
-          >
-            <svg viewBox="0 0 24 24">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-              {soundEnabled ? (
-                <>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                </>
-              ) : (
-                <>
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </>
-              )}
-            </svg>
-          </button>
+          <div className={styles.volumeControl} ref={volumeRef}>
+            <button
+              className={`${styles.soundTile}${
+                soundEnabled ? ` ${styles.soundTileActive}` : ''
+              }`}
+              onClick={async () => {
+                if (Tone.getContext().state !== 'running') {
+                  try { await Tone.start(); } catch { /* noop */ }
+                }
+                setVolumeOpen((v) => !v);
+              }}
+              aria-label="Volume"
+            >
+              <svg viewBox="0 0 24 24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                {soundEnabled ? (
+                  <>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </>
+                )}
+              </svg>
+            </button>
+            {volumeOpen && (
+              <div className={styles.volumePopup}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={Math.round(volume * 100)}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10) / 100;
+                    setVolume(v);
+                    if (v > 0 && !soundEnabled) setSoundEnabled(true);
+                    if (v === 0) setSoundEnabled(false);
+                  }}
+                  className={styles.volumeSlider}
+                  aria-label="Volume"
+                />
+              </div>
+            )}
+          </div>
 
           <button
             className={`${styles.gearTile}${
