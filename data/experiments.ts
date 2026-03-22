@@ -237,6 +237,26 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
   },
+  {
+    letter: 'G',
+    name: 'Rain',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Notes fall like rain. Each drop sounds on landing. Control the density — drizzle for a ballad, downpour for uptempo. Chord changes color the falling waves.',
+    instructions: [
+      { icon: 'move-v', text: '<strong>Mouse Y</strong> controls rain density (top = drizzle, bottom = downpour)' },
+      { icon: 'cursor', text: '<strong>Mouse X</strong> adds subtle wind direction' },
+      { icon: 'refresh', text: '<strong>Chord changes</strong> color new drops — watch the wave shift down' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt forward</strong> for heavy rain, level for drizzle' },
+      { icon: 'move', text: '<strong>Tilt sideways</strong> for wind direction' },
+      { icon: 'click', text: '<strong>Tap</strong> for a burst of drops' },
+    ],
+    controls: ['tempo', 'timeSignature', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
@@ -248,7 +268,7 @@ export const experiments: Experiment[] = [
     longDescription:
       'Glowing orbs float in zero gravity — each one a note in a jazz chord. When they collide, both notes ring out. The chord changes cycle through a classic ii-V-I-IV progression. Tilt your phone to shift gravity and conduct the collisions.',
     publishedDate: 'March 2026',
-    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock', 'Magnets', 'Freeze & Release'],
+    sections: ['Collision Changes', 'Piano Split', 'Gravity Well', 'Flock', 'Magnets', 'Freeze & Release', 'Rain'],
     sectionConfigs: codeChordsSectionConfigs,
   },
   {
