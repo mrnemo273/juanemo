@@ -240,6 +240,13 @@ export function unmuteMetronome(): void {
   }
 }
 
+/** Set metronome volume in dB (default is -22) */
+export function setMetronomeVolume(db: number): void {
+  if (metronomeGain) {
+    metronomeGain.gain.rampTo(Tone.dbToGain(db), 0.05);
+  }
+}
+
 /** Update metronome time signature */
 export function setMetronomeTimeSignature(ts: 3 | 4): void {
   metronomeTS = ts;

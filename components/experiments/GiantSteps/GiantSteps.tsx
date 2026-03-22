@@ -7,7 +7,7 @@ import { useGiantStepsProgression } from './useGiantStepsProgression';
 import { GIANT_STEPS_PROGRESSION, KEY_CENTER_COLORS, CIRCLE_OF_FIFTHS, KEY_CENTER_ANGLES } from './giantStepsChordData';
 import type { KeyCenter, Shockwave } from './types';
 import * as Tone from 'tone';
-import { initAudio, playNote, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, stopMetronome } from '../CollisionChanges/audioEngine';
+import { initAudio, playNote, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeVolume, stopMetronome } from '../CollisionChanges/audioEngine';
 import styles from './GiantSteps.module.css';
 
 const MOBILE_BREAKPOINT = 600;
@@ -131,6 +131,7 @@ export default function GiantSteps() {
     try {
       await initAudio();
       startMetronome(bpmRef.current, 4);
+      setMetronomeVolume(-30);
       setAudioStarted(true);
     } catch {
       audioStartingRef.current = false;
@@ -197,7 +198,7 @@ export default function GiantSteps() {
     for (let i = 0; i < 3; i++) {
       const timer = setTimeout(() => {
         const freq = chord.frequencies[noteIndices[i]];
-        playNote(freq, 0.35);
+        playNote(freq, 0.9);
         // Pulse vertex
         vertexScaleRef.current[i] = 2.0;
         // Shockwave at this note's position on the circle
