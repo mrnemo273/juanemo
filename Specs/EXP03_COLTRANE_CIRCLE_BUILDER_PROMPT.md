@@ -719,12 +719,32 @@ See `Specs/EXP03_GIANT_STEPS.md` — **18 criteria** (GS.A.1–GS.A.18).
 
 ---
 
-## Builder Notes
-
-*(To be filled in by builder.)*
+## Builder Notes (shipped 2026-03-22)
 
 ### Deviations
 
 | # | Spec Said | Builder Did | Why |
 |---|-----------|-------------|-----|
-| | | | |
+| 1 | 7 orbiting orbs with slingshot physics | No orbs — triangle-only visualization | Cleaner and more legible. The triangle vertices (root, 3rd, 7th) ARE the visual, with dots that pulse when each note plays. |
+| 2 | Static equilateral Coltrane triangle (B-G-E♭) | Dynamic triangle connecting root, 3rd, 7th of *current chord* | Different triangle shapes for maj7/dom7/min7 — the geometry IS the voicing. Much more interesting than a static triangle. |
+| 3 | Mouse-Y-to-tempo + chord dropdown | BPM slider (80–320 range input) | Dropdown was useless since progression auto-advances. Mouse-Y felt arbitrary. Slider is more intuitive. Mobile still uses gyro beta. |
+| 4 | Chord strum on key change | Staggered ascending note sequence (root → 3rd → 7th) on every chord | Feels like a scale. Each vertex pulses (scale 2.0 → 1.0 decay) when its note sounds. |
+| 5 | Shockwave rings only on key center changes at B/G/E♭ | Shockwave rings at each note's position, staggered with audio | Ripples follow the triangle vertices, not fixed positions. Much more dynamic. |
+| 6 | B, G, E♭ labels always highlighted | Only the 3 notes in the current chord triangle light up | Labels change with each chord, colored to match key center. Rest stay dim. |
+| 7 | Trail afterimages during slingshot | No trails (no orbs to trail) | N/A — orbs were removed. |
+| 8 | Tap/click spawns burst of 3 orbs | Tap/click starts audio context only | No orbs to spawn. |
+| 9 | Metronome at default volume | Metronome lowered to -30 dB, note velocity raised to 0.9 | On mobile speakers, metronome was drowning out the chord tones. |
+
+### Key Implementation Details
+
+- **Variable beat durations:** Tonic chords on bars 3/7/9/11/13/15 last 4 beats; all others last 2. Progression hook uses `chord.beats` field: `(chord.beats * 60000) / bpm`.
+- **Smooth angular lerp:** Triangle vertices lerp at speed 0.18 with shortest-path wrapping (if diff > 180°, go the short way around). Vertices sorted by angle before drawing to prevent line crossings.
+- **Note-to-angle mapping:** `NOTE_TO_ANGLE` lookup table maps pitch classes to circle-of-fifths positions. `normalizePitch()` converts display names (E♭ → Eb, F♯ → F#) for set comparison.
+- **`setMetronomeVolume(db)`** added to shared audioEngine.ts — lets each experiment set its own metronome level without changing the default for Code Chords.
+
+### For Future Section Builders
+
+- The shared infrastructure (chord data, progression hook, switch, experiment entry) is all in place. Future sections (B/C/D) only need to create their own `.tsx` component and uncomment the import in `GiantStepsSwitch.tsx`.
+- `useGiantStepsProgression` provides `onChordChange` and `onKeyChange` callbacks, `setBpm`, `start`, `stop`, `jumpToChord`. Use `onChordChange` for per-chord visuals, `onKeyChange` for key-center-level events.
+- The `giantStepsChordData.ts` has everything: 26-chord progression with `beats` field, `KEY_CENTER_COLORS`, `CIRCLE_OF_FIFTHS` positions, `KEY_CENTER_ANGLES`.
+- Consider whether orbs add value to your section. They were removed from Section A because the triangle was sufficient. Sections B (Three-Body) and D (Mirror Symmetry) are explicitly orb-based, so they make sense there.
