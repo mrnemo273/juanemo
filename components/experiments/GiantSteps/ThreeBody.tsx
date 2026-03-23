@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
 import { useGiantStepsProgression } from './useGiantStepsProgression';
-import { CIRCLE_OF_FIFTHS, KEY_CENTER_COLORS, KEY_CENTER_ANGLES } from './giantStepsChordData';
+import { CIRCLE_OF_FIFTHS, KEY_CENTER_COLORS, KEY_CENTER_ANGLES, GIANT_STEPS_PROGRESSION } from './giantStepsChordData';
 import type { KeyCenter, Shockwave } from './types';
 import * as Tone from 'tone';
 import { initAudio, dispose, startMetronome, setMetronomeTempo, setMetronomeVolume, stopMetronome } from '../CollisionChanges/audioEngine';
@@ -181,6 +181,9 @@ export default function ThreeBody() {
   const chordFlashRef = useRef(0);
   // Mobile gyro rotation offset (added to all well targets)
   const gyroRotationRef = useRef(0);
+  // Track cumulative rotation for chord advancement on mobile
+  const lastGyroChordAngleRef = useRef(0);
+  const mobileChordIndexRef = useRef(0);
   const bpmRef = useRef(160);
   // Current chord tones as circle-of-fifths indices (for harmonic filtering)
   const chordToneIndicesRef = useRef<Set<number>>(new Set([5, 7, 9, 4])); // Bmaj7: B D# F# A#
@@ -402,13 +405,56 @@ export default function ThreeBody() {
       if (w === 0 || h === 0) { rafRef.current = requestAnimationFrame(loop); return; }
       if (controlsRef.current.paused) { rafRef.current = requestAnimationFrame(loop); return; }
 
-      // Mobile gyro: tilt rotates the triad around the circle
+      // Mobile gyro: tilt rotates the triad + advances chord progression
       if (isMobile) {
         const g = gyroRef.current;
-        // Always read gyro values — permission checked at toast time
-        // gammaNorm: 0 (left tilt) to 1 (right tilt), 0.5 = level
-        // Map to ±180° rotation: (0.5 → 0°, 0 → -180°, 1 → +180°)
-        gyroRotationRef.current = (g.gammaNorm - 0.5) * 360;
+        const newRotation = (g.gammaNorm - 0.5) * 360;
+        gyroRotationRef.current = newRotation;
+
+        // Advance chord when rotation crosses 30° boundaries (one circle-of-fifths step)
+        const angleDiff = newRotation - lastGyroChordAngleRef.current;
+        if (Math.abs(angleDiff) >= 30) {
+          const steps = Math.floor(Math.abs(angleDiff) / 30);
+          const direction = angleDiff > 0 ? 1 : -1;
+          lastGyroChordAngleRef.current += steps * 30 * direction;
+
+          // Advance/retreat through progression
+          const total = GIANT_STEPS_PROGRESSION.length;
+          mobileChordIndexRef.current = ((mobileChordIndexRef.current + steps * direction) % total + total) % total;
+          const chord = GIANT_STEPS_PROGRESSION[mobileChordIndexRef.current];
+
+          // Update chord name + flash
+          chordNameRef.current = chord.name;
+          chordFlashRef.current = performance.now();
+          activeKeyCenterRef.current = chord.keyCenter;
+
+          // Compute new well targets from chord tones
+          const noteIndices = [0, 1, 3];
+          const newTargets = noteIndices.map(ni => {
+            const idx = noteToCircleIndex(chord.notes[ni]);
+            return idx >= 0 ? CIRCLE_OF_FIFTHS[idx].angle : 0;
+          });
+          wellTargetAnglesRef.current = [...newTargets];
+          wellFinalTargetsRef.current = [...newTargets];
+
+          // Update chord tone filtering
+          const indices = new Set<number>();
+          for (const note of chord.notes) {
+            const idx = noteToCircleIndex(note);
+            if (idx >= 0) indices.add(idx);
+          }
+          chordToneIndicesRef.current = indices;
+
+          // Play bass root on chord change
+          if (controlsRef.current.soundEnabled && isSaxReady()) {
+            const bassFreq = BASS_FREQUENCIES[chord.keyCenter];
+            if (bassFreq) playSaxNote(bassFreq, 0.45, '2n');
+          }
+
+          // Pulse wells
+          const keys: KeyCenter[] = ['B', 'G', 'Eb'];
+          keys.forEach(k => { wellPulseRef.current[k] = 0.5; });
+        }
       }
 
       const cx = w / 2;
@@ -772,16 +818,16 @@ export default function ThreeBody() {
       ctx.fillStyle = `rgba(214, 197, 171, ${flashAlpha})`;
       ctx.fillText(chordNameRef.current, cx, cy);
 
-      // 8. BPM indicator + gyro debug on mobile
-      ctx.font = '10px "DM Sans", sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillStyle = 'rgba(214, 197, 171, 0.25)';
-      ctx.fillText(`${bpmRef.current} BPM`, 12, h - 12);
+      // 8. Gyro debug on mobile (top-left, stacked)
       if (isMobile) {
         const g = gyroRef.current;
-        ctx.fillStyle = 'rgba(214, 197, 171, 0.5)';
-        ctx.fillText(`gyro: γ=${g.gammaNorm.toFixed(3)} rot=${gyroRotationRef.current.toFixed(1)}° perm=${g.permissionState}`, 12, h - 26);
+        ctx.font = '10px "DM Sans", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'rgba(214, 197, 171, 0.4)';
+        ctx.fillText(`γ ${g.gammaNorm.toFixed(3)}`, 12, 12);
+        ctx.fillText(`rot ${gyroRotationRef.current.toFixed(1)}°`, 12, 24);
+        ctx.fillText(`${g.permissionState}`, 12, 36);
       }
 
       rafRef.current = requestAnimationFrame(loop);

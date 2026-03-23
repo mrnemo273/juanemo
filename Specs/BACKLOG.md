@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-21 — **EXP-02F Freeze & Release built and shipped.** Energy circle, shockwave strum, ease-out burst, note duration variety (quarter/half/whole). 10 spec deviations — all improvements. Key discovery: varied note durations make collisions sound dramatically more musical. Backlog item J.6 created to backport this to all sections A–E.
+2026-03-22 — **GS.1 Coltrane Circle ✅ DONE.** 11 deviations: no orbs (dynamic chord triangle), custom sax engine, staggered triads, BPM slider, volume popup (global), metronome volume control. Shared infra in place — B/C/D ready for builders.
 
 ---
 
@@ -127,20 +127,20 @@ All previous phases built the foundation that the V2.0 architecture builds on. T
 
 ## Experiment Pipeline — Visual Jazz Series 🎷
 
-Approved by JC on 2026-03-19. Nine interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
+Approved by JC on 2026-03-19. Twelve interactive experiments exploring jazz harmony, rhythm, and improvisation through visual interaction and Web Audio (Tone.js). Each experiment maps jazz theory concepts to collision, physics, or gestural interaction patterns. Mobile-first (gyro + touch), with mouse support on desktop.
 
 ### EXP-01: Generative Typography — Upgrade (Sound + Mobile Enhancement)
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| GT.1 | **Ambient Typography Audio** — per-letter Tone.js voices mapped to axis values (wght→freq, wdth→filter, opsz→reverb) | 🔵 SPEC WRITTEN | Spec: `Specs/EXP01_UPGRADE.md`. 14 audio acceptance criteria. Textural/ambient, NOT rhythmic. |
-| GT.2 | **Haptic Feedback** — subtle vibration pulses on letter shifts (A), proximity enter (B), touch sweep (D) | 🔵 SPEC WRITTEN | Android only. 10–20ms pulses. No haptic in Section C. |
-| GT.3 | **Shake-to-Reset** — shake phone to shuffle (A) or replay (E) | 🔵 SPEC WRITTEN | Acceleration > 15 m/s², 1s cooldown, "Shook!" toast. |
-| GT.4 | **Pinch-to-Optical-Size** — two-finger pinch in Section C maps to opsz axis (8–144) | 🔵 SPEC WRITTEN | Scroll wheel on desktop. Coexists with tilt for wght/wdth. |
-| GT.5 | **Stillness Reward** — hold phone still 3s in Section B → letters settle, audio converges | 🔵 SPEC WRITTEN | < 0.3 m/s² threshold. Desktop: no cursor for 5s. |
-| GT.6 | **Screen Wake Lock** — prevent screen sleep during experiment (global) | 🔵 SPEC WRITTEN | `navigator.wakeLock.request('screen')`. Re-request on visibility change. |
-| GT.7 | **Wire Section F Speed Control** — bind speed context to CSS animation-duration | 🔵 SPEC WRITTEN | Speed 1 = 8s, 5 = 4s, 10 = 1.5s. Sync audio breathing to duration. |
-| GT.8 | **Ambient-Reactive Color Shift** — dark mode/night = warm tones + triangle wave, light/day = cool + sine | 🔵 SPEC WRITTEN | CSS custom properties + audio waveform switch. Subtle, not dramatic. |
+| GT.1 | **Ambient Typography Audio** — per-letter Tone.js voices mapped to axis values (wght→freq, wdth→filter, opsz→reverb) | ✅ DONE | `typographyAudio.ts` (204 lines). Per-letter Oscillator→Filter→Gain→Panner chain. Proximity boost +12dB (spec said +6dB — louder was needed). Opsz→gain offset approximation (not per-voice reverb). |
+| GT.2 | **Haptic Feedback** — subtle vibration pulses on letter shifts (A), proximity enter (B), touch sweep (D) | ✅ DONE | A: 15ms, B: 20ms, D: 10ms. No haptic in C. Matches spec. |
+| GT.3 | **Shake-to-Reset** — shake phone to shuffle (A) or replay (E) | ✅ DONE | DeviceMotion, 15 m/s² threshold, 2-sample window, 1s cooldown. 25ms haptic confirmation. |
+| GT.4 | **Pinch-to-Optical-Size** — two-finger pinch in Section C maps to opsz axis (8–144) | ✅ DONE | Pointer event tracking. Desktop scroll wheel NOT implemented (would conflict with page scroll). |
+| GT.5 | **Stillness Reward** — hold phone still 3s in Section B → letters settle, audio converges | ✅ DONE | 60-sample rolling average, 0.3 m/s² threshold, 3s duration. Lerps to midpoint axes. |
+| GT.6 | **Screen Wake Lock** — prevent screen sleep during experiment (global) | ✅ DONE | navigator.wakeLock on mount, re-request on visibilitychange. |
+| GT.7 | **Wire Section F Speed Control** — bind speed context to CSS animation-duration | ✅ DONE | `--breathe-duration` CSS variable. Noise layer gain synced to breath phase. |
+| GT.8 | **Ambient-Reactive Color Shift** — dark mode/night = warm tones + triangle wave, light/day = cool + sine | ✅ DONE | matchMedia listener switches oscillator waveform. |
 
 ### EXP-02: Collision Changes (Jazz Harmony via Particle Collision)
 
@@ -187,7 +187,7 @@ The Flock section evolved significantly from the original boids spec through ite
 
 | J.4c | Section E (was D): Magnets — consonance attracts, dissonance repels, chord change reshuffles relationships | ✅ DONE | Spec: `Specs/EXP02_MAGNETS.md`. Builder deviated significantly: spring equilibrium model replaced pure attract/repel, tangential orbiting prevents dead blobs, beat-synced breathing added despite spec saying no, collision energy bursts cascade. Mobile: drag+pin coexist via `touchDragged` flag. REST_DIST mobile-tuned (90–200px vs 130–320px desktop). |
 | J.4d | Section F: Freeze & Release — tap to freeze (silence), release with velocity burst, longer freeze = bigger burst | ✅ DONE | Spec: `Specs/EXP02_FREEZE_RELEASE.md`. 10 deviations from spec — all improvements. Key additions: energy circle (replaces timer), shockwave ring with strum (plays each orb as it passes), shockwave physics push, ease-out burst, note duration variety (quarter/half/whole), auto-release at max energy. **Discovery: note duration variety is a major musical improvement — should backport to Sections A–E.** |
-| J.4e | Section G: Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | 🔵 SPEC WRITTEN | Spec: `Specs/EXP02_RAIN.md`. Builder prompt: `Specs/EXP02_RAIN_BUILDER_PROMPT.md`. Continuous emitter (not fixed 7 orbs). Max 40 particles, 3-bounce lifetime, splash rings, puddle accumulation, chord-change color wave. 21 builder realities, 27 acceptance criteria. |
+| J.4e | Section G: Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | ✅ DONE | 6 deviations — all improvements. Key changes: pass-through bottom (no bounce — cleaner than 3-bounce lifetime), elastic mid-air collisions with 1.4× boost (spec said pass-through), auto-play on first chord, tuned density 3–12/sec with 30 max particles, 50ms note gap (tighter than spec's 100ms). All 23 acceptance criteria passed. Component: `Rain.tsx`. |
 | J.5 | **Pagination tile overflow** — scrollable tiles on mobile when 6+ sections | 🔵 SPEC WRITTEN | Spec: `Specs/PAGINATION_OVERFLOW.md`. Scrollable tile group + pinned sound/gear + gradient fade + arrows. ExperimentFrame only. Bundle with Rain builder or separate task. 13 acceptance criteria. |
 | J.6 | **Note duration variety — backport to Sections A–E** | 🔲 TODO | Discovered in Freeze & Release: using quarter/half/whole notes instead of fixed 8th notes on collision makes audio dramatically more musical. `playDyadDuration` already exists in `audioEngine.ts`. Each section should call it with varied durations. Explore tying duration to collision properties (harder = longer, chord tones = longer than extensions, bigger orbs = longer sustain). Goal: make generative audio feel less like random bleeps and more like an improvising musician. |
 
@@ -197,10 +197,32 @@ Inspired by John Coltrane's *Giant Steps* (1959). The Coltrane substitution divi
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| GS.1 | **Section A: Coltrane Circle** — 12 keys on a circle, orbs slingshot between key centers, triangle pulses on each change | 🔲 TODO | Circle of fifths geometry. Slingshot physics between B→G→E♭. Triangle glow on resolution. |
-| GS.2 | **Section B: Three-Body Problem** — three gravity wells (one per tonal center), orbs perpetually in flight between them | 🔲 TODO | N-body physics. Tempo control = chaos dial. ~2 beats/chord at Giant Steps speed → constant motion. |
-| GS.3 | **Section C: Chromatic Bridges** — ii-V passing chords visualized as ephemeral force-field arcs between key centers | 🔲 TODO | Bridges appear 2 beats before resolution. Orbs travel along arcs, settle on arrival. Glow + dissolve. |
-| GS.4 | **Section D: Mirror Symmetry** — 3-fold rotational symmetry, each note spawns 3 mirrored orbs at 120° intervals | 🔲 TODO | 12 ÷ 3 symmetry. Mirrors align briefly on resolution (unison chord moment), then split. |
+| GS.1 | **Section A: Coltrane Circle** — 12 keys on a circle, dynamic chord triangle, staggered sax notes on each change | ✅ DONE | Spec: `Specs/EXP03_GIANT_STEPS.md`. Builder prompt + notes: `Specs/EXP03_COLTRANE_CIRCLE_BUILDER_PROMPT.md`. Shared infra built: `types.ts`, `giantStepsChordData.ts`, `useGiantStepsProgression.ts`, `GiantStepsSwitch.tsx`. 11 deviations — see builder notes below. |
+| GS.2 | **Section B: Three-Body Problem** — three gravity wells (one per tonal center), orbs perpetually in flight between them | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_THREE_BODY_BUILDER_PROMPT.md`. N-body gravity, trail system, tempo = chaos dial. 15 acceptance criteria. |
+| GS.3 | **Section C: Chromatic Bridges** — ii-V passing chords visualized as ephemeral force-field arcs between key centers | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_CHROMATIC_BRIDGES_BUILDER_PROMPT.md`. Bézier bridges, flow particles, resolution flash. 15 acceptance criteria. |
+| GS.4 | **Section D: Mirror Symmetry** — 3-fold rotational symmetry, each note spawns 3 mirrored orbs at 120° intervals | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_MIRROR_SYMMETRY_BUILDER_PROMPT.md`. 7 real + 14 mirrors, alignment events, kaleidoscope. 14 acceptance criteria. |
+
+**GS.1 Builder Notes (EXP-03A Coltrane Circle):**
+
+The builder radically reimagined Section A. The core circle-of-fifths layout and BPM-driven progression are faithful to spec, but the visual system was replaced entirely. 11 deviations documented in the builder prompt file. Key decisions:
+
+**1. No orbs — dynamic chord triangle only.** Spec called for 7 orbs with slingshot physics between key centers. Builder removed orbs entirely, replacing them with a single animated triangle whose vertices connect the root, 3rd, and 7th of the current chord on the circle of fifths. Triangle shape changes per chord type (maj7 = wide, dom7 = mid, min7 = narrow). Smooth angular lerp (0.18 speed) with shortest-path wrapping prevents overshoot. The builder noted: "Sections B (Three-Body) and D (Mirror Symmetry) are explicitly orb-based, so they make sense there."
+
+**2. Custom sax engine (`saxEngine.ts`).** Instead of reusing EXP-02's `audioEngine.ts` FMSynth, built a tenor sax timbre: `fatsawtooth` (count 2, spread 8) → Distortion (0.25, 40% wet) → Peaking EQ 900Hz (Q=3, +8dB "sax honk") → Lowpass 1400Hz (-24dB/oct) → FeedbackDelay (120ms) → Reverb (2.5s, 28% wet). Notes played at `freq/2` for tenor range. Creative homage to Coltrane's instrument.
+
+**3. Staggered ascending triad on chord change.** Root → 3rd → 7th play as a rising sequence, not simultaneous. Stagger interval is BPM-adaptive: `Math.max(40, Math.min(150, (60000 / bpm) * 0.25))`. Each note triggers a vertex pulse (scale 2.0→1.0) and shockwave ring at its circle position.
+
+**4. BPM slider replaces mouse-Y-to-tempo.** Range input (80–320 BPM) instead of continuous mouse position mapping. Mobile gyro beta still controls BPM. Slider styled with `--color-dun` token.
+
+**5. Volume slider popup — global addition.** Added `volume` (0–1) to `ExperimentControlsContext`. Popup volume slider syncs to `Tone.getDestination().volume` via `20 * Math.log10(volume)` dB conversion. This is a cross-experiment UI addition — all future experiments inherit it.
+
+**6. `setMetronomeVolume(db)` added to shared `audioEngine.ts`.** Allows per-experiment metronome levels. Section A sets it to -30dB (very quiet behind sax).
+
+**7. Active pitch class highlighting.** Circle labels for notes in the current chord glow in the key center color. Non-active notes stay dim. Updates per chord change.
+
+**8. MIN_NOTE_GAP = 60ms** (spec said 100ms). Tighter for the staggered triad to sound like a phrase.
+
+**Architectural impact on Sections B/C/D:** Shared infra is in place (`types.ts`, chord data, progression hook, section switch). B/C/D builders should use the sax engine (or build their own sound), note the volume control in context, and decide independently whether orbs fit their section's concept.
 
 ### EXP-04: Walking Line (Generative Bass Line) *(was EXP-03)*
 
@@ -264,6 +286,39 @@ Inspired by John Coltrane's *Giant Steps* (1959). The Coltrane substitution divi
 | J.30 | Brush style changes with scale mode (pentatonic, bebop, blues) | 🔲 TODO | Visual: different stroke textures per scale. |
 | J.31 | Backing track auto-generated: walking bass + comping + drums | 🔲 TODO | Tone.js Transport for sync. |
 | J.32 | Mobile: finger painting with gyro for vibrato | 🔲 TODO | |
+
+### EXP-11: Quintet (Jazz Ensemble Interaction) *(NEW)*
+
+Five instruments — piano, bass, trumpet, sax, drums — each with distinct visual identity and sonic character. The user conducts an ensemble. Explores multi-voice interaction, spatial audio, and the social dynamics of a jazz group.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| QT.1 | **Section A: Bandleader** — five autonomous instrument agents, each with generative behavior (piano comps, bass walks, drums keep time, horns solo). Tilt/drag to give energy to one instrument and quiet others. You're conducting. | 🔲 TODO | Tone.js multi-instrument (PolySynth piano, MonoSynth bass, FMSynth trumpet, AMSynth sax, NoiseSynth+MetalSynth drums). Mobile: tilt toward an instrument to feature it. |
+| QT.2 | **Section B: Spatial Stage** — place five instruments in a virtual room. Spatial audio via PannerNode. On mobile: DeviceOrientation rotates the listener — turn your head to hear different instruments. With headphones, the band is in the room with you. | 🔲 TODO | HRTF panning model. Drag to reposition instruments on desktop. Mobile: orientation → AudioListener rotation. The most headphone-forward section. |
+| QT.3 | **Section C: Trading Fours** — instruments take turns playing 4-bar generative phrases, then hand off. Tap the instrument you want to solo next. Others comp underneath. Visual: spotlight follows the soloist, others dim. | 🔲 TODO | Generative phrase engine per instrument (scale-based Markov or pattern library). Transport-synced 4-bar phrases. |
+| QT.4 | **Section D: Collective Improv** — all five instruments play simultaneously with rule-based interaction: when one gets loud, others get soft. When bass walks up, piano moves down. Emergent conversation. User controls global energy (tilt = intensity, stillness = breakdown). | 🔲 TODO | Rule-based ensemble AI. P10 (Stillness Reward): hold still → breakdown, only drums + bass. Shake → full ensemble crescendo. |
+
+### EXP-12: Windchimes (Physical Sound Sculpture) *(NEW)*
+
+Geometric shapes hanging at different lengths — circles, triangles, hexagons — each with a unique timbre. Wind makes them sway and collide. Blow into the phone's microphone to create wind. Tilt to change wind direction. The most mobile-native experiment: the phone becomes a physical instrument you breathe into.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| WC.1 | **Section A: Breath** — shapes hang from top of screen at varying lengths. Microphone input (AnalyserNode amplitude, NOT SpeechRecognition) detects blowing — sustained breath = steady wind, short puff = gust. Shapes sway and collide, producing tones on impact. Different shapes = different timbres: circle = bell (sine), triangle = glass (FM), hexagon = wood (noise burst + filter). | 🔲 TODO | Mic permission flow. Amplitude threshold to distinguish breath from background noise. Physics: pendulum motion per shape, collision detection between adjacent shapes. |
+| WC.2 | **Section B: Wind Garden** — tilt controls wind direction and strength (gamma = direction, beta = intensity). No microphone. Shapes sway in the "wind" created by tilting. Multiple sets of chimes at different positions create a spatial windchime garden. | 🔲 TODO | Spatial audio: chime sets positioned L/C/R. Tilt sweeps wind across the garden. Gentle ambient mode — set phone down and let random gentle breezes play. |
+| WC.3 | **Section C: Builder** — drag shapes to reposition. Pinch to resize (bigger = lower pitch). Rotate phone to change hanging angle. Closer shapes collide more frequently = more active. Design your own chime arrangement, then let the wind play it. | 🔲 TODO | P3 (Pinch) to resize shapes. P4 (Rotate) to adjust arrangement. Export/share chime configuration via URL params. |
+| WC.4 | **Section D: Ambient Listener** — microphone stays on, but listens to the ENVIRONMENT (not just breath). Room noise drives the chimes — loud room = active, quiet room = occasional single tone. The experiment responds to your world. | 🔲 TODO | AnalyserNode frequency bands: low rumble → slow deep sway, high speech → quick light movement. AmbientLightSensor (P9) for visual palette: dark room = warm glow, bright = cool silver. |
+
+### EXP-13: Strings (Tactile Instrument) *(NEW)*
+
+Strings stretched across the screen. Swipe to strum. Press to pluck. Tilt to bend pitch. The most instrument-like experiment — the phone becomes a playable thing. Explores the physicality of string vibration, resonance, and the relationship between gesture and sound.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| ST.1 | **Section A: Open Strings** — 4–6 horizontal strings tuned to a chord. Swipe across to strum (swipe velocity = volume, direction = up/down strum order). Tap a single string to pluck. Visible string vibration decays with the audio. Touch pressure (P5) controls velocity. | 🔲 TODO | Tone.js PluckSynth or Karplus-Strong synthesis for realistic string timbre. Canvas rendering: vibrating string as sine wave with decaying amplitude. Strings spaced evenly across viewport. |
+| ST.2 | **Section B: Fretboard** — tap points along a string to shorten it (higher pitch). The string visually shortens with a "finger" contact point. Slide finger up/down the string for pitch bend / slide. Combine with strum for melody + rhythm. | 🔲 TODO | Frequency = baseFreq × (stringLength / frettedLength). Multi-touch: one finger frets, another hand strums. Two-hand playing on a single device. |
+| ST.3 | **Section C: Reverb Room** — tilt the phone to change the virtual room size. Flat = dry/intimate. Tilted forward = huge cathedral reverb. The visual background shifts: close wood grain → stone walls → vast open space. The same strum sounds radically different in each space. | 🔲 TODO | Tone.js Reverb with dynamic decay (0.5s dry → 8s cathedral). Convolution reverb if samples available. Visual: background parallax layers shift with tilt. P1 (Tilt) mapped to reverb size + visual depth. |
+| ST.4 | **Section D: Resonance** — multiple strings tuned to harmonically related notes. Pluck one and watch sympathetic resonance: other strings that share harmonics vibrate slightly too (visible + audible). Demonstrates overtone series physically. | 🔲 TODO | When a string is plucked, other strings with shared harmonics (octave, 5th, 3rd) vibrate at reduced amplitude. Visual: ghost vibration on sympathetic strings. The more consonant the relationship, the more they resonate. |
 
 ---
 
@@ -384,10 +439,19 @@ Approved by JC on 2026-03-19. Four interactive experiments using free stock phot
 
 ---
 
+## Known Bugs / Tech Debt
+
+| # | Issue | Fix | Affected | Action |
+|---|-------|-----|----------|--------|
+| BUG-1 | **iOS gyro listener dropped after permission grant.** `useDeviceOrientation` hook auto-attach effect only re-started for `'not-required'` state. When iOS permission changed to `'granted'`, the cleanup ran but the listener was never re-attached — gyro values stuck at 0.5. | Fixed in `5d6c6e0`: added `'granted'` to the auto-attach condition in `lib/useDeviceOrientation.ts`. | **All experiments using gyro on iOS.** Builders: check EXP-02 sections (Collision Changes, Rain, Flock, Gravity Well, etc.) — any section that reads `gammaNorm`/`betaNorm` after iOS permission grant may have been silently broken. The values would default to 0.5, making gyro appear to "do nothing." | Planner should audit all experiments that use `useDeviceOrientation` and verify gyro works on iOS after permission grant. |
+
+---
+
 ## Changelog
 
 | Date | Change | By |
 |---|---|---|
+| 2026-03-21 | **EXP-03 Giant Steps fully spec'd.** Master spec (`EXP03_GIANT_STEPS.md`) + 4 builder prompts: Coltrane Circle (shared infra + Section A), Three-Body Problem (Section B), Chromatic Bridges (Section C), Mirror Symmetry (Section D). 26-chord Coltrane Changes progression, 3 key centers (B/G/E♭), BPM-driven tempo (80–320), 62 acceptance criteria. Section A builds shared infra (chord data, progression hook, types, section switch); B/C/D can be built in parallel after A. | Scrummaster (JC creative direction) |
 | 2026-03-21 | **EXP-02E Magnets spec + builder prompt written.** Consonance/dissonance interval forces between all orb pairs. Visual: solid DUN lines (consonant), dashed BITTERSWEET lines (dissonant). Drag-to-override on desktop, tap-to-pin on mobile. Chord change flash (3× force line opacity, 300ms). Edge bounce (not wrapping). Adds `noteToMidi()` and `CONSONANCE_TABLE` to `chordData.ts`. 24 acceptance criteria. Spec: `Specs/EXP02_MAGNETS.md`. Builder prompt: `Specs/EXP02_MAGNETS_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
 | 2026-03-21 | **EXP-02D Flock built, tuned, and deployed.** Major evolution from boids spec — see builder notes. Orbital leader-follower physics, breathing rhythm, click-drag-shake instrument, smooth bezier flight trails. Component: `Flock.tsx` (1379 lines). Pushed to main. | Builder (JC creative direction throughout) |
 | 2026-03-20 | **EXP-02D Flock spec + builder prompt written.** Boids algorithm with separation/alignment/cohesion. Cursor leads on desktop, tilt steers on mobile. Edge wrapping (not bouncing). Pass-through collisions from Section C carried forward. 23 acceptance criteria. Spec: `Specs/EXP02_FLOCK.md`. Builder prompt: `Specs/EXP02_FLOCK_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
