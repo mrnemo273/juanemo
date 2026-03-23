@@ -772,12 +772,17 @@ export default function ThreeBody() {
       ctx.fillStyle = `rgba(214, 197, 171, ${flashAlpha})`;
       ctx.fillText(chordNameRef.current, cx, cy);
 
-      // 8. BPM indicator
+      // 8. BPM indicator + gyro debug on mobile
       ctx.font = '10px "DM Sans", sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
       ctx.fillStyle = 'rgba(214, 197, 171, 0.25)';
       ctx.fillText(`${bpmRef.current} BPM`, 12, h - 12);
+      if (isMobile) {
+        const g = gyroRef.current;
+        ctx.fillStyle = 'rgba(214, 197, 171, 0.5)';
+        ctx.fillText(`gyro: γ=${g.gammaNorm.toFixed(3)} rot=${gyroRotationRef.current.toFixed(1)}° perm=${g.permissionState}`, 12, h - 26);
+      }
 
       rafRef.current = requestAnimationFrame(loop);
     };
