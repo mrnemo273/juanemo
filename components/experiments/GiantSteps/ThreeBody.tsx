@@ -333,11 +333,16 @@ export default function ThreeBody() {
         return idx >= 0 ? CIRCLE_OF_FIFTHS[idx].angle : 0;
       });
 
-      // If orbs are settled, apply immediately. Otherwise queue.
-      if (orbsSettledRef.current) {
-        applyNewTargets(newTargets, indices);
+      // On mobile, gyro controls well positions — don't auto-move wells
+      if (!isMobileViewport()) {
+        if (orbsSettledRef.current) {
+          applyNewTargets(newTargets, indices);
+        } else {
+          queuedTargetsRef.current = { angles: newTargets, chordTones: indices };
+        }
       } else {
-        queuedTargetsRef.current = { angles: newTargets, chordTones: indices };
+        // Still update chord tones for harmonic filtering
+        chordToneIndicesRef.current = indices;
       }
     });
 
