@@ -73,7 +73,7 @@ export function initSaxEngine(): void {
   synth.chain(distortion, nasalPeak, filter, delay, reverb, Tone.getDestination());
 }
 
-export function playSaxNote(freq: number, velocity: number): void {
+export function playSaxNote(freq: number, velocity: number, duration: string = '4n'): void {
   if (!synth || !initialized) return;
 
   const now = performance.now();
@@ -83,7 +83,7 @@ export function playSaxNote(freq: number, velocity: number): void {
   const vel = Math.max(0.1, Math.min(0.6, velocity));
   synth.triggerAttackRelease(
     Tone.Frequency(freq).toNote(),
-    '4n',
+    duration,
     Tone.now(),
     vel,
   );

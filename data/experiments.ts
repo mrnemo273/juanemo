@@ -280,6 +280,24 @@ export const giantStepsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'decay', 'reverb'],
   },
+  {
+    letter: 'B',
+    name: 'Three-Body Problem',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Three wells chase chord tones around the circle of fifths, dragging orbs in staggered waves that play triads on arrival. Wells move to root, 3rd, and 7th of each chord — the triangle morphs with the harmony.',
+    instructions: [
+      { icon: 'move-v', text: '<strong>BPM slider</strong> controls tempo (80–320 BPM)' },
+      { icon: 'click', text: '<strong>Click/tap</strong> to start audio' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt sideways</strong> rotates the triad around the circle' },
+      { icon: 'click', text: '<strong>Tap</strong> to start audio' },
+    ],
+    controls: ['tempo', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
