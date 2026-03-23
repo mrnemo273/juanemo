@@ -168,6 +168,8 @@ export default function ThreeBody() {
 
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const [gyroRequested, setGyroRequested] = useState(false);
 
   const progression = useGiantStepsProgression();
 
@@ -230,8 +232,14 @@ export default function ThreeBody() {
     orbsRef.current = orbs;
   }, []);
 
-  /* ── Mobile detection ── */
-  useEffect(() => { setIsMobile(isMobileViewport()); }, []);
+  /* ── Mobile detection + gyro toast ── */
+  useEffect(() => {
+    const mobile = isMobileViewport();
+    setIsMobile(mobile);
+    if (mobile && gyro.permissionState === 'prompt') {
+      setShowGyroToast(true);
+    }
+  }, [gyro.permissionState]);
 
   /* ── Audio init ── */
   const audioStartingRef = useRef(false);
@@ -392,8 +400,9 @@ export default function ThreeBody() {
       if (isMobile) {
         const g = gyroRef.current;
         if (g.permissionState === 'granted' || g.permissionState === 'not-required') {
-          // gammaNorm: -1 (left tilt) to 1 (right tilt) → map to 0–360° rotation
-          gyroRotationRef.current = g.gammaNorm * 180;
+          // gammaNorm: 0 (left tilt) to 1 (right tilt), 0.5 = level
+          // Map to ±180° rotation: (0.5 → 0°, 0 → -180°, 1 → +180°)
+          gyroRotationRef.current = (g.gammaNorm - 0.5) * 360;
         }
       }
 
@@ -785,9 +794,42 @@ export default function ThreeBody() {
     handleAudioStart();
   }, [progression, handleAudioStart]);
 
+  const handleGyroToast = useCallback(async () => {
+    if (gyroRequested) return;
+    setGyroRequested(true);
+    try {
+      await gyro.requestPermission();
+    } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, gyroRequested, handleAudioStart]);
+
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showGyroToast && (
+        <button
+          onClick={handleGyroToast}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(214, 197, 171, 0.12)',
+            border: '1px solid rgba(214, 197, 171, 0.25)',
+            borderRadius: 8,
+            color: 'rgba(214, 197, 171, 0.8)',
+            padding: '16px 28px',
+            fontSize: 14,
+            fontFamily: '"DM Sans", sans-serif',
+            cursor: 'pointer',
+            zIndex: 10,
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          Tap to enable motion control
+        </button>
+      )}
       <div className={styles.bpmSlider}>
         <input
           type="range"
