@@ -236,10 +236,11 @@ export default function ThreeBody() {
   useEffect(() => {
     const mobile = isMobileViewport();
     setIsMobile(mobile);
-    if (mobile && gyro.permissionState === 'prompt') {
+    // Show toast on mobile: for iOS (prompt) to get permission, for all mobile to start audio
+    if (mobile && !gyroRequested) {
       setShowGyroToast(true);
     }
-  }, [gyro.permissionState]);
+  }, [gyroRequested]);
 
   /* ── Audio init ── */
   const audioStartingRef = useRef(false);
@@ -404,11 +405,10 @@ export default function ThreeBody() {
       // Mobile gyro: tilt rotates the triad around the circle
       if (isMobile) {
         const g = gyroRef.current;
-        if (g.permissionState === 'granted' || g.permissionState === 'not-required') {
-          // gammaNorm: 0 (left tilt) to 1 (right tilt), 0.5 = level
-          // Map to ±180° rotation: (0.5 → 0°, 0 → -180°, 1 → +180°)
-          gyroRotationRef.current = (g.gammaNorm - 0.5) * 360;
-        }
+        // Always read gyro values — permission checked at toast time
+        // gammaNorm: 0 (left tilt) to 1 (right tilt), 0.5 = level
+        // Map to ±180° rotation: (0.5 → 0°, 0 → -180°, 1 → +180°)
+        gyroRotationRef.current = (g.gammaNorm - 0.5) * 360;
       }
 
       const cx = w / 2;
@@ -420,16 +420,22 @@ export default function ThreeBody() {
 
       // ═══ PHYSICS ═══
 
-      // Well movement — smooth lerp to chord positions (matching Section A's feel)
-      // On mobile, add gyro rotation offset to all targets
-      const WELL_LERP = 0.18 * dt;
+      // Well movement
       const targets = wellTargetAnglesRef.current;
       const current = wellCurrentAnglesRef.current;
-      const gyroOffset = isMobile ? gyroRotationRef.current : 0;
-      for (let w = 0; w < 3; w++) {
-        const effectiveTarget = wrapAngle(targets[w] + gyroOffset);
-        let diff = angularDelta(current[w], effectiveTarget);
-        current[w] = wrapAngle(current[w] + diff * WELL_LERP);
+      if (isMobile) {
+        // Mobile: wells follow gyro directly (responsive, no lag)
+        const gyroOffset = gyroRotationRef.current;
+        for (let w = 0; w < 3; w++) {
+          current[w] = wrapAngle(targets[w] + gyroOffset);
+        }
+      } else {
+        // Desktop: smooth lerp to chord positions (matching Section A)
+        const WELL_LERP = 0.18 * dt;
+        for (let w = 0; w < 3; w++) {
+          const diff = angularDelta(current[w], targets[w]);
+          current[w] = wrapAngle(current[w] + diff * WELL_LERP);
+        }
       }
 
       const tiltNoise = RADIAL_NOISE;
