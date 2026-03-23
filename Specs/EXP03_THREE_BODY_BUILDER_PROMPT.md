@@ -535,6 +535,13 @@ The implementation evolved significantly through iterative tuning. The original 
 | 8 | 7 orbs, all identical | **3 groups**: root (3 orbs, blue/B), 3rd (2 orbs, green/G), 7th (2 orbs, yellow/Eb). Each group targets its chord tone's well. | Groups create triads. Color-coding matches wells for visual clarity. |
 | 9 | Wells have fixed gravity strength that ramps on key change | **Wells lerp to chord positions** (same speed as Section A: 0.18). Settled check: wells+orbs must reach targets → 400ms hold → next chord applies. | Wait-for-settle prevents wells from moving before orbs arrive. Hold time gives breathing room. |
 
+### Mobile Gyro System
+- **Dead zone**: 8% threshold (`GYRO_DEADZONE = 0.08`). Tilt must exceed ~5° from level before triad moves. Prevents jitter.
+- **Chord advancement**: Every 30° of tilt past the dead zone advances to the next chord in the Giant Steps progression. Tilting right = forward, left = backward.
+- **Well lerp on mobile**: Wells lerp to gyro-shifted targets (same 0.18 speed as desktop), so chord transitions are smooth even though gyro input is real-time.
+- **Toast for permission**: On mobile, a centered "Tap to enable motion control" toast appears. Tapping requests iOS gyro permission + starts audio. On Android, the toast just starts audio (gyro auto-attaches).
+- **Desktop auto-play only**: Chord progression drives wells automatically. No gyro, no mouse interaction beyond BPM slider.
+
 ### Key Constants (as tuned)
 ```
 EASE_SPEED = 0.025       // easing rate per frame
@@ -543,7 +550,28 @@ WELL_LERP = 0.18         // matches Section A
 SETTLE_HOLD_MS = 400     // dwell time after orbs settle
 NOTE_TRIGGER_THRESHOLD = 6°
 NOTE_COOLDOWN_MS = 180
+GYRO_DEADZONE = 0.08     // 8% dead zone for mobile tilt
 ```
+
+### Lessons Learned (for future builders)
+
+1. **Spring physics causes vibration at rest.** Orbs oscillated at their target wells because spring force + velocity accumulation means perpetual overshoot/undershoot. Easing (move fraction of remaining distance, clamp to not exceed it) gives clean arrivals.
+
+2. **Always clamp step to remaining distance.** Without `if (Math.abs(step) > absDelta) step = delta`, orbs overshoot by fractions of a degree each frame and vibrate forever.
+
+3. **Stagger by wave, not by orb index.** Staggering orbs 0-6 individually spreads the groups across time. Staggering by *wave* (one from each group per wave) creates triad hits.
+
+4. **iOS gyro listener bug (BUG-1).** `useDeviceOrientation` hook dropped the listener after iOS permission grant. The auto-attach effect only re-started for `'not-required'`, not `'granted'`. Fixed in `lib/useDeviceOrientation.ts` — **audit ALL experiments that use gyro on iOS.** See BACKLOG.md BUG-1.
+
+5. **Wells must wait for orbs.** Without a settled check + hold time, wells move to the next chord before orbs arrive. The progression outruns the visuals. Solution: queue chord changes, check all orbs within 8° of target + velocity < 0.15, then hold 400ms before applying next.
+
+6. **Chord-tone filtering is essential for musicality.** Triggering all 12 notes on the circle sounds random. Filtering to chord tones (full volume) > scale tones (soft) > chromatic (silent) makes it sound like music.
+
+7. **Group-based note durations add voice character.** Root = whole note, 3rd = half, 7th = quarter. Without this, all notes sound identical and blend into noise.
+
+8. **Gradient triangle edges > solid color.** When orbs are color-coded by group, a single-color triangle looks disconnected. Gradient edges (blue→green, green→yellow, yellow→blue) visually tie the triangle to its orbs.
+
+9. **Gyro dead zone is critical.** Without it, the triad wobbles constantly from tiny hand movements. 8% threshold makes the triad "stick" until intentional tilt.
 
 ### Files created
 - `components/experiments/GiantSteps/ThreeBody.tsx` — Section B (circle-of-fifths orb system)
@@ -552,3 +580,4 @@ NOTE_COOLDOWN_MS = 180
 - `components/experiments/GiantSteps/GiantStepsSwitch.tsx` — wired `activeSection === 1`
 - `components/experiments/GiantSteps/saxEngine.ts` — added `duration` parameter to `playSaxNote`
 - `data/experiments.ts` — added Section B config with updated description/instructions
+- `lib/useDeviceOrientation.ts` — fixed iOS gyro listener re-attach (BUG-1)
