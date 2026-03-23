@@ -104,9 +104,9 @@ export function useDeviceOrientation(): DeviceOrientationValues {
     };
   }, []);
 
-  /* Auto-attach for non-iOS (permission not required) */
+  /* Auto-attach when permission allows it */
   useEffect(() => {
-    if (permissionState === 'not-required') {
+    if (permissionState === 'not-required' || permissionState === 'granted') {
       startListening();
     }
     return () => {
