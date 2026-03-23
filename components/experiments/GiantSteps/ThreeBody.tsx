@@ -470,10 +470,13 @@ export default function ThreeBody() {
       const targets = wellTargetAnglesRef.current;
       const current = wellCurrentAnglesRef.current;
       if (isMobile) {
-        // Mobile: wells follow gyro directly (responsive, no lag)
+        // Mobile: wells lerp toward gyro-shifted targets (smooth chord transitions)
         const gyroOffset = gyroRotationRef.current;
+        const WELL_LERP = 0.18 * dt;
         for (let w = 0; w < 3; w++) {
-          current[w] = wrapAngle(targets[w] + gyroOffset);
+          const effectiveTarget = wrapAngle(targets[w] + gyroOffset);
+          const diff = angularDelta(current[w], effectiveTarget);
+          current[w] = wrapAngle(current[w] + diff * WELL_LERP);
         }
       } else {
         // Desktop: smooth lerp to chord positions (matching Section A)
