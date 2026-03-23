@@ -408,7 +408,14 @@ export default function ThreeBody() {
       // Mobile gyro: tilt rotates the triad + advances chord progression
       if (isMobile) {
         const g = gyroRef.current;
-        const newRotation = (g.gammaNorm - 0.5) * 360;
+        const GYRO_DEADZONE = 0.08; // ±8% of range = ~29° tilt before anything moves
+        const rawNorm = g.gammaNorm - 0.5; // -0.5 to 0.5
+        // Apply dead zone: zero out small tilts, scale the rest
+        const absNorm = Math.abs(rawNorm);
+        const activeNorm = absNorm > GYRO_DEADZONE
+          ? Math.sign(rawNorm) * (absNorm - GYRO_DEADZONE) / (0.5 - GYRO_DEADZONE)
+          : 0;
+        const newRotation = activeNorm * 180;
         gyroRotationRef.current = newRotation;
 
         // Advance chord when rotation crosses 30° boundaries (one circle-of-fifths step)
