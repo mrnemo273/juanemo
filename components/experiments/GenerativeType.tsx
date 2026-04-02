@@ -13,6 +13,7 @@ import {
   EASINGS,
 } from '../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../lib/useDeviceOrientation';
+import { applyDeadZone } from '../../lib/gyroUtils';
 import * as Tone from 'tone';
 import {
   initTypographyAudio,
@@ -284,6 +285,9 @@ function SectionProximity() {
   const gyroRef = useRef(gyro);
   gyroRef.current = gyro;
 
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
+
   const charsRef = useRef<(HTMLSpanElement | null)[]>([]);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const sectionRef = useRef<HTMLElement>(null);
@@ -310,6 +314,20 @@ function SectionProximity() {
       }
     }
   }, [gyro.permissionState, gyro.isAvailable]);
+
+  // iOS gyro permission toast
+  useEffect(() => {
+    if (isMobileViewport() && isTouchDevice() && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+  }, [gyro]);
 
   // Stillness detection via DeviceMotion (mobile) or mouse idle (desktop)
   useEffect(() => {
@@ -421,8 +439,8 @@ function SectionProximity() {
       let mx: number, my: number;
       if (modeRef.current === 'gyro') {
         const g = gyroRef.current;
-        mx = g.gammaNorm * window.innerWidth;
-        my = g.betaNorm * window.innerHeight;
+        mx = applyDeadZone(g.gammaNorm, 0.04) * window.innerWidth;
+        my = applyDeadZone(g.betaNorm, 0.04) * window.innerHeight;
       } else {
         mx = mouseRef.current.x;
         my = mouseRef.current.y;
@@ -504,6 +522,11 @@ function SectionProximity() {
 
   return (
     <section ref={sectionRef} className={styles.section} data-section="B">
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div className={styles.proxWord}>
         {LETTERS.map((letter, i) => (
           <span
@@ -532,6 +555,9 @@ function SectionMouseAxes() {
   gyroRef.current = gyro;
   const modeRef = useRef<InteractionMode>('mouse');
 
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
+
   // Pinch state
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const lastPinchDistRef = useRef<number | null>(null);
@@ -553,6 +579,20 @@ function SectionMouseAxes() {
       }
     }
   }, [gyro.permissionState, gyro.isAvailable]);
+
+  // iOS gyro permission toast
+  useEffect(() => {
+    if (isMobileViewport() && isTouchDevice() && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+  }, [gyro]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -669,7 +709,7 @@ function SectionMouseAxes() {
     const gyroLoop = () => {
       if (modeRef.current === 'gyro') {
         const g = gyroRef.current;
-        applyAxes(g.gammaNorm, g.betaNorm);
+        applyAxes(applyDeadZone(g.gammaNorm, 0.04), applyDeadZone(g.betaNorm, 0.04));
       }
       animFrame = requestAnimationFrame(gyroLoop);
     };
@@ -693,6 +733,11 @@ function SectionMouseAxes() {
 
   return (
     <section ref={sectionRef} className={`${styles.section} ${styles.sectionPinch}`} data-section="C">
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={textRef} className={styles.mouseWord}>JUANEMO</div>
     </section>
   );

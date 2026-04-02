@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZone } from '../../../lib/gyroUtils';
 import { useGiantStepsProgression } from './useGiantStepsProgression';
 import { GIANT_STEPS_PROGRESSION, KEY_CENTER_COLORS, CIRCLE_OF_FIFTHS, KEY_CENTER_ANGLES } from './giantStepsChordData';
 import type { KeyCenter, Shockwave } from './types';
@@ -77,6 +78,7 @@ export default function GiantSteps() {
 
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const gyroRequestedRef = useRef(false);
 
   const progression = useGiantStepsProgression();
 
@@ -278,6 +280,11 @@ export default function GiantSteps() {
     };
 
     const handleTouchStart = () => {
+      const g = gyroRef.current;
+      if (g.permissionState === 'prompt' && !gyroRequestedRef.current) {
+        gyroRequestedRef.current = true;
+        g.requestPermission().catch(() => {});
+      }
       handleAudioStart();
     };
 
@@ -322,7 +329,7 @@ export default function GiantSteps() {
       if (isMobile) {
         const g = gyroRef.current;
         if (g.permissionState === 'granted' || g.permissionState === 'not-required') {
-          const newBpm = Math.round(80 + g.betaNorm * 240);
+          const newBpm = Math.round(80 + applyDeadZone(g.betaNorm, 0.10) * 240);
           bpmRef.current = newBpm;
           progression.setBpm(newBpm);
         }
@@ -527,7 +534,13 @@ export default function GiantSteps() {
           value={displayBpm}
           onChange={handleBpmChange}
           className={styles.slider}
-          onTouchStart={() => { try { Tone.start(); } catch { /* noop */ } }}
+          onTouchStart={() => {
+            try { Tone.start(); } catch { /* noop */ }
+            if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+              gyroRequestedRef.current = true;
+              gyro.requestPermission().catch(() => {});
+            }
+          }}
         />
         <span className={styles.bpmLabel}>{displayBpm} BPM</span>
       </div>
