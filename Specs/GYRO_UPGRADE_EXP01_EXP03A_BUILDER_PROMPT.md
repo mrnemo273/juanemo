@@ -173,3 +173,10 @@ If there's already a toast or startup pattern in GiantSteps, integrate with that
 |---|-----------|-------------|-----|
 | 1 | GenerativeType: "Option A — check if there's already a tap handler" | Used Option B (toast overlay) for both sections | Neither section B nor C has a tap-to-start pattern — they're pure typography with no audio init gesture. Toast is the only way to get a user gesture for iOS permission |
 | 2 | GiantSteps: "add toast or startup pattern" | No toast — integrated into existing touchstart handler | GiantSteps already requires a canvas tap to start audio, so piggybacking permission request on that gesture is cleaner than adding a toast |
+
+### Lessons Learned
+
+1. **GenerativeType has no shared component wrapper for sections.** Each section (A–F) is a standalone function component rendered by a parent that just picks `SECTIONS[activeSection]`. This means gyro state can't be lifted — each section that uses gyro needs its own toast + permission handling independently.
+2. **`useEffect` closures capture stale values.** In GiantSteps, the `handleTouchStart` is defined inside a `useEffect`, so it captures the initial `gyro` object. Used `gyroRef.current` instead to get the latest `permissionState` at call time. In contrast, GenerativeType's toast handler uses `useCallback` with `[gyro]` dep — both patterns work but for different reasons.
+3. **BPM dead zone at 10% is aggressive but correct.** With `applyDeadZone(betaNorm, 0.10)`, the phone needs to tilt ~9° from center before BPM changes. This feels right because BPM jumps are very audible — even a 5 BPM wobble from table vibration is noticeable. The wide dead zone makes "phone on table = stable BPM" reliable.
+4. **Toast design consistency matters.** The spec originally called for `rgba(0,0,0,0.7)` (opaque dark), but the proven ThreeBody design uses `rgba(214,197,171,0.12)` with `backdrop-filter: blur(8px)`. All experiments now use the ThreeBody style for visual consistency across the portfolio.
