@@ -96,6 +96,9 @@ export default function ExperimentFrame({
   const [volume, setVolume] = useState(0.8);
   const [volumeOpen, setVolumeOpen] = useState(false);
   const volumeRef = useRef<HTMLDivElement>(null);
+  const tileScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Start AudioContext on first user interaction (required by browsers)
   useEffect(() => {
@@ -131,6 +134,46 @@ export default function ExperimentFrame({
     const db = volume > 0 ? 20 * Math.log10(volume) : -Infinity;
     Tone.getDestination().volume.rampTo(db, 0.05);
   }, [volume]);
+
+  // Auto-scroll tile container to center active tile
+  const initialScrollDone = useRef(false);
+  useEffect(() => {
+    const container = tileScrollRef.current;
+    if (!container) return;
+    requestAnimationFrame(() => {
+      const activeTile = container.children[activeSection] as HTMLElement;
+      if (activeTile) {
+        const scrollLeft = activeTile.offsetLeft - container.clientWidth / 2 + activeTile.clientWidth / 2;
+        // Instant on first render, smooth on subsequent section changes
+        container.scrollTo({ left: scrollLeft, behavior: initialScrollDone.current ? 'smooth' : 'instant' });
+        initialScrollDone.current = true;
+      }
+    });
+  }, [activeSection]);
+
+  // Track scroll position for arrow visibility
+  useEffect(() => {
+    const container = tileScrollRef.current;
+    if (!container) return;
+    const updateArrows = () => {
+      setCanScrollLeft(container.scrollLeft > 4);
+      setCanScrollRight(container.scrollLeft < container.scrollWidth - container.clientWidth - 4);
+    };
+    updateArrows();
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(container);
+    container.addEventListener('scroll', updateArrows, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', updateArrows);
+      ro.disconnect();
+    };
+  }, []);
+
+  const scrollByTiles = useCallback((direction: number) => {
+    const container = tileScrollRef.current;
+    if (!container) return;
+    container.scrollBy({ left: direction * 43 * 3, behavior: 'smooth' });
+  }, []);
 
   // Mobile detection — determined once on mount
   const [isMobile, setIsMobile] = useState(false);
@@ -629,19 +672,35 @@ export default function ExperimentFrame({
 
         {/* BOTTOM BAR — fixed, pagination tiles + gear */}
         <div className={styles.bottombar}>
-          {totalSections >= 1 &&
-            sectionLetters.map((letter, i) => (
-              <button
-                key={letter}
-                className={`${styles.pageTile}${
-                  activeSection === i ? ` ${styles.pageTileActive}` : ''
-                }`}
-                onClick={() => handleSectionChange(i)}
-                aria-label={`Section ${letter}: ${sections?.[i] ?? ''}`}
-              >
-                {letter}
-              </button>
-            ))}
+          <button
+            className={`${styles.scrollArrow}${!canScrollLeft ? ` ${styles.scrollArrowHidden}` : ''}`}
+            onClick={() => scrollByTiles(-1)}
+            aria-label="Scroll sections left"
+          >
+            ‹
+          </button>
+          <div className={styles.tileScroll} ref={tileScrollRef}>
+            {totalSections >= 1 &&
+              sectionLetters.map((letter, i) => (
+                <button
+                  key={letter}
+                  className={`${styles.pageTile}${
+                    activeSection === i ? ` ${styles.pageTileActive}` : ''
+                  }`}
+                  onClick={() => handleSectionChange(i)}
+                  aria-label={`Section ${letter}: ${sections?.[i] ?? ''}`}
+                >
+                  {letter}
+                </button>
+              ))}
+          </div>
+          <button
+            className={`${styles.scrollArrow}${!canScrollRight ? ` ${styles.scrollArrowHidden}` : ''}`}
+            onClick={() => scrollByTiles(1)}
+            aria-label="Scroll sections right"
+          >
+            ›
+          </button>
 
           <div className={styles.tileSep} />
 

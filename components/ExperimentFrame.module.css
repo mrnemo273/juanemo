@@ -520,6 +520,18 @@
   color: var(--color-bittersweet);
 }
 
+/* Scrollable tile container (mobile overflow) */
+.tileScroll {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* Scroll arrows — hidden by default, shown via JS when needed */
+.scrollArrow {
+  display: none;
+}
+
 /* Separator between pagination tiles and gear */
 .tileSep {
   width: 1px;
@@ -735,4 +747,65 @@
   }
 
   .tileSep { margin: 0 5px; }
+
+  /* Scrollable tile container — activates when tiles overflow */
+  .tileScroll {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex: 1;
+    min-width: 0;
+    padding: 0 4px;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0px,
+      black 20px,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0px,
+      black 20px,
+      black calc(100% - 20px),
+      transparent 100%
+    );
+  }
+
+  .tileScroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pageTile {
+    scroll-snap-align: center;
+    flex-shrink: 0;
+  }
+
+  /* Scroll arrows */
+  .scrollArrow {
+    display: flex;
+    width: 24px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--color-dun);
+    opacity: 0.4;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+    padding: 0;
+  }
+
+  .scrollArrow:hover {
+    opacity: 0.7;
+  }
+
+  .scrollArrowHidden {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
