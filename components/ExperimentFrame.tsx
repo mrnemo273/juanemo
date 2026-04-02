@@ -85,7 +85,8 @@ export default function ExperimentFrame({
   const [easing, setEasing] = useState<EasingType>('spring');
   const [shuffleKey, setShuffleKey] = useState(0);
   const [replayKey, setReplayKey] = useState(0);
-  const [activeSection, setActiveSection] = useState(0);
+  // Default to the most recent (last) section
+  const [activeSection, setActiveSection] = useState(configs ? configs.length - 1 : 0);
   const [panelOpen, setPanelOpen] = useState(false);
   const [tempo, setTempo] = useState(120);
   const [timeSignature, setTimeSignature] = useState<3 | 4>(3);
@@ -210,7 +211,7 @@ export default function ExperimentFrame({
     if (sectionLetters.length <= 1) return;
     const onPopState = () => {
       const hash = window.location.hash.slice(1).toUpperCase();
-      const index = hash ? sectionLetters.indexOf(hash) : 0;
+      const index = hash ? sectionLetters.indexOf(hash) : sectionLetters.length - 1;
       const resolved = index >= 0 ? index : 0;
       if (resolved !== activeSection) {
         handleSectionChange(resolved);

@@ -298,6 +298,25 @@ export const giantStepsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'decay', 'reverb'],
   },
+  {
+    letter: 'C',
+    name: 'Chromatic Bridges',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'The ii-V passing chords that connect key centers, visualized as ephemeral arcs between zones. Orbs travel along bridges during the ii-V, then settle into the new key center on resolution.',
+    instructions: [
+      { icon: 'move-v', text: '<strong>BPM slider</strong> controls tempo (80–320 BPM)' },
+      { icon: 'cursor', text: '<strong>Mouse position</strong> bends bridge curvature' },
+      { icon: 'click', text: '<strong>Click a zone</strong> to force resolution' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt</strong> bends bridge curvature' },
+      { icon: 'click', text: '<strong>Tap a zone</strong> to force resolution' },
+    ],
+    controls: ['tempo', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
