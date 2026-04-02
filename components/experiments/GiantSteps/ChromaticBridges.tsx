@@ -8,7 +8,7 @@ import { GIANT_STEPS_PROGRESSION, KEY_CENTER_COLORS, CIRCLE_OF_FIFTHS } from './
 import type { KeyCenter } from './types';
 import * as Tone from 'tone';
 import { initAudio, dispose, startMetronome, setMetronomeTempo, setMetronomeVolume, stopMetronome } from '../CollisionChanges/audioEngine';
-import { initSaxEngine, playSaxNote, isSaxReady, setSaxDecay, setSaxReverb, disposeSax } from './saxEngine';
+import { initSaxEngine, playSaxNote, isSaxReady, setSaxDecay, setSaxReverb, disposeSax, type Voice } from './saxEngine';
 import styles from './GiantSteps.module.css';
 
 /* ── Constants ── */
@@ -270,10 +270,11 @@ export default function ChromaticBridges() {
     for (const t of noteTimersRef.current) clearTimeout(t);
     noteTimersRef.current = [];
     const staggerMs = Math.max(40, Math.min(150, (60000 / bpmRef.current) * 0.25));
-    const noteIndices = [0, 1, 3];
+    const noteIndices = [0, 1, 3]; // root, 3rd, 7th
+    const voices: Voice[] = ['sax', 'piano', 'bass'];
     for (let i = 0; i < 3; i++) {
       const timer = setTimeout(() => {
-        playSaxNote(chord.frequencies[noteIndices[i]] / 2, 0.5);
+        playSaxNote(chord.frequencies[noteIndices[i]] / 2, 0.5, '4n', voices[i]);
       }, i * staggerMs);
       noteTimersRef.current.push(timer);
     }
@@ -517,7 +518,7 @@ export default function ChromaticBridges() {
 
         // Bounce: spring overshoot then settle — stronger amplitude, more oscillations
         const bp = arc.bouncePhase;
-        const bounceMult = arc.dissolved ? 1 : 1 + 0.45 * Math.sin(bp * Math.PI * 3.5) * Math.max(0, 1 - bp * 1.2);
+        const bounceMult = arc.dissolved ? 1 : 1 + 0.7 * Math.sin(bp * Math.PI * 5) * Math.max(0, 1 - bp * 1.1);
 
         // Draw-in: how much of each arc to render (0→1)
         const drawT = arc.dissolved ? 1 : arc.drawIn;
