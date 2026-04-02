@@ -317,6 +317,27 @@ export const giantStepsSectionConfigs: SectionConfig[] = [
     ],
     controls: ['tempo', 'decay', 'reverb'],
   },
+  {
+    letter: 'D',
+    name: 'Mirror Symmetry',
+    hint: '',
+    hintMobile: '',
+    hintActionMobile: '',
+    description:
+      'Everything has three-fold rotational symmetry — 7 real orbs spawn 14 mirror copies at 120° intervals. When the tonic resolves, mirrors converge into a unified form before splitting again. A kaleidoscopic visualization of 12 ÷ 3.',
+    instructions: [
+      { icon: 'move-v', text: '<strong>BPM slider</strong> controls tempo (80–320 BPM)' },
+      { icon: 'cursor', text: '<strong>Mouse angle</strong> rotates the symmetry axis' },
+      { icon: 'cursor', text: '<strong>Move toward center</strong> to pull mirrors inward' },
+      { icon: 'click', text: '<strong>Click/tap</strong> to force alignment' },
+    ],
+    instructionsMobile: [
+      { icon: 'move', text: '<strong>Tilt sideways</strong> rotates the symmetry axis' },
+      { icon: 'move', text: '<strong>Tilt forward</strong> pulls mirrors inward' },
+      { icon: 'click', text: '<strong>Tap</strong> to force alignment' },
+    ],
+    controls: ['tempo', 'decay', 'reverb'],
+  },
 ];
 
 export const experiments: Experiment[] = [
