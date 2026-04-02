@@ -130,6 +130,22 @@
   }
 }
 
+.gyroToast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--color-dun, #D6C5AB);
+  border: 1px solid var(--color-dun, #D6C5AB);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 10;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .canvas {
     /* Canvas rendering adjusts internally */

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { useParticlePhysics, setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import * as Tone from 'tone';
@@ -49,6 +50,8 @@ export default function CollisionChanges() {
 
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
 
   const initialChordIdx = useRef(0); // default chord for initial orb physics
   const [selectedChord, setSelectedChord] = useState<number | null>(null);
@@ -127,6 +130,23 @@ export default function CollisionChanges() {
     ctx.addEventListener('statechange', check);
     return () => ctx.removeEventListener('statechange', check);
   }, [audioStarted, controls.soundEnabled, handleAudioStart]);
+
+  /* --------------------------------------------------------
+     iOS gyro permission toast
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (isMobile && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [isMobile, gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, handleAudioStart]);
 
   /* --------------------------------------------------------
      Canvas sizing via ResizeObserver
@@ -375,8 +395,8 @@ export default function CollisionChanges() {
         // gammaNorm 0–1 → gravity X: -1 to +1
         // betaNorm 0–1 → gravity Y: -1 to +1
         physics.gyroGravityRef.current = {
-          gx: (g.gammaNorm - 0.5) * 2,
-          gy: (g.betaNorm - 0.5) * 2,
+          gx: applyDeadZoneBipolar(g.gammaNorm, 0.06),
+          gy: applyDeadZoneBipolar(g.betaNorm, 0.06),
         };
       }
 
@@ -517,6 +537,11 @@ export default function CollisionChanges() {
     // Kick the AudioContext synchronously in the gesture handler
     // iOS Safari requires resume() in the immediate call stack of a user gesture
     try { Tone.start(); } catch { /* will retry below */ }
+    if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      gyroRequestedRef.current = true;
+      gyro.requestPermission().catch(() => {});
+      setShowGyroToast(false);
+    }
 
     selectedChordRef.current = idx;
     setSelectedChord(idx);
@@ -531,7 +556,7 @@ export default function CollisionChanges() {
       if (chord.ninth) freqs.push(chord.ninth.frequency);
       playChordStrum(freqs);
     })();
-  }, [progression, handleAudioStart]);
+  }, [progression, handleAudioStart, gyro]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -548,6 +573,11 @@ export default function CollisionChanges() {
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
           className={styles.chordToggle}

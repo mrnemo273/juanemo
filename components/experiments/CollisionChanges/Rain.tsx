@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZone, applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import { HARMONIC_COLORS } from './chordData';
 import * as Tone from 'tone';
@@ -126,6 +127,8 @@ export default function Rain() {
   const [audioStarted, setAudioStarted] = useState(false);
   const audioStartedRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
 
   const [selectedChord, setSelectedChord] = useState<number | null>(null);
   const selectedChordRef = useRef<number | null>(null);
@@ -202,6 +205,23 @@ export default function Rain() {
     ctx.addEventListener('statechange', check);
     return () => ctx.removeEventListener('statechange', check);
   }, [audioStarted, controls.soundEnabled, handleAudioStart]);
+
+  /* --------------------------------------------------------
+     iOS gyro permission toast
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (isMobile && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [isMobile, gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, handleAudioStart]);
 
   /* --------------------------------------------------------
      Canvas sizing via ResizeObserver
@@ -306,8 +326,8 @@ export default function Rain() {
     if (mobile) {
       const g = gyroRef.current;
       if (g.permissionState === 'granted' || g.permissionState === 'not-required') {
-        const betaT = g.betaNorm;
-        return MIN_DENSITY + Math.max(0, (betaT - 0.3) / 0.7) * (MAX_DENSITY - MIN_DENSITY);
+        const betaDZ = applyDeadZone(g.betaNorm, 0.05);
+        return MIN_DENSITY + Math.max(0, (betaDZ - 0.3) / 0.7) * (MAX_DENSITY - MIN_DENSITY);
       }
       return MIN_DENSITY + (MAX_DENSITY - MIN_DENSITY) * 0.3; // default medium-low
     }
@@ -324,7 +344,7 @@ export default function Rain() {
     if (mobile) {
       const g = gyroRef.current;
       if (g.permissionState === 'granted' || g.permissionState === 'not-required') {
-        return (g.gammaNorm - 0.5) * 2 * WIND_FORCE;
+        return applyDeadZoneBipolar(g.gammaNorm, 0.05) * WIND_FORCE;
       }
       return 0;
     }
@@ -736,6 +756,11 @@ export default function Rain() {
 
   const handleChordPick = useCallback((idx: number) => {
     try { Tone.start(); } catch { /* will retry below */ }
+    if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      gyroRequestedRef.current = true;
+      gyro.requestPermission().catch(() => {});
+      setShowGyroToast(false);
+    }
 
     selectedChordRef.current = idx;
     currentChordIndexRef.current = idx;
@@ -756,7 +781,7 @@ export default function Rain() {
         playChordStrum(freqs);
       }
     })();
-  }, [progression, handleAudioStart]);
+  }, [progression, handleAudioStart, gyro]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -773,6 +798,11 @@ export default function Rain() {
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
           className={styles.chordToggle}

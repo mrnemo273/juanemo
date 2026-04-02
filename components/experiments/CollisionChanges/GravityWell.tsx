@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import { HARMONIC_COLORS } from './chordData';
@@ -394,6 +395,8 @@ export default function GravityWell() {
 
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
   const [selectedChord, setSelectedChord] = useState<number | null>(null);
 
   const progression = useChordProgression();
@@ -484,6 +487,23 @@ export default function GravityWell() {
     ctx.addEventListener('statechange', check);
     return () => ctx.removeEventListener('statechange', check);
   }, [audioStarted, controls.soundEnabled, handleAudioStart]);
+
+  /* --------------------------------------------------------
+     iOS gyro permission toast
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (isMobile && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [isMobile, gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, handleAudioStart]);
 
   /* --------------------------------------------------------
      Canvas sizing
@@ -633,8 +653,8 @@ export default function GravityWell() {
         let centerX = w / 2;
         let centerY = h / 2;
         if (mobile && (g.permissionState === 'granted' || g.permissionState === 'not-required')) {
-          centerX += (g.gammaNorm - 0.5) * 160;
-          centerY += (g.betaNorm - 0.5) * 120;
+          centerX += applyDeadZoneBipolar(g.gammaNorm, 0.08) * 80;
+          centerY += applyDeadZoneBipolar(g.betaNorm, 0.08) * 60;
         }
 
         const distFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
@@ -748,8 +768,8 @@ export default function GravityWell() {
       let centerY = h / 2;
       const g = gyroRef.current;
       if (mobile && (g.permissionState === 'granted' || g.permissionState === 'not-required')) {
-        centerX += (g.gammaNorm - 0.5) * 160; // ±80px
-        centerY += (g.betaNorm - 0.5) * 120;  // ±60px
+        centerX += applyDeadZoneBipolar(g.gammaNorm, 0.08) * 80; // ±80px
+        centerY += applyDeadZoneBipolar(g.betaNorm, 0.08) * 60;  // ±60px
       }
 
       // Frequency lerp
@@ -923,6 +943,11 @@ export default function GravityWell() {
 
   const handleChordPick = useCallback((idx: number) => {
     try { Tone.start(); } catch { /* retry below */ }
+    if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      gyroRequestedRef.current = true;
+      gyro.requestPermission().catch(() => {});
+      setShowGyroToast(false);
+    }
     selectedChordRef.current = idx;
     setSelectedChord(idx);
     setDropdownOpen(false);
@@ -937,7 +962,7 @@ export default function GravityWell() {
       freqs.push(chord.frequencies[0] * 2); // octave root
       playChordStrum(freqs);
     })();
-  }, [progression, handleAudioStart]);
+  }, [progression, handleAudioStart, gyro]);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -953,6 +978,11 @@ export default function GravityWell() {
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
           className={styles.chordToggle}

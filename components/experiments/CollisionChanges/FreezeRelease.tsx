@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import { HARMONIC_COLORS } from './chordData';
@@ -168,6 +169,8 @@ export default function FreezeRelease() {
   const [audioStarted, setAudioStarted] = useState(false);
   const audioStartedRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
 
   const [selectedChord, setSelectedChord] = useState<number | null>(null);
   const selectedChordRef = useRef<number | null>(null);
@@ -277,6 +280,23 @@ export default function FreezeRelease() {
     ctx.addEventListener('statechange', check);
     return () => ctx.removeEventListener('statechange', check);
   }, [controls.soundEnabled, handleAudioStart]);
+
+  /* --------------------------------------------------------
+     iOS gyro permission toast
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (isMobile && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [isMobile, gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, handleAudioStart]);
 
   // Mute/unmute metronome when sound toggle changes
   useEffect(() => {
@@ -635,8 +655,8 @@ export default function FreezeRelease() {
         isMobile &&
         (g.permissionState === 'granted' || g.permissionState === 'not-required')
       ) {
-        gyroGx = (g.gammaNorm - 0.5) * 2;
-        gyroGy = (g.betaNorm - 0.5) * 2;
+        gyroGx = applyDeadZoneBipolar(g.gammaNorm, 0.05);
+        gyroGy = applyDeadZoneBipolar(g.betaNorm, 0.05);
       }
 
       // Frequency lerp
@@ -663,8 +683,8 @@ export default function FreezeRelease() {
         // Store tilt vector for burst aiming
         if (isMobile && (g.permissionState === 'granted' || g.permissionState === 'not-required')) {
           storedTiltRef.current = {
-            x: (g.gammaNorm - 0.5) * 2,
-            y: (g.betaNorm - 0.5) * 2,
+            x: applyDeadZoneBipolar(g.gammaNorm, 0.05),
+            y: applyDeadZoneBipolar(g.betaNorm, 0.05),
           };
         }
 
@@ -1147,6 +1167,11 @@ export default function FreezeRelease() {
 
   const handleChordPick = useCallback((idx: number) => {
     try { Tone.start(); } catch { /* will retry below */ }
+    if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      gyroRequestedRef.current = true;
+      gyro.requestPermission().catch(() => {});
+      setShowGyroToast(false);
+    }
 
     selectedChordRef.current = idx;
     setSelectedChord(idx);
@@ -1164,7 +1189,7 @@ export default function FreezeRelease() {
         playChordStrum(chordFreqs);
       }
     })();
-  }, [progression, handleAudioStart]);
+  }, [progression, handleAudioStart, gyro]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -1188,6 +1213,11 @@ export default function FreezeRelease() {
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
       />
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
           className={styles.chordToggle}

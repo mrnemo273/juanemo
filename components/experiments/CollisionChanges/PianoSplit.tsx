@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState, useContext } from 'react';
 import { ExperimentControlsContext } from '../../../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../../../lib/useDeviceOrientation';
+import { applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import { voiceLeadAssignment, HARMONIC_COLORS } from './chordData';
@@ -461,6 +462,8 @@ export default function PianoSplit() {
 
   const [audioStarted, setAudioStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showGyroToast, setShowGyroToast] = useState(false);
+  const gyroRequestedRef = useRef(false);
   const [selectedChord, setSelectedChord] = useState<number | null>(null);
 
   const progression = useChordProgression();
@@ -552,6 +555,23 @@ export default function PianoSplit() {
     ctx.addEventListener('statechange', check);
     return () => ctx.removeEventListener('statechange', check);
   }, [audioStarted, controls.soundEnabled, handleAudioStart]);
+
+  /* --------------------------------------------------------
+     iOS gyro permission toast
+     -------------------------------------------------------- */
+  useEffect(() => {
+    if (isMobile && gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      setShowGyroToast(true);
+    }
+  }, [isMobile, gyro.permissionState]);
+
+  const handleGyroPermission = useCallback(async () => {
+    if (gyroRequestedRef.current) return;
+    gyroRequestedRef.current = true;
+    try { await gyro.requestPermission(); } catch { /* ignore */ }
+    setShowGyroToast(false);
+    handleAudioStart();
+  }, [gyro, handleAudioStart]);
 
   /* --------------------------------------------------------
      Canvas sizing
@@ -756,8 +776,8 @@ export default function PianoSplit() {
       const g = gyroRef.current;
       if (mobile && (g.permissionState === 'granted' || g.permissionState === 'not-required')) {
         gyroGravityRef.current = {
-          gx: (g.gammaNorm - 0.5) * 2,
-          gy: (g.betaNorm - 0.5) * 2,
+          gx: applyDeadZoneBipolar(g.gammaNorm, 0.06),
+          gy: applyDeadZoneBipolar(g.betaNorm, 0.06),
         };
       }
 
@@ -992,6 +1012,11 @@ export default function PianoSplit() {
 
   const handleChordPick = useCallback((idx: number) => {
     try { Tone.start(); } catch { /* retry below */ }
+    if (gyro.permissionState === 'prompt' && !gyroRequestedRef.current) {
+      gyroRequestedRef.current = true;
+      gyro.requestPermission().catch(() => {});
+      setShowGyroToast(false);
+    }
     selectedChordRef.current = idx;
     setSelectedChord(idx);
     setDropdownOpen(false);
@@ -1003,7 +1028,7 @@ export default function PianoSplit() {
       const voicing = splitChordVoicing(chord);
       playChordStrumStereo(voicing.bassFreqs, voicing.trebleFreqs);
     })();
-  }, [progression, handleAudioStart]);
+  }, [progression, handleAudioStart, gyro]);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -1019,6 +1044,11 @@ export default function PianoSplit() {
   return (
     <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showGyroToast && (
+        <button className={styles.gyroToast} onClick={handleGyroPermission}>
+          Tap to enable motion control
+        </button>
+      )}
       <div ref={dropdownRef} className={styles.chordDropdown}>
         <button
           className={styles.chordToggle}
