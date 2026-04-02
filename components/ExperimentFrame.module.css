@@ -520,16 +520,105 @@
   color: var(--color-bittersweet);
 }
 
-/* Scrollable tile container (mobile overflow) */
-.tileScroll {
+/* Inline tile row — visible on desktop, hidden on mobile */
+.tileRow {
   display: flex;
   gap: 3px;
   align-items: center;
 }
 
-/* Scroll arrows — hidden by default, shown via JS when needed */
-.scrollArrow {
+/* Section dropdown — hidden on desktop, visible on mobile */
+.sectionDropdown {
   display: none;
+  position: relative;
+}
+
+.dropdownTrigger {
+  gap: 4px;
+  width: auto !important;
+  padding: 0 10px !important;
+}
+
+.dropdownChevron {
+  width: 8px;
+  height: 8px;
+  opacity: 0.4;
+}
+
+.dropdownPopover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: rgba(31, 38, 39, 0.95);
+  border: 1px solid rgba(214, 197, 171, 0.15);
+  border-radius: 8px;
+  min-width: 160px;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: dropdownFadeIn 0.15s ease;
+  z-index: 40;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: rgba(214, 197, 171, 0.08);
+}
+
+.dropdownItemActive {
+  background: rgba(214, 197, 171, 0.06);
+}
+
+.dropdownLetter {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-dun);
+  opacity: 0.4;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.dropdownItemActive .dropdownLetter {
+  color: var(--color-bittersweet);
+  opacity: 1;
+}
+
+.dropdownName {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--color-dun);
+  opacity: 0.35;
+  white-space: nowrap;
+}
+
+.dropdownItemActive .dropdownName {
+  opacity: 0.6;
 }
 
 /* Separator between pagination tiles and gear */
@@ -748,64 +837,12 @@
 
   .tileSep { margin: 0 5px; }
 
-  /* Scrollable tile container — activates when tiles overflow */
-  .tileScroll {
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    flex: 1;
-    min-width: 0;
-    padding: 0 4px;
-    mask-image: linear-gradient(
-      to right,
-      transparent 0px,
-      black 20px,
-      black calc(100% - 20px),
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0px,
-      black 20px,
-      black calc(100% - 20px),
-      transparent 100%
-    );
-  }
-
-  .tileScroll::-webkit-scrollbar {
+  /* Hide inline tiles, show dropdown on mobile */
+  .tileRow {
     display: none;
   }
 
-  .pageTile {
-    scroll-snap-align: center;
-    flex-shrink: 0;
-  }
-
-  /* Scroll arrows */
-  .scrollArrow {
-    display: flex;
-    width: 24px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: var(--color-dun);
-    opacity: 0.4;
-    font-size: 14px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-    padding: 0;
-  }
-
-  .scrollArrow:hover {
-    opacity: 0.7;
-  }
-
-  .scrollArrowHidden {
-    opacity: 0;
-    pointer-events: none;
+  .sectionDropdown {
+    display: block;
   }
 }

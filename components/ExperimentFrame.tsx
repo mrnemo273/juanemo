@@ -96,9 +96,8 @@ export default function ExperimentFrame({
   const [volume, setVolume] = useState(0.8);
   const [volumeOpen, setVolumeOpen] = useState(false);
   const volumeRef = useRef<HTMLDivElement>(null);
-  const tileScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Start AudioContext on first user interaction (required by browsers)
   useEffect(() => {
@@ -135,45 +134,17 @@ export default function ExperimentFrame({
     Tone.getDestination().volume.rampTo(db, 0.05);
   }, [volume]);
 
-  // Auto-scroll tile container to center active tile
-  const initialScrollDone = useRef(false);
+  // Close section dropdown on outside click
   useEffect(() => {
-    const container = tileScrollRef.current;
-    if (!container) return;
-    requestAnimationFrame(() => {
-      const activeTile = container.children[activeSection] as HTMLElement;
-      if (activeTile) {
-        const scrollLeft = activeTile.offsetLeft - container.clientWidth / 2 + activeTile.clientWidth / 2;
-        // Instant on first render, smooth on subsequent section changes
-        container.scrollTo({ left: scrollLeft, behavior: initialScrollDone.current ? 'smooth' : 'instant' });
-        initialScrollDone.current = true;
+    if (!sectionDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setSectionDropdownOpen(false);
       }
-    });
-  }, [activeSection]);
-
-  // Track scroll position for arrow visibility
-  useEffect(() => {
-    const container = tileScrollRef.current;
-    if (!container) return;
-    const updateArrows = () => {
-      setCanScrollLeft(container.scrollLeft > 4);
-      setCanScrollRight(container.scrollLeft < container.scrollWidth - container.clientWidth - 4);
     };
-    updateArrows();
-    const ro = new ResizeObserver(updateArrows);
-    ro.observe(container);
-    container.addEventListener('scroll', updateArrows, { passive: true });
-    return () => {
-      container.removeEventListener('scroll', updateArrows);
-      ro.disconnect();
-    };
-  }, []);
-
-  const scrollByTiles = useCallback((direction: number) => {
-    const container = tileScrollRef.current;
-    if (!container) return;
-    container.scrollBy({ left: direction * 43 * 3, behavior: 'smooth' });
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sectionDropdownOpen]);
 
   // Mobile detection — determined once on mount
   const [isMobile, setIsMobile] = useState(false);
@@ -672,14 +643,8 @@ export default function ExperimentFrame({
 
         {/* BOTTOM BAR — fixed, pagination tiles + gear */}
         <div className={styles.bottombar}>
-          <button
-            className={`${styles.scrollArrow}${!canScrollLeft ? ` ${styles.scrollArrowHidden}` : ''}`}
-            onClick={() => scrollByTiles(-1)}
-            aria-label="Scroll sections left"
-          >
-            ‹
-          </button>
-          <div className={styles.tileScroll} ref={tileScrollRef}>
+          {/* Desktop: inline tiles */}
+          <div className={styles.tileRow}>
             {totalSections >= 1 &&
               sectionLetters.map((letter, i) => (
                 <button
@@ -694,13 +659,39 @@ export default function ExperimentFrame({
                 </button>
               ))}
           </div>
-          <button
-            className={`${styles.scrollArrow}${!canScrollRight ? ` ${styles.scrollArrowHidden}` : ''}`}
-            onClick={() => scrollByTiles(1)}
-            aria-label="Scroll sections right"
-          >
-            ›
-          </button>
+
+          {/* Mobile: dropdown trigger + popover */}
+          <div className={styles.sectionDropdown} ref={dropdownRef}>
+            <button
+              className={`${styles.pageTile} ${styles.pageTileActive} ${styles.dropdownTrigger}`}
+              onClick={() => setSectionDropdownOpen((o) => !o)}
+              aria-label={`Section ${sectionLetters[activeSection]} — tap to change`}
+            >
+              {sectionLetters[activeSection]}
+              <svg className={styles.dropdownChevron} viewBox="0 0 10 6" fill="none">
+                <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {sectionDropdownOpen && (
+              <div className={styles.dropdownPopover}>
+                {sectionLetters.map((letter, i) => (
+                  <button
+                    key={letter}
+                    className={`${styles.dropdownItem}${
+                      activeSection === i ? ` ${styles.dropdownItemActive}` : ''
+                    }`}
+                    onClick={() => {
+                      handleSectionChange(i);
+                      setSectionDropdownOpen(false);
+                    }}
+                  >
+                    <span className={styles.dropdownLetter}>{letter}</span>
+                    <span className={styles.dropdownName}>{configs?.[i]?.name ?? sections?.[i] ?? ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className={styles.tileSep} />
 
