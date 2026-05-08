@@ -1,7 +1,7 @@
 # BACKLOG.md — Juanemo Living Backlog
 
 ## Last Updated
-2026-03-22 — **GS.1 Coltrane Circle ✅ DONE.** 11 deviations: no orbs (dynamic chord triangle), custom sax engine, staggered triads, BPM slider, volume popup (global), metronome volume control. Shared infra in place — B/C/D ready for builders.
+2026-05-08 — **Backport batch COMPLETE.** GYRO.1 (dead zones + iOS permission for all 10 gyro components) ✅, J.5 (pagination overflow) ✅, J.6 (note duration variety backport) ✅. EXP-01 through EXP-03 fully polished. Ready for Stock Collage series.
 
 ---
 
@@ -188,8 +188,9 @@ The Flock section evolved significantly from the original boids spec through ite
 | J.4c | Section E (was D): Magnets — consonance attracts, dissonance repels, chord change reshuffles relationships | ✅ DONE | Spec: `Specs/EXP02_MAGNETS.md`. Builder deviated significantly: spring equilibrium model replaced pure attract/repel, tangential orbiting prevents dead blobs, beat-synced breathing added despite spec saying no, collision energy bursts cascade. Mobile: drag+pin coexist via `touchDragged` flag. REST_DIST mobile-tuned (90–200px vs 130–320px desktop). |
 | J.4d | Section F: Freeze & Release — tap to freeze (silence), release with velocity burst, longer freeze = bigger burst | ✅ DONE | Spec: `Specs/EXP02_FREEZE_RELEASE.md`. 10 deviations from spec — all improvements. Key additions: energy circle (replaces timer), shockwave ring with strum (plays each orb as it passes), shockwave physics push, ease-out burst, note duration variety (quarter/half/whole), auto-release at max energy. **Discovery: note duration variety is a major musical improvement — should backport to Sections A–E.** |
 | J.4e | Section G: Rain — emitter mode, density via tilt/mouse, splash on landing, chord change wave coloring | ✅ DONE | 6 deviations — all improvements. Key changes: pass-through bottom (no bounce — cleaner than 3-bounce lifetime), elastic mid-air collisions with 1.4× boost (spec said pass-through), auto-play on first chord, tuned density 3–12/sec with 30 max particles, 50ms note gap (tighter than spec's 100ms). All 23 acceptance criteria passed. Component: `Rain.tsx`. |
-| J.5 | **Pagination tile overflow** — scrollable tiles on mobile when 6+ sections | ✅ DONE | Spec: `Specs/PAGINATION_OVERFLOW.md`. Initially shipped as scrollable tile group with snap + gradient fade + ResizeObserver-driven instant initial scroll (commits `bab3520`, `7eaf8d3`). Pivoted to dropdown section picker on mobile (commit `b515939`) — cleaner than horizontal scroll once section count grew. ExperimentFrame only. |
-| J.6 | **Note duration variety — backport to Sections A–E** | ✅ DONE | Shared `pickNoteDuration(velocity, toneA?, toneB?)` helper added to `audioEngine.ts` returning `4n` / `2n` / `1n`. Velocity skews longer on harder hits; both core tones (root/3rd/5th) bias longer; either tone being a 9th biases shorter (passing color). Wired into `CollisionChanges`, `Flock` (collisions + shake-grab), `GravityWell`, `Magnets`, `Rain` — `Rain` also picked up a `chordTone` field on `RainParticle` (set via `getChordTone(idx)` at spawn). Keeps `8n` only in the un-touched `playDyad` helper for any future tight-feel use. |
+| J.5 | **Pagination tile overflow** — scrollable tiles on mobile when 6+ sections | ✅ DONE | Spec: `Specs/PAGINATION_OVERFLOW.md`. Scrollable tile group with scroll-snap, gradient fade, auto-scroll to active tile (instant on first render, smooth after), ResizeObserver-tracked arrow visibility, 4px scroll threshold to prevent ghost arrows. ExperimentFrame.tsx + CSS only. 2 deviations: instant initial scroll (not smooth), ResizeObserver replaces manual needsScroll check. |
+| J.6 | **Note duration variety — backport to Sections A–E** | ✅ DONE | Spec: `Specs/NOTE_DURATION_BACKPORT_BUILDER_PROMPT.md`. Duration tied to collision properties: A=velocity, B=register, C=orbital radius, D=leader proximity, E=consonance. Sections F+G already had varied durations. |
+| GYRO.1 | **Gyro dead zone + iOS permission — backport to all gyro experiments** | ✅ DONE | Spec: `Specs/GYRO_UPGRADE.md`. All 10 gyro-using components upgraded. Dead zones: 0.04 (EXP-01 typography), 0.05 (wind/force), 0.06 (gravity), 0.08 (position), 0.10 (BPM). iOS permission toast on all experiments. `lib/gyroUtils.ts` shared utility. Toast style matched ThreeBody design (translucent warm tint + blur). |
 
 ### EXP-03: Giant Steps (Coltrane Changes via Circle of Fifths)
 
@@ -198,9 +199,9 @@ Inspired by John Coltrane's *Giant Steps* (1959). The Coltrane substitution divi
 | # | Item | Status | Notes |
 |---|---|---|---|
 | GS.1 | **Section A: Coltrane Circle** — 12 keys on a circle, dynamic chord triangle, staggered sax notes on each change | ✅ DONE | Spec: `Specs/EXP03_GIANT_STEPS.md`. Builder prompt + notes: `Specs/EXP03_COLTRANE_CIRCLE_BUILDER_PROMPT.md`. Shared infra built: `types.ts`, `giantStepsChordData.ts`, `useGiantStepsProgression.ts`, `GiantStepsSwitch.tsx`. 11 deviations — see builder notes below. |
-| GS.2 | **Section B: Three-Body Problem** — three gravity wells (one per tonal center), orbs perpetually in flight between them | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_THREE_BODY_BUILDER_PROMPT.md`. N-body gravity, trail system, tempo = chaos dial. 15 acceptance criteria. |
-| GS.3 | **Section C: Chromatic Bridges** — ii-V passing chords visualized as ephemeral force-field arcs between key centers | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_CHROMATIC_BRIDGES_BUILDER_PROMPT.md`. Bézier bridges, flow particles, resolution flash. 15 acceptance criteria. |
-| GS.4 | **Section D: Mirror Symmetry** — 3-fold rotational symmetry, each note spawns 3 mirrored orbs at 120° intervals | 🔵 SPEC WRITTEN | Builder prompt: `Specs/EXP03_MIRROR_SYMMETRY_BUILDER_PROMPT.md`. 7 real + 14 mirrors, alignment events, kaleidoscope. 14 acceptance criteria. |
+| GS.2 | **Section B: Three-Body Problem** — circle-of-fifths chord-tone targeting, wave-based stagger, gyro triad rotation | ✅ DONE | Builder prompt + notes: `Specs/EXP03_THREE_BODY_BUILDER_PROMPT.md`. 9 major deviations: easing replaced springs, wave stagger for triads, harmonic filtering, circle layout (not free-space), gyro dead zone + triad rotation, auto-play desktop. Fixed iOS gyro bug (BUG-1) in `useDeviceOrientation.ts`. See builder notes below. |
+| GS.3 | **Section C: Chromatic Bridges** — chord-shape Bézier arcs on circle of fifths, pen draw-in animation, dissolving ghost arcs | ✅ DONE | Builder prompt: `Specs/EXP03_CHROMATIC_BRIDGES_BUILDER_PROMPT.md`. Major reimagining: chord arcs (root→3rd→7th) replace zone-to-zone bridges. No bridge detection logic. Orbs reduced to tiny flow particles. Sax engine expanded to 3 voices (sax/piano/bass) with shared reverb/delay/chorus bus. See builder notes below. |
+| GS.4 | **Section D: Mirror Symmetry** — 2-fold rotational symmetry, radial spoke layout, sector-crossing steel drum audio | ✅ DONE | Builder prompt: `Specs/EXP03_MIRROR_SYMMETRY_BUILDER_PROMPT.md`. Key changes: 2-fold (180°) not 3-fold (120°), spoke lines through center, sector-crossing triggers notes (not alignment events), drone synth on key root, hue-shifted orb colors, dotted octave zone rings. See builder notes below. |
 
 **GS.1 Builder Notes (EXP-03A Coltrane Circle):**
 
@@ -223,6 +224,62 @@ The builder radically reimagined Section A. The core circle-of-fifths layout and
 **8. MIN_NOTE_GAP = 60ms** (spec said 100ms). Tighter for the staggered triad to sound like a phrase.
 
 **Architectural impact on Sections B/C/D:** Shared infra is in place (`types.ts`, chord data, progression hook, section switch). B/C/D builders should use the sax engine (or build their own sound), note the volume control in context, and decide independently whether orbs fit their section's concept.
+
+**GS.2 Builder Notes (EXP-03B Three-Body):**
+
+Fundamentally reimagined from free-space gravity to circle-of-fifths chord-tone targeting. 9 deviations, all improvements. Full notes in `Specs/EXP03_THREE_BODY_BUILDER_PROMPT.md`.
+
+**Key architectural decisions:** Easing model replaced spring physics (prevents vibration at rest). Wave-based stagger (1 from each group per wave = triad hits). Harmonic filtering (chord tones full, scale tones soft, chromatic silent). Group-based note durations (root=1n, 3rd=2n, 7th=4n). Wait-for-settle + 400ms hold before next chord.
+
+**Mobile gyro system (new pattern):** Dead zone (0.08 = ~5° from level). Gamma tilt rotates triad around circle. Toast permission flow for iOS. Desktop is auto-play only (no mouse interaction). This gyro pattern is superior to all existing experiments — see GYRO.1 backlog item.
+
+**BUG-1 (iOS gyro):** `useDeviceOrientation` hook dropped the listener after iOS permission grant. Auto-attach effect only checked `'not-required'`, not `'granted'`. Fixed — now checks both. **All experiments that use gyro on iOS benefit from this fix automatically** since they share the hook.
+
+**Files:** `ThreeBody.tsx` (created), `GiantStepsSwitch.tsx` (modified), `saxEngine.ts` (added duration param), `experiments.ts` (Section B config), `useDeviceOrientation.ts` (BUG-1 fix).
+
+**GS.3 Builder Notes (EXP-03C Chromatic Bridges):**
+
+Reimagined bridges as chord-shape arcs on the shared circle-of-fifths layout. The spec's zone-to-zone Bézier bridges were replaced entirely.
+
+**1. Chord arcs replace bridges.** Each chord spawns 3 Bézier arcs connecting root→3rd→7th on the circle of fifths, forming a triangular shape. New shapes draw in with a pen animation (`DRAW_IN_SPEED = 0.06`), old shapes dissolve over 2.5s with fade-out. No ii-V-I bridge detection logic — every chord gets arcs.
+
+**2. No orbs on bridges.** Spec called for orbs traveling along bridge paths. Builder stripped orbs to tiny flow particles (4–8px) that drift along arc segments. Line 581: `// 3. (Orbs removed — arcs only)`. The arcs themselves are the visual.
+
+**3. Spring bounce on spawn.** New arcs overshoot inward (0.7 amplitude, 5 oscillations) then settle, giving a plucked-string quality. Dissolving arcs skip the bounce.
+
+**4. Filled chord shape.** Once arcs fully draw in, the enclosed triangular area fills with 12% key center color (25% when dissolving as ghost).
+
+**5. Sax engine expanded to 3 voices.** `saxEngine.ts` now has sax (gritty reed), piano (bright percussive), and bass (deep sub) voices sharing a reverb/delay/chorus bus. Root→bass, 3rd→piano, 7th→sax. Major shared infrastructure change.
+
+**6. Mouse/gyro → arc curvature.** Desktop: mouse distance from center shifts Bézier control points radially. Mobile: gamma tilt shifts control points. Creates interactive warping of the chord shapes.
+
+**7. No tap-to-force-resolution or zone-tap interaction.** Tap only starts audio. Simpler interaction model.
+
+**Files:** `ChromaticBridges.tsx` (644 lines, created), `saxEngine.ts` (rewritten — 3-voice engine), `GiantStepsSwitch.tsx` (wired activeSection === 2).
+
+**GS.4 Builder Notes (EXP-03D Mirror Symmetry):**
+
+Heavily JC-directed through hand-drawn sketches and real-time feedback. 8 deviations from spec, most requested by JC during the build session.
+
+**1. 2-fold symmetry (180°) not 3-fold (120°).** JC clarified with a hand-drawn sketch — wanted each spoke line to connect an orb to its mirror on the opposite side of center, not 3 rotational copies. `MIRROR_ANGLES = [0, Math.PI]` = 14 visible orbs, not 21.
+
+**2. Fixed-radius rotating formation.** Orbs at fixed distances from center (35–340px desktop), whole formation rotates toward active key center via angular lerp. No spring physics, no velocity. Per-orb stagger on lerp speed + selfSpin drift for variety.
+
+**3. No alignment events.** JC explicitly disliked orbs regrouping: "I don't like it when they regroup in the middle." Converge→unison→split removed entirely.
+
+**4. No glow/flash/flicker.** JC: "lets remove the glow and the flicker." Clean rendering — fill + stroke at consistent opacity.
+
+**5. Steel drum spatial audio.** JC: treat the background "like a steel drum with more notes from the center out." Distance from center → octave (close=2x/piano, mid=sax, far=0.5x/bass). Notes triggered by sector boundary crossings, not chord changes. Rate-limited 120ms per orb.
+
+**6. Spoke lines through center.** JC: "the lines look like they connect to the center instead of passing through the center." Spoke lines now pass through center connecting real↔mirror.
+
+**7. Drone synth.** Continuous sine tone at active key center root (B2/G2/E♭3). Ramps smoothly over 0.8s on key change. -18dB through 0.06 gain. Harmonic anchor underneath steel drum pings.
+
+**8. Sector-aware orb coloring + hue shifts.** Orb color determined by which sector it's currently in (changes as formation rotates). Per-orb hue offsets (-25° to +28°) create rainbow variation within each key center's color family.
+
+**Key lesson:** User communicates visually — hand-drawn sketches resolved spatial/layout ambiguities faster than text descriptions.
+
+**Files:** `MirrorSymmetry.tsx` (679 lines, created), `GiantStepsSwitch.tsx` (wired activeSection === 3).
 
 ### EXP-04: Walking Line (Generative Bass Line) *(was EXP-03)*
 
@@ -324,52 +381,53 @@ Strings stretched across the screen. Swipe to strum. Press to pluck. Tilt to ben
 
 ## Experiment Pipeline — Stock Collage Series ✂️
 
-Approved by JC on 2026-03-19. Four interactive experiments using free stock photography (Unsplash API) as raw material for collage. Each experiment explores a different collage technique — surrealist juxtaposition, strip recombination, color-based blending, and depth-based layering. Claude assists with curation, alignment, and composition suggestions.
+Approved by JC on 2026-03-19. Four sections of a single "Stock Collage" experiment (EXP-04) using free stock photography as raw material. Curated Unsplash CDN URLs — no API key needed. User drives all creative choices (no AI curation). Sections A+B are compose-then-admire; Sections C+D are always-alive (respond to mouse/tilt). No audio.
 
-### EXP-11: Exquisite Search (Surrealist Exquisite Corpse) *(was EXP-10)*
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| C.1 | Three horizontal bands — search Unsplash for each, pick from results | 🔲 TODO | Top/mid/bottom. Each band independently pannable. |
-| C.2 | Fold mechanic — active band visible, others clipped to 20px alignment sliver | 🔲 TODO | CSS mask with 8px Gaussian blur feather at seams. |
-| C.3 | Reveal animation — 3D unfold (rotateX -90° → 0°, 400ms stagger) | 🔲 TODO | Top-to-bottom sequence. Shadow underneath during unfold. |
-| C.4 | Claude picks middle band search term to bridge top + bottom | 🔲 TODO | Analyzes color palette + dominant shapes. Option for "surrealist clash" mode. |
-| C.5 | Shake mode — randomly reassign which image fills which band | 🔲 TODO | Instant variations from same 3 images. |
-| C.6 | Export composite as single image (canvas compositing with feathered seams) | 🔲 TODO | |
-
-### EXP-12: Slice & Stack (Hockney-Style Strip Collage) *(was EXP-11)*
+### Section A: Exquisite Search (Surrealist Exquisite Corpse)
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| C.7 | Search 2+ images, slice each into vertical strips (8/12/16/24) | 🔲 TODO | drawImage with source cropping. Each strip is independent draggable element. |
-| C.8 | Drag strips to recompose — snap to grid with half-width offset option | 🔲 TODO | 1px drop shadows between strips for layered paper feel. |
-| C.9 | Auto-shuffle button — randomly interleave strips from all images | 🔲 TODO | |
-| C.10 | Sort by hue — rearrange all strips by dominant color (HSL H component) | 🔲 TODO | Creates unexpected gradient left-to-right. |
-| C.11 | Vertical offset per strip for stepped/staircase collage | 🔲 TODO | |
-| C.12 | Claude identifies "continuation opportunities" — lines/horizons that align across strips | 🔲 TODO | Suggests specific pairings. Auto-compose "best alignment" mode. |
-| C.13 | Export strip collage | 🔲 TODO | |
+| C.1 | Three horizontal bands — pick from curated Unsplash gallery | 🔵 SPEC WRITTEN | Spec: `Specs/STOCK_COLLAGE_EXQUISITE_SEARCH_BUILDER_PROMPT.md`. Builds shared infra: `collageImages.ts`, `ImagePicker.tsx`, `useCollageExport.ts`, `StockCollageSwitch.tsx`. |
+| C.2 | Fold mechanic — active band visible, others clipped to 20px sliver | 🔵 SPEC WRITTEN | State machine: COMPOSE → READY → REVEALING → COMPLETE. |
+| C.3 | Reveal animation — 3D unfold (rotateX -90° → 0°, 400ms stagger) | 🔵 SPEC WRITTEN | CSS 3D transforms, expo-out easing, shadow during unfold. |
+| C.4 | ~~Claude picks middle band~~ | ⏸ DROPPED | No AI curation — user picks all images. |
+| C.5 | Shake mode — randomly reassign which image fills which band | 🔵 SPEC WRITTEN | Reuses EXP-01 shake detection pattern. Desktop: Shuffle button. |
+| C.6 | Export composite as single image | 🔵 SPEC WRITTEN | Canvas compositing with feathered seams. |
 
-### EXP-13: Color Bleed (Chromatic Merge) *(was EXP-12)*
-
-| # | Item | Status | Notes |
-|---|---|---|---|
-| C.14 | Place 2+ stock photos side by side on canvas | 🔲 TODO | Drag to reposition, rotate, flip. |
-| C.15 | Real-time bleed effect — colors merge where edges match (CIE Lab distance) | 🔲 TODO | WebGL fragment shader. Hermite interpolation weighted by color similarity. |
-| C.16 | Bleed radius control (how far the merge extends from edge) | 🔲 TODO | Distance field from image edges. |
-| C.17 | Color tolerance control (how close colors must be to trigger bleed) | 🔲 TODO | Min = surgical precision, max = impressionist haze. |
-| C.18 | Claude ranks photos by "bleed potential" and suggests positioning/rotation | 🔲 TODO | Preview heatmap of predicted bleed zones. |
-| C.19 | Export blended collage | 🔲 TODO | |
-
-### EXP-14: Depth Sandwich (Parallax Diorama) *(was EXP-13)*
+### Section B: Slice & Stack (Hockney-Style Strip Collage)
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| C.20 | Pick 3–5 stock photos, generate depth maps (MiDaS via TensorFlow.js/ONNX) | 🔲 TODO | Client-side depth estimation. Quantized to 3–5 discrete layers. |
-| C.21 | Peel each photo into depth layers (foreground/midground/background) | 🔲 TODO | Depth map as alpha mask with edge feathering. |
-| C.22 | Interleave layers from different images by depth plane | 🔲 TODO | All foregrounds compete for front plane. CSS translateZ in perspective container. |
-| C.23 | Parallax via gyro (mobile) or mouse (desktop) — foreground fast, background slow | 🔲 TODO | rotateX/rotateY driven by input. |
-| C.24 | Claude suggests "figure-ground swap" combinations + lighting consistency check | 🔲 TODO | Specific combo suggestions. |
-| C.25 | Export as parallax video or still composite | 🔲 TODO | |
+| C.7 | Pick 2–4 images, slice into vertical strips (8/12/16/24) | 🔵 SPEC WRITTEN | Spec: `Specs/STOCK_COLLAGE_SLICE_STACK_BUILDER_PROMPT.md`. drawImage with source cropping. |
+| C.8 | Drag strips to recompose — snap to grid | 🔵 SPEC WRITTEN | 1px gaps + drop shadows. Desktop click-drag + mobile touch-drag. |
+| C.9 | Auto-shuffle — randomly interleave strips from all images | 🔵 SPEC WRITTEN | Fisher-Yates shuffle, animated 300ms transition. |
+| C.10 | Sort by hue — rearrange strips by dominant color | 🔵 SPEC WRITTEN | Median hue from sampled pixels. Animated 400ms transition. |
+| C.11 | Vertical offset per strip — wave/staircase/random modes | 🔵 SPEC WRITTEN | 0–60px slider + 4 offset modes. |
+| C.12 | ~~Claude identifies continuation opportunities~~ | ⏸ DROPPED | No AI curation — user arranges everything manually. |
+| C.13 | Export strip collage | 🔵 SPEC WRITTEN | Includes gaps, shadows, offsets in export. |
+
+### Section C: Color Bleed (Chromatic Merge)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.14 | Place 2 stock photos side by side on canvas | 🔵 SPEC WRITTEN | Spec: `Specs/STOCK_COLLAGE_COLOR_BLEED_BUILDER_PROMPT.md`. Side-by-side / top-bottom / diagonal layouts. Pan to reposition. |
+| C.15 | Real-time bleed effect — colors merge at boundary (CIE Lab distance) | 🔵 SPEC WRITTEN | Canvas 2D pixel manipulation (not WebGL). Hermite interpolation. Boundary-strip-only processing for performance. |
+| C.16 | Bleed radius control (10–120px) | 🔵 SPEC WRITTEN | How far merge extends from split line. |
+| C.17 | Color tolerance control (5–80 Lab distance) | 🔵 SPEC WRITTEN | Low = surgical, high = impressionist. |
+| C.18 | ~~Claude ranks photos by bleed potential~~ | ⏸ DROPPED | No AI curation. |
+| C.19 | Export blended collage | 🔵 SPEC WRITTEN | Snapshot of current bleed state. |
+| C.20 | **Always-alive:** mouse/tilt shifts bleed boundary + idle oscillation | 🔵 SPEC WRITTEN | Lerp 0.08, dead zone 0.06. Gentle sine breathing when idle. |
+
+### Section D: Depth Sandwich (Parallax Diorama)
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| C.21 | Pick 3–5 stock photos, generate depth maps client-side | 🔵 SPEC WRITTEN | Spec: `Specs/STOCK_COLLAGE_DEPTH_SANDWICH_BUILDER_PROMPT.md`. TensorFlow.js MiDaS or pseudo-depth fallback. |
+| C.22 | Peel each photo into 3 depth layers (fg/mid/bg) with feathered edges | 🔵 SPEC WRITTEN | 8px gradient feather between layers. |
+| C.23 | Interleave layers from different images by depth plane | 🔵 SPEC WRITTEN | All foregrounds compete for front, all backgrounds recede. |
+| C.24 | **Always-alive parallax** — gyro (mobile) or mouse (desktop) | 🔵 SPEC WRITTEN | Foreground fast, background slow. Lerp 0.08, dead zone 0.06. Idle sway ±3px. 10% overscale prevents edge reveal. |
+| C.25 | ~~Claude suggests figure-ground swap combinations~~ | ⏸ DROPPED | No AI curation. |
+| C.26 | Export as still composite | 🔵 SPEC WRITTEN | Snapshot PNG at current parallax position. |
 
 ---
 
