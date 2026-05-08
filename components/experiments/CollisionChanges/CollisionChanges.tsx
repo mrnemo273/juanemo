@@ -7,7 +7,7 @@ import { applyDeadZoneBipolar } from '../../../lib/gyroUtils';
 import { useParticlePhysics, setOrbSizes } from './useParticlePhysics';
 import { useChordProgression, PROGRESSION, getChordTone } from './useChordProgression';
 import * as Tone from 'tone';
-import { initAudio, playDyad, playNote, playChordStrum, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeTimeSignature, stopMetronome } from './audioEngine';
+import { initAudio, playDyadDuration, pickNoteDuration, playNote, playChordStrum, isAudioReady, dispose, setDecay, setReverbMix, startMetronome, setMetronomeTempo, setMetronomeTimeSignature, stopMetronome } from './audioEngine';
 import { HARMONIC_COLORS, voiceLeadAssignment } from './chordData';
 import type { CollisionEvent } from './types';
 import styles from './CollisionChanges.module.css';
@@ -421,12 +421,14 @@ export default function CollisionChanges() {
           playNote(eb.frequency, eb.velocity);
         }
         for (const col of collisions) {
-          playDyad(col.freqA, col.freqB, col.velocity);
+          const pA = physics.stateRef.current.particles.find((p) => p.id === col.idA);
+          const pB = physics.stateRef.current.particles.find((p) => p.id === col.idB);
+          playDyadDuration(col.freqA, col.freqB, col.velocity, pickNoteDuration(col.velocity, pA?.chordTone, pB?.chordTone));
           collisionLinesRef.current.push({
-            x1: physics.stateRef.current.particles.find((p) => p.id === col.idA)?.x ?? col.midX,
-            y1: physics.stateRef.current.particles.find((p) => p.id === col.idA)?.y ?? col.midY,
-            x2: physics.stateRef.current.particles.find((p) => p.id === col.idB)?.x ?? col.midX,
-            y2: physics.stateRef.current.particles.find((p) => p.id === col.idB)?.y ?? col.midY,
+            x1: pA?.x ?? col.midX,
+            y1: pA?.y ?? col.midY,
+            x2: pB?.x ?? col.midX,
+            y2: pB?.y ?? col.midY,
             time: time,
           });
         }

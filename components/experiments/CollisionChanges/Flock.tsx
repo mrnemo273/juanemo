@@ -18,7 +18,8 @@ import {
   setMetronomeTempo,
   setMetronomeTimeSignature,
   stopMetronome,
-  playDyad,
+  playDyadDuration,
+  pickNoteDuration,
   playNote,
   playChordStrum,
 } from './audioEngine';
@@ -1046,7 +1047,7 @@ export default function Flock() {
             const others = particlesRef.current.filter(p => p.id !== grabbed.id);
             const partner = others[Math.floor(Math.random() * others.length)];
             const velocity = Math.min(1.0, cursorSpeed / 20);
-            playDyad(grabbed.frequency, partner.frequency, velocity);
+            playDyadDuration(grabbed.frequency, partner.frequency, velocity, pickNoteDuration(velocity, grabbed.chordTone, partner.chordTone));
             grabbed.brightness = Math.min(1, grabbed.brightness + 0.5);
             partner.brightness = Math.min(1, partner.brightness + 0.3);
 
@@ -1077,15 +1078,16 @@ export default function Flock() {
       if (isAudioReady()) {
         for (let ci = 0; ci < collisions.length; ci++) {
           const col = collisions[ci];
+          const pA = particlesRef.current.find((p) => p.id === col.idA);
+          const pB = particlesRef.current.find((p) => p.id === col.idB);
+          const duration = pickNoteDuration(col.velocity, pA?.chordTone, pB?.chordTone);
           // Stagger by 30ms per pair so dyads layer rather than stack
           const delay = ci * 30;
           if (delay === 0) {
-            playDyad(col.freqA, col.freqB, col.velocity);
+            playDyadDuration(col.freqA, col.freqB, col.velocity, duration);
           } else {
-            setTimeout(() => playDyad(col.freqA, col.freqB, col.velocity), delay);
+            setTimeout(() => playDyadDuration(col.freqA, col.freqB, col.velocity, duration), delay);
           }
-          const pA = particlesRef.current.find((p) => p.id === col.idA);
-          const pB = particlesRef.current.find((p) => p.id === col.idB);
           collisionLinesRef.current.push({
             x1: pA?.x ?? col.midX,
             y1: pA?.y ?? col.midY,

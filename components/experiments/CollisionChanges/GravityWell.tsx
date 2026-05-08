@@ -18,7 +18,8 @@ import {
   setMetronomeTempo,
   setMetronomeTimeSignature,
   stopMetronome,
-  playDyad,
+  playDyadDuration,
+  pickNoteDuration,
   playNote,
   playChordStrum,
 } from './audioEngine';
@@ -800,9 +801,9 @@ export default function GravityWell() {
           playNote(eb.frequency, eb.velocity);
         }
         for (const col of collisions) {
-          playDyad(col.freqA, col.freqB, col.velocity);
           const pA = particlesRef.current.find((p) => p.id === col.idA);
           const pB = particlesRef.current.find((p) => p.id === col.idB);
+          playDyadDuration(col.freqA, col.freqB, col.velocity, pickNoteDuration(col.velocity, pA?.chordTone, pB?.chordTone));
           collisionLinesRef.current.push({
             x1: pA?.x ?? col.midX,
             y1: pA?.y ?? col.midY,

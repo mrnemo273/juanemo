@@ -17,7 +17,8 @@ import {
   setMetronomeTempo,
   setMetronomeTimeSignature,
   stopMetronome,
-  playDyad,
+  playDyadDuration,
+  pickNoteDuration,
   playNote,
   playChordStrum,
 } from './audioEngine';
@@ -79,6 +80,7 @@ interface RainParticle {
   exitNoted: boolean; // whether exit note has been played
   spawnTime: number;
   chordIndex: number;
+  chordTone: ChordTone;
 }
 
 interface Splash {
@@ -289,6 +291,7 @@ export default function Rain() {
       exitNoted: false,
       spawnTime: Date.now(),
       chordIndex: currentChordIndexRef.current,
+      chordTone: getChordTone(idx),
     };
 
     particlesRef.current.push(particle);
@@ -593,8 +596,8 @@ export default function Rain() {
                   const lastTime = cooldownRef.current.get(pairKey) || 0;
                   if (now - lastTime > COLLISION_COOLDOWN) {
                     cooldownRef.current.set(pairKey, now);
-                    const vel = Math.sqrt(dvx * dvx + dvy * dvy) * 0.3;
-                    playDyad(a.frequency, b.frequency, Math.max(Math.min(vel, 0.8), 0.15));
+                    const vel = Math.max(Math.min(Math.sqrt(dvx * dvx + dvy * dvy) * 0.3, 0.8), 0.15);
+                    playDyadDuration(a.frequency, b.frequency, vel, pickNoteDuration(vel, a.chordTone, b.chordTone));
                   }
                 }
 

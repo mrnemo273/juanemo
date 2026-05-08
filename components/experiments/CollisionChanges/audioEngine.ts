@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import type { ChordTone } from './types';
 
 let synth: Tone.PolySynth | null = null;
 let delay: Tone.FeedbackDelay | null = null;
@@ -100,6 +101,26 @@ export function playDyadDuration(freq1: number, freq2: number, velocity: number,
     now,
     vel,
   );
+}
+
+/**
+ * Pick a musical note duration for a collision.
+ * Core chord tones (root/3rd/5th) sustain longer; 9th extensions clip shorter
+ * (they read as passing color). Velocity skews longer on harder hits.
+ */
+export function pickNoteDuration(
+  velocity: number,
+  toneA?: ChordTone,
+  toneB?: ChordTone,
+): string {
+  let weight = Math.max(0, Math.min(1, velocity));
+  if (toneA === '9th' || toneB === '9th') weight -= 0.25;
+  const isCore = (t?: ChordTone) => t === 'root' || t === '3rd' || t === '5th';
+  if (isCore(toneA) && isCore(toneB)) weight += 0.2;
+  weight += (Math.random() - 0.5) * 0.25;
+  if (weight < 0.35) return '4n';
+  if (weight < 0.75) return '2n';
+  return '1n';
 }
 
 /** Arpeggiate a chord — play notes in sequence with stagger */
