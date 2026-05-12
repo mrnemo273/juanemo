@@ -461,6 +461,50 @@
   align-self: flex-start;
 }
 
+.featherSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  max-width: 140px;
+  height: 3px;
+  background: rgba(214, 197, 171, 0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.featherSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-dun);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.featherSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.featherSlider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-dun);
+  border: none;
+  cursor: pointer;
+}
+
+.controlValue {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--color-dun);
+  opacity: 0.6;
+  min-width: 32px;
+  text-align: right;
+}
+
 .noControls {
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;

@@ -1,0 +1,196 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-gunmetal);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.bandsWrap {
+  position: absolute;
+  /* Inset from top/bottom so the experiment title and section hint stay visible. */
+  top: 90px;
+  bottom: 110px;
+  left: 0;
+  right: 0;
+}
+
+.band {
+  position: absolute;
+  /* left + width are set inline per-band so each band can have its own
+     random horizontal extent. */
+  overflow: hidden;
+  background: var(--color-outer-space);
+  will-change: transform;
+  cursor: pointer;
+  outline: none;
+}
+
+.band:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-bittersweet);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(214, 197, 171, 0.04) 0,
+      rgba(214, 197, 171, 0.04) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  border: 1px dashed rgba(214, 197, 171, 0.2);
+}
+
+.placeholderText {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  opacity: 0.55;
+}
+
+.changeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  background: rgba(31, 38, 39, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(214, 197, 171, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  z-index: 5;
+}
+.changeBtn:hover {
+  border-color: var(--color-dun);
+  color: var(--color-bone);
+}
+
+.actionsCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.revealBtn {
+  pointer-events: auto;
+  padding: 16px 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-bone);
+  background: var(--color-bittersweet);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s;
+  box-shadow: 0 8px 28px rgba(242, 92, 84, 0.3),
+    0 0 0 8px rgba(242, 92, 84, 0.06);
+  animation: pulse 2200ms ease-in-out infinite;
+}
+.revealBtn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 12px 36px rgba(242, 92, 84, 0.4),
+    0 0 0 10px rgba(242, 92, 84, 0.08);
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(242, 92, 84, 0.3), 0 0 0 8px rgba(242, 92, 84, 0.06); }
+  50% { box-shadow: 0 8px 28px rgba(242, 92, 84, 0.5), 0 0 0 12px rgba(242, 92, 84, 0.12); }
+}
+
+.actionsBottom {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.actionBtn {
+  padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-dun);
+  background: rgba(31, 38, 39, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(214, 197, 171, 0.25);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.actionBtn:hover {
+  border-color: var(--color-dun);
+  color: var(--color-bone);
+}
+
+.actionBtnFlash {
+  background: var(--color-bittersweet);
+  color: var(--color-bone);
+  border-color: var(--color-bittersweet);
+}
+
+@media (max-width: 600px) {
+  .bandsWrap {
+    top: 70px;
+    bottom: 90px;
+  }
+  .actionsBottom {
+    bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100% - 32px);
+  }
+  .revealBtn {
+    padding: 14px 28px;
+    font-size: 12px;
+  }
+  .changeBtn {
+    top: 8px;
+    right: 8px;
+    padding: 4px 10px;
+    font-size: 9px;
+  }
+}

@@ -259,6 +259,28 @@ export const codeChordsSectionConfigs: SectionConfig[] = [
   },
 ];
 
+export const stockCollageSectionConfigs: SectionConfig[] = [
+  {
+    letter: 'A',
+    name: 'Exquisite Search',
+    hint: 'Random photos blended into one',
+    hintMobile: 'Tap a band to re-roll it',
+    description:
+      'An automatic exquisite corpse — horizontal bands of randomly chosen photos, blended at the seams into a single image. The bands unfold on arrival; tap any one to re-roll just that strip, or shuffle to re-roll them all. Crank the band count up to 12 and turn Stretch on for abstract horizontal color fields.',
+    instructions: [
+      { icon: 'eye', text: '<strong>Watch</strong> — bands unfold on arrival into a finished collage.' },
+      { icon: 'cursor', text: '<strong>Tap a band</strong> to re-roll just that one. <strong>Drag</strong> to reframe, <strong>scroll</strong> to zoom.' },
+      { icon: 'refresh', text: '<strong>Shuffle</strong> re-rolls every band at once. Turn up <strong>Bands</strong> + <strong>Stretch</strong> for abstract patterns.' },
+    ],
+    instructionsMobile: [
+      { icon: 'eye', text: '<strong>Watch</strong> — bands unfold automatically.' },
+      { icon: 'move', text: '<strong>Tap</strong> a band to re-roll it. <strong>Drag</strong> to reframe, <strong>pinch</strong> to zoom.' },
+      { icon: 'refresh', text: '<strong>Shake</strong> to re-roll every band. Try high band counts + Stretch for color-field looks.' },
+    ],
+    controls: ['bandRatio', 'bandCount', 'mode'],
+  },
+];
+
 export const giantStepsSectionConfigs: SectionConfig[] = [
   {
     letter: 'A',
@@ -341,6 +363,17 @@ export const giantStepsSectionConfigs: SectionConfig[] = [
 ];
 
 export const experiments: Experiment[] = [
+  {
+    slug: 'stock-collage',
+    number: '04',
+    name: 'Stock Collage',
+    description: 'Four collage techniques using stock photography as raw material.',
+    longDescription:
+      'Surrealist juxtaposition, strip recombination, chromatic blending, and depth-based layering — four ways to cut, merge, and reassemble stock photography into something new. Section A is a digital exquisite corpse: compose three horizontal bands one at a time, then unfold them to reveal a single surrealist image.',
+    publishedDate: 'May 2026',
+    sections: ['Exquisite Search'],
+    sectionConfigs: stockCollageSectionConfigs,
+  },
   {
     slug: 'giant-steps',
     number: '03',

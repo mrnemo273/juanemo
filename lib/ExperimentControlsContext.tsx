@@ -3,6 +3,9 @@
 import { createContext, useContext } from 'react';
 
 export type EasingType = 'spring' | 'smooth';
+export type BandRatio = 'equal' | 'golden' | 'cinematic';
+export type BandCount = 6 | 12 | 18 | 24 | 36;
+export type CollageMode = 'cover' | 'stretch' | 'slice';
 
 export interface ExperimentControls {
   speed: number;        // ms — transition duration
@@ -17,6 +20,10 @@ export interface ExperimentControls {
   paused: boolean;      // true when settings panel is open
   soundEnabled: boolean; // true when sound toggle is on
   volume: number;       // master volume 0–1
+  feather: number;      // band-seam blur in px (stock collage)
+  bandRatio: BandRatio; // height distribution of collage bands
+  bandCount: BandCount; // number of collage bands (3–12)
+  mode: CollageMode;    // collage rendering: cover crop, stretch fit, or abstract slice
 }
 
 const defaultControls: ExperimentControls = {
@@ -32,6 +39,10 @@ const defaultControls: ExperimentControls = {
   paused: false,
   soundEnabled: true,
   volume: 0.8,
+  feather: 8,
+  bandRatio: 'equal',
+  bandCount: 36,
+  mode: 'slice',
 };
 
 export const ExperimentControlsContext =

@@ -8,6 +8,9 @@ import {
   ExperimentControlsContext,
   type EasingType,
   type ExperimentControls,
+  type BandRatio,
+  type BandCount,
+  type CollageMode,
 } from '../lib/ExperimentControlsContext';
 import { useDeviceOrientation } from '../lib/useDeviceOrientation';
 import type { SectionConfig } from '../data/experiments';
@@ -94,6 +97,10 @@ export default function ExperimentFrame({
   const [reverbMix, setReverbMix] = useState(0.3);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(0.8);
+  const [feather, setFeather] = useState(8);
+  const [bandRatio, setBandRatio] = useState<BandRatio>('equal');
+  const [bandCount, setBandCount] = useState<BandCount>(36);
+  const [mode, setMode] = useState<CollageMode>('slice');
   const [volumeOpen, setVolumeOpen] = useState(false);
   const volumeRef = useRef<HTMLDivElement>(null);
   const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
@@ -293,6 +300,10 @@ export default function ExperimentFrame({
     paused: panelOpen,
     soundEnabled,
     volume,
+    feather,
+    bandRatio,
+    bandCount,
+    mode,
   };
 
   /* --------------------------------------------------------
@@ -622,6 +633,90 @@ export default function ExperimentFrame({
                             reverbMix === val ? ` ${styles.ctrlBtnActive}` : ''
                           }`}
                           onClick={() => setReverbMix(val)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('feather') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Feather</span>
+                    <div className={styles.controlOptions}>
+                      <input
+                        type="range"
+                        min={0}
+                        max={20}
+                        step={1}
+                        value={feather}
+                        onChange={(e) => setFeather(parseInt(e.target.value, 10))}
+                        className={styles.featherSlider}
+                        aria-label="Seam feathering"
+                      />
+                      <span className={styles.controlValue}>{feather}px</span>
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('bandRatio') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Ratio</span>
+                    <div className={styles.controlOptions}>
+                      {([
+                        ['Equal', 'equal'],
+                        ['Golden', 'golden'],
+                        ['Cinema', 'cinematic'],
+                      ] as const).map(([label, val]) => (
+                        <button
+                          key={val}
+                          className={`${styles.ctrlBtn}${
+                            bandRatio === val ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setBandRatio(val)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('bandCount') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Bands</span>
+                    <div className={styles.controlOptions}>
+                      {([6, 12, 18, 24, 36] as const).map((n) => (
+                        <button
+                          key={n}
+                          className={`${styles.ctrlBtn}${
+                            bandCount === n ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setBandCount(n)}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasControl('mode') && (
+                  <div className={styles.controlGroup}>
+                    <span className={styles.controlLabel}>Mode</span>
+                    <div className={styles.controlOptions}>
+                      {([
+                        ['Slice', 'slice'],
+                        ['Stretch', 'stretch'],
+                        ['Cover', 'cover'],
+                      ] as const).map(([label, val]) => (
+                        <button
+                          key={val}
+                          className={`${styles.ctrlBtn}${
+                            mode === val ? ` ${styles.ctrlBtnActive}` : ''
+                          }`}
+                          onClick={() => setMode(val)}
                         >
                           {label}
                         </button>
