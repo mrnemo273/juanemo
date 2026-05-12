@@ -255,24 +255,47 @@ The generative typography system, design tokens, and font infrastructure carry f
 
 ---
 
-## Stock Collage Experiment Pipeline (EXP-10 → EXP-13)
+## Stock Collage Experiment Pipeline (EXP-04, Sections A–D)
 
-**Goal:** Build 4 interactive experiments that use free stock photography (Unsplash API) as raw material for digital collage. Each experiment explores a different collage technique with AI-assisted curation and composition.
+**Goal:** A single 4-section experiment using free stock photography as raw material. Each section explores a different collage technique. **Section A shipped 2026-05-12** — see below for the identity pivot.
 
-**Tech stack additions:** Unsplash API, WebGL shaders (Color Bleed), TensorFlow.js or ONNX Runtime (Depth Sandwich depth estimation via MiDaS).
+**Tech stack additions:** Curated Unsplash CDN URLs (no API key), Web Animations API (Section A reveal), Tone.js (Section A audio). Sections C/D will add WebGL shaders (Color Bleed) and TensorFlow.js/ONNX (Depth Sandwich).
 
-**Source material:** `prototypes/experiment-ideas-r5.html` (approved ideas with sketches)
+**Source material:** `prototypes/experiment-ideas-r5.html`
 
-| # | Experiment | Collage Technique | Key Interaction |
+| Section | Name | Technique | Status |
 |---|---|---|---|
-| EXP-10 | Exquisite Search | Surrealist exquisite corpse | Search 3 bands, fold/reveal, Claude bridges middle |
-| EXP-11 | Slice & Stack | Hockney-style strip recombination | Slice images into strips, drag to recompose, sort by hue |
-| EXP-12 | Color Bleed | Chromatic edge merging (WebGL) | Place photos, colors melt where edges match |
-| EXP-13 | Depth Sandwich | ML depth-map parallax diorama | Peel photos into depth layers, tilt for parallax |
+| A | Exquisite Search | Surrealist slices, auto-picked, animated entrance | ✅ **SHIPPED** (commit `9e74bf4`) |
+| B | Slice & Stack | Hockney-style strip recombination | 🔵 SPEC WRITTEN — needs re-spec (see note) |
+| C | Color Bleed | Chromatic edge merging | 🔵 SPEC WRITTEN — needs re-spec (see note) |
+| D | Depth Sandwich | ML depth-map parallax diorama | 🔵 SPEC WRITTEN — needs re-spec (see note) |
 
-**Build order:** TBD — JC to pick first experiment to spec.
+### Section A — what shipped vs. what was spec'd
 
-### Status: 🔲 TODO (pipeline approved, no experiments started)
+The original Section A spec described a *manual surrealist exquisite corpse* (user picks images for three horizontal bands, fold/reveal animation, no audio). Through ~12 rounds of JC creative direction the section became a **generative slice abstract**:
+
+- **6 / 12 / 18 / 24 / 36 horizontal slices** (default 36), each auto-picked from the curated library
+- Each slice extracts a small patch of its photo and stretches it to fill — abstract color/texture fields, photos not recognizable
+- Bands have **random widths (25–75% of viewport) and random horizontal positions** — Diebenkorn-style layered stripes
+- Entrance: each band slides in from 180px right with **multi-stop spring keyframes** (overshoot + back-and-forth shimmy), 320ms × 35ms stagger, opacity fade-in
+- **Pentatonic chime audio** per band (Tone.js triangle synth + reverb, master-volume aware)
+- **Auto-rerun every 15s** rolls the whole composition fresh; **tap any band** rerolls just that one with the same shimmy animation
+- **No buttons** — the only UI is the settings panel (Ratio / Bands / Mode controls)
+- **Image preload** before reveal so photos never pop in mid-animation
+
+Full pivot trail and rationale in `Specs/STOCK_COLLAGE_EXQUISITE_SEARCH_BUILDER_PROMPT.md` § "Builder Notes".
+
+### Planner action — re-spec Sections B/C/D
+
+Original B/C/D specs predate the Section A identity pivot and assume the same "user picks everything, compose-then-admire" UX that A no longer has. Before kicking off builders for B/C/D, decide:
+
+1. **Stay with the original B/C/D specs?** Then the experiment has a tonal mismatch between A (ambient generative art) and B/C/D (manual interactive composition). Probably not what JC wants.
+2. **Re-spec B/C/D to match A's new identity?** Each becomes a generative / auto-rolling variant of its technique. E.g., Slice & Stack auto-shuffles strips on a timer; Color Bleed auto-rotates source pairs; Depth Sandwich auto-cycles parallax compositions. Closer to a cohesive multi-section ambient art piece.
+3. **Hybrid** — keep B/C/D interactive but borrow A's audio + auto-rerun + buttonless aesthetic. The user still composes, but with the same tactile feedback and ambient pacing.
+
+**Recommend option 2 or 3 — option 1 would be jarring.** Recommend JC + scrummaster discuss before re-spec.
+
+### Status: 🟡 A ✅ shipped • B/C/D ⏸ awaiting re-spec
 
 ---
 

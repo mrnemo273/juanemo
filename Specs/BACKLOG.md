@@ -381,18 +381,40 @@ Strings stretched across the screen. Swipe to strum. Press to pluck. Tilt to ben
 
 ## Experiment Pipeline — Stock Collage Series ✂️
 
-Approved by JC on 2026-03-19. Four sections of a single "Stock Collage" experiment (EXP-04) using free stock photography as raw material. Curated Unsplash CDN URLs — no API key needed. User drives all creative choices (no AI curation). Sections A+B are compose-then-admire; Sections C+D are always-alive (respond to mouse/tilt). No audio.
+Approved by JC on 2026-03-19. Four sections of a single "Stock Collage" experiment (EXP-04) using free stock photography as raw material. Curated Unsplash CDN URLs — no API key needed.
 
-### Section A: Exquisite Search (Surrealist Exquisite Corpse)
+**⚠ Planner note (2026-05-12):** the **shipped Section A drifted significantly from the original spec** through JC iteration. The original framing (manual exquisite-corpse compose flow, AI-free user picking, no audio) does not match what's live. Section A is now a **generative slice abstract** — auto-picked photos, auto-rerun every 15s, pentatonic chime audio, tap a band to reroll, no buttons. **Sections B/C/D specs are unchanged and still describe the original "user picks everything" model.** Before kicking off B/C/D builders, re-spec them (or write delta specs) so they fit the new identity. See `Specs/STOCK_COLLAGE_EXQUISITE_SEARCH_BUILDER_PROMPT.md` § "Builder Notes" for the full pivot trail.
+
+### Section A: Exquisite Search ✅ SHIPPED (commit `9e74bf4`)
+
+**Identity pivoted through ~12 rounds of JC creative direction.** Final form: *generative slice abstract*, not a manual exquisite-corpse compose flow. Shared infra still lands as planned for Sections B–D.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| C.1 | Three horizontal bands — pick from curated Unsplash gallery | 🔵 SPEC WRITTEN | Spec: `Specs/STOCK_COLLAGE_EXQUISITE_SEARCH_BUILDER_PROMPT.md`. Builds shared infra: `collageImages.ts`, `ImagePicker.tsx`, `useCollageExport.ts`, `StockCollageSwitch.tsx`. |
-| C.2 | Fold mechanic — active band visible, others clipped to 20px sliver | 🔵 SPEC WRITTEN | State machine: COMPOSE → READY → REVEALING → COMPLETE. |
-| C.3 | Reveal animation — 3D unfold (rotateX -90° → 0°, 400ms stagger) | 🔵 SPEC WRITTEN | CSS 3D transforms, expo-out easing, shadow during unfold. |
-| C.4 | ~~Claude picks middle band~~ | ⏸ DROPPED | No AI curation — user picks all images. |
-| C.5 | Shake mode — randomly reassign which image fills which band | 🔵 SPEC WRITTEN | Reuses EXP-01 shake detection pattern. Desktop: Shuffle button. |
-| C.6 | Export composite as single image | 🔵 SPEC WRITTEN | Canvas compositing with feathered seams. |
+| C.1 | Horizontal bands of curated Unsplash photos | ✅ SHIPPED | **6 / 12 / 18 / 24 / 36 bands** (default 36). Each band auto-picks a random image; the user never picks. Shared infra `ImagePicker.tsx` shipped but unused in A — available for B/C/D. |
+| C.2 | ~~Fold mechanic, active band slivers, COMPOSE→READY state machine~~ | ⏸ DROPPED | Replaced by auto-pick. No manual compose, no slivers, no Reveal button. Phases collapsed to `compose` (preloading) → `revealing` → `complete`. |
+| C.3 | Entrance animation — bands slide in top-to-bottom | ✅ SHIPPED | **Not** the 3D fold — multi-stop spring keyframes via Web Animations API. Starts 180px right + opacity 0, slides in with overshoot/back-and-forth shimmy, 320ms × 35ms stagger (36 bands ≈ 1.6s total). |
+| C.4 | ~~Claude picks middle band~~ | ⏸ DROPPED (per original spec) | |
+| C.5 | Shake mode / shuffle | ✅ SHIPPED (auto) | **15s auto-rerun** does the global re-shuffle. **Tap any band** rerolls just that one (animated with same shimmy). Mobile shake also triggers full reshuffle. **Shuffle button removed** — UI is now buttonless. |
+| C.6 | Export composite as single image | 🟡 INFRA ONLY | `useCollageExport.ts` shipped (used by future sections). Export button removed from Section A — section is now ambient-art-piece, not save-it-yourself tool. Re-add the button later if A needs export. |
+| C.7 | **New:** Slice mode — extract a small patch + stretch to fill band | ✅ SHIPPED | The abstraction engine. Patch 10–25% wide × 2–6% tall, stretched to band rect. Plus `Cover` / `Stretch` modes in the panel (segmented control). Default = Slice. |
+| C.8 | **New:** Per-band random width + horizontal offset | ✅ SHIPPED | Each band's width is 25–75% of viewport (capped well short of full-width per JC), random X position. Re-rolled on pick. |
+| C.9 | **New:** Audio — pentatonic chime per band | ✅ SHIPPED | `audioEngine.ts`: soft triangle synth + reverb, -20dB. One note per band's slide-in (random within C5–G6 pentatonic). Master volume + mute via existing speaker control. |
+| C.10 | **New:** Image preload before reveal | ✅ SHIPPED | Bands hidden via `opacity: 0` during a `'compose'` preload window; phase flips to `'revealing'` once all images are in cache (or 2s timeout). Prevents the "image pops in mid-animation" artifact. |
+
+**Settings panel controls:** Ratio (Equal / Golden / Cinema), Bands (6 / 12 / 18 / 24 / 36), Mode (Slice / Stretch / Cover). Feather control was removed — sharp seams between bands.
+
+**Files shipped:**
+- `components/experiments/StockCollage/ExquisiteSearch.tsx` + `.module.css` — Section A
+- `components/experiments/StockCollage/StockCollageSwitch.tsx` — section router
+- `components/experiments/StockCollage/types.ts` — shared types, ratio generator, slice generator, band-shape generator, reveal keyframes
+- `components/experiments/StockCollage/audioEngine.ts` — pentatonic chime synth
+- `components/experiments/StockCollage/ImagePicker.tsx` + `.module.css` — gallery picker (unused by A, intended for B–D)
+- `components/experiments/StockCollage/useCollageExport.ts` — canvas → PNG download helper (unused by A, intended for B–D)
+- `lib/ExperimentControlsContext.tsx` — added `feather`, `bandRatio`, `bandCount`, `mode` context fields (collage-specific, follows the same pattern as the jazz-only fields `tempo`/`decay`/etc.)
+- `components/ExperimentFrame.tsx` + `.module.css` — panel UI for new controls
+- `data/experiments.ts` — `stock-collage` experiment entry (#04)
+- `app/experiments/[slug]/page.tsx` — route registration
 
 ### Section B: Slice & Stack (Hockney-Style Strip Collage)
 
@@ -509,6 +531,7 @@ Approved by JC on 2026-03-19. Four sections of a single "Stock Collage" experime
 
 | Date | Change | By |
 |---|---|---|
+| 2026-05-12 | **EXP-04 Stock Collage Section A shipped (commit `9e74bf4`).** Identity pivoted through JC creative direction from "manual surrealist exquisite corpse" to **generative slice abstract**. Final form: 36 auto-picked photo slices stretched to abstract color/texture bands, varied widths (25–75% viewport) and horizontal positions, sharp seams, slide-in with multi-stop spring keyframes (180px → 0 with overshoot/back-and-forth, 320ms × 35ms stagger, Web Animations API). Pentatonic chime per band on entrance + per tap-reroll. 15s auto-rerun. No buttons (Shuffle/Export removed). Tap any band = animated single-band reroll. Image preload before reveal prevents pop-in. Shared infra (`ImagePicker`, `useCollageExport`, `StockCollageSwitch`, `types`, `audioEngine`) shipped — B/C/D can plug in. **Original Section A spec is now a stale planning document — see § Builder Notes in the spec for the iteration trail.** Sections B/C/D specs were written against the original "user picks everything" model and need re-speccing (or delta specs) before builders pick them up. | Builder + JC creative direction |
 | 2026-03-21 | **EXP-03 Giant Steps fully spec'd.** Master spec (`EXP03_GIANT_STEPS.md`) + 4 builder prompts: Coltrane Circle (shared infra + Section A), Three-Body Problem (Section B), Chromatic Bridges (Section C), Mirror Symmetry (Section D). 26-chord Coltrane Changes progression, 3 key centers (B/G/E♭), BPM-driven tempo (80–320), 62 acceptance criteria. Section A builds shared infra (chord data, progression hook, types, section switch); B/C/D can be built in parallel after A. | Scrummaster (JC creative direction) |
 | 2026-03-21 | **EXP-02E Magnets spec + builder prompt written.** Consonance/dissonance interval forces between all orb pairs. Visual: solid DUN lines (consonant), dashed BITTERSWEET lines (dissonant). Drag-to-override on desktop, tap-to-pin on mobile. Chord change flash (3× force line opacity, 300ms). Edge bounce (not wrapping). Adds `noteToMidi()` and `CONSONANCE_TABLE` to `chordData.ts`. 24 acceptance criteria. Spec: `Specs/EXP02_MAGNETS.md`. Builder prompt: `Specs/EXP02_MAGNETS_BUILDER_PROMPT.md`. | Scrummaster (JC creative direction) |
 | 2026-03-21 | **EXP-02D Flock built, tuned, and deployed.** Major evolution from boids spec — see builder notes. Orbital leader-follower physics, breathing rhythm, click-drag-shake instrument, smooth bezier flight trails. Component: `Flock.tsx` (1379 lines). Pushed to main. | Builder (JC creative direction throughout) |
